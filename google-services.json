@@ -1,0 +1,29 @@
+  {
+    "project_info": {
+      "project_number": "189610378654",
+      "project_id": "clashtalent-e5471",
+      "storage_bucket": "clashtalent-e5471.firebasestorage.app"
+    },
+    "client": [
+      {
+        "client_info": {
+          "mobilesdk_app_id": "1:189610378654:android:e53d59765c7fd54fa2428f",
+          "android_client_info": {
+            "package_name": "clashtalent.com"
+          }
+        },
+        "oauth_client": [],
+        "api_key": [
+          {
+            "current_key": "AIzaSyDI5WDzKigCAYIait1ZiFK3Hk6riuspij0"
+          }
+        ],
+        "services": {
+          "appinvite_service": {
+            "other_platform_oauth_client": []
+          }
+        }
+      }
+    ],
+    "configuration_version": "1"
+  }

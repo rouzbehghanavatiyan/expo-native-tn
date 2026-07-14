@@ -1,0 +1,252 @@
+import ImageRank from "@/src/components/ImageRank";
+import MainTitle from "@/src/components/MainTitle";
+import { allUserMessagese } from "@/src/services/masterServices";
+import { useAppSelector } from "@/src/store/reduxHookType";
+import { getImageUrl } from "@/src/utils/fileHelper";
+import { socketClient } from "@/src/utils/socketClient";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { MailOpen } from "@tamagui/lucide-icons";
+import { useRouter } from "expo-router";
+import React, { useCallback, useEffect, useState } from "react";
+import { Pressable } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Spinner, Text, View, XStack, YStack } from "tamagui";
+
+interface MessageData {
+  id?: number;
+  sender: number;
+  recipient?: number;
+  recieveId?: number;
+  userNameSender?: string;
+  score?: number;
+  [key: string]: any;
+}
+
+const mockUsers: MessageData[] = [
+  {
+    id: 1,
+    sender: 101,
+    userNameSender: "Cristiano Ronaldo",
+    score: 9999,
+    image: "https://i.pravatar.cc/150?img=1",
+  },
+  {
+    id: 2,
+    sender: 102,
+    userNameSender: "Lionel Messi",
+    score: 9800,
+    image: "https://i.pravatar.cc/150?img=2",
+  },
+  {
+    id: 3,
+    sender: 103,
+    userNameSender: "Neymar Jr",
+    score: 9500,
+    image: "https://i.pravatar.cc/150?img=3",
+  },
+  {
+    id: 4,
+    sender: 104,
+    userNameSender: "Kylian Mbappe",
+    score: 9200,
+    image: "https://i.pravatar.cc/150?img=4",
+  },
+  {
+    id: 5,
+    sender: 105,
+    userNameSender: "Erling Haaland",
+    score: 9000,
+    image: "https://i.pravatar.cc/150?img=5",
+  },
+];
+
+const ChatRoom: React.FC = () => {
+  const router = useRouter();
+  const main = useAppSelector((state) => state?.main);
+  const userIdLogin = main?.userLogin?.user?.id;
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [userSender, setUserSender] = useState<MessageData[]>([]);
+  const [unreadMessages, setUnreadMessages] = useState<Record<number, boolean>>(
+    {},
+  );
+
+  const handleRedirect = async (data: MessageData) => {
+    await AsyncStorage.setItem(`message_read_${data.sender}`, "true");
+
+    setUnreadMessages((prev) => ({
+      ...prev,
+      [data.sender]: false,
+    }));
+    router.push({
+      pathname: "/chat/[id]",
+      params: {
+        id: String(data.sender),
+        userName: data.userNameSender ?? "",
+        profile: getImageUrl(data) ?? "",
+        score: String(data.score ?? 0),
+      },
+    });
+  };
+
+  const handleMessagesReadConfirmation = useCallback(
+    (data: { sender: number }) => {
+      setUnreadMessages((prev) => ({
+        ...prev,
+        [data.sender]: false,
+      }));
+    },
+    [],
+  );
+
+  const handleGetUserMessages = async () => {
+    try {
+      setIsLoading(true);
+      const res = await allUserMessagese(userIdLogin);
+      setIsLoading(false);
+
+      const { data, status } = res?.data;
+      if (status === 0) {
+        console.log(data);
+
+        setUserSender(data);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleReceiveMessage = useCallback(
+    async (data: MessageData) => {
+      if (userIdLogin === data?.recieveId) {
+        await AsyncStorage.setItem(`message_read_${data.sender}`, "false");
+
+        setUnreadMessages((prev) => ({
+          ...prev,
+          [data.sender]: true,
+        }));
+      }
+    },
+    [userIdLogin],
+  );
+
+  useEffect(() => {
+    if (!socketClient) return;
+
+    socketClient.on("receive_message", handleReceiveMessage);
+    socketClient.on(
+      "messages_read_confirmation",
+      handleMessagesReadConfirmation,
+    );
+
+    return () => {
+      socketClient.off("receive_message", handleReceiveMessage);
+      socketClient.off(
+        "messages_read_confirmation",
+        handleMessagesReadConfirmation,
+      );
+    };
+  }, [socketClient, handleReceiveMessage, handleMessagesReadConfirmation]);
+
+  useEffect(() => {
+    handleGetUserMessages();
+  }, []);
+
+  useEffect(() => {
+    const loadStoredReadStatus = async () => {
+      const storedReadStatus: Record<number, boolean> = {};
+
+      for (const user of userSender) {
+        const value = await AsyncStorage.getItem(`message_read_${user.sender}`);
+        const isUnread = value !== "true";
+
+        storedReadStatus[user.sender] = isUnread;
+      }
+
+      setUnreadMessages(storedReadStatus);
+    };
+
+    if (userSender.length > 0) {
+      loadStoredReadStatus();
+    }
+  }, [userSender]);
+
+  if (isLoading) {
+    return (
+      <YStack
+        flex={1}
+        alignItems="center"
+        justifyContent="center"
+        bg="$background"
+      >
+        <Spinner size="large" color="$blue10" />
+      </YStack>
+    );
+  }
+
+  return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
+      <YStack flex={1} bg="$background">
+        <MainTitle title="Messages" handleBack={() => router.back()} />
+        {userSender.length > 0 ? (
+          userSender.map((user) => {
+            const fixImage = getImageUrl(user);
+            const uniqueKey = `${user?.id}-${user?.sender}`;
+
+            return (
+              <Pressable key={uniqueKey} onPress={() => handleRedirect(user)}>
+                <XStack
+                  p="$4"
+                  bc="$grey100"
+                  my={1}
+                  ai="center"
+                  jc="space-between"
+                  bg="$white"
+                >
+                  <ImageRank
+                    userName={user?.userNameSender}
+                    imgSize={50}
+                    score={user?.score || 0}
+                    imgSrc={fixImage || "default-profile-image.png"}
+                  />
+
+                  {unreadMessages[user.sender] && (
+                    <View
+                      width={12}
+                      height={12}
+                      borderRadius={999}
+                      bg="#FF3040"
+                    />
+                  )}
+                </XStack>
+              </Pressable>
+            );
+          })
+        ) : (
+          <YStack
+            flex={1}
+            bg="white"
+            alignItems="center"
+            justifyContent="center"
+            p="$4"
+          >
+            <XStack
+              alignItems="center"
+              justifyContent="center"
+              gap="$2"
+              p="$4"
+              borderRadius="$4"
+            >
+              <MailOpen size={26} color="#333" />
+              <Text color="$gray11" fontSize="$5">
+                Empty messages
+              </Text>
+            </XStack>
+          </YStack>
+        )}
+      </YStack>
+    </SafeAreaView>
+  );
+};
+
+export default ChatRoom;

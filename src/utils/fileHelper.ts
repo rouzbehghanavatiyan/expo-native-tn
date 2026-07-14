@@ -1,0 +1,24 @@
+const BASE_URL = process.env.EXPO_PUBLIC_VITE_SERVERPROFILE;
+
+export const getImageUrl = (attachment: any) => {
+  if (!attachment) return null;
+
+  return `${BASE_URL}/${attachment.attachmentType}/${attachment.fileName}${attachment.ext}`;
+};
+
+export const mergeUniqueMessages = (items: any[]) => {
+  const map = new Map<string, any>();
+
+  for (const item of items) {
+    const key =
+      item.id != null
+        ? `id-${item.id}`
+        : item.tempId
+          ? `temp-${item.tempId}`
+          : "";
+    if (!key) continue;
+    map.set(key, item);
+  }
+
+  return Array.from(map.values());
+};
