@@ -1,5 +1,4 @@
 import { useIsFocused } from "@react-navigation/native";
-import { VideoView } from "expo-video";
 import React, { useEffect, useRef, useState } from "react";
 import {
   Dimensions,
@@ -8,80 +7,131 @@ import {
   StyleSheet,
   View,
 } from "react-native";
+import Video, {
+  OnLoadData,
+  OnProgressData,
+  VideoRef,
+} from "react-native-video";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
-const CustomVideo = ({ player }: any) => {
+const TOUCH_AREA_HEIGHT = 28;
+const BAR_HEIGHT = 3;
+const BAR_HEIGHT_ACTIVE = 5;
+
+interface CustomVideoProps {
+  uri: string;
+  isPlaying: boolean;
+  onVideoPlay?: () => void;
+}
+
+const CustomVideo = ({ uri, isPlaying, onVideoPlay }: CustomVideoProps) => {
+  const videoRef = useRef<VideoRef>(null);
+  const isFocused = useIsFocused();
+
   const [position, setPosition] = useState(0);
   const [duration, setDuration] = useState(1);
-  const isFocused = useIsFocused();
+  const [isDragging, setIsDragging] = useState(false);
+  const [manuallyPaused, setManuallyPaused] = useState(false);
+
+  const positionRef = useRef(0);
+  const wasPlayingRef = useRef(false);
 
   const barWidth = SCREEN_WIDTH;
 
-  // useEffect(() => {
-  //   if (!player) return;
-
-  //   const sub = player.addListener("timeUpdate", (e: any) => {
-  //     setPosition(e.currentTime);
-  //     setDuration(e.duration || 1);
-  //   });
-
-  //   return () => {
-  //     sub.remove();
-  //   };
-  // }, [player]);
-
+  // اگه از بیرون آیتم عوض بشه، حالت پاز دستی رو ریست کن
   useEffect(() => {
-    if (!player) return;
+    setManuallyPaused(false);
+  }, [uri]);
 
-    if (!isFocused) {
-      player.pause();
-    }
-  }, [isFocused, player]);
+  const handleLoad = (data: OnLoadData) => {
+    setDuration(data.duration || 1);
+  };
+
+  const handleProgress = (data: OnProgressData) => {
+    if (isDragging) return; // حین درگ کاربر، آپدیت خودکار رو نادیده بگیر
+    setPosition(data.currentTime);
+    positionRef.current = data.currentTime;
+  };
 
   const togglePlay = () => {
-    if (!player) return;
-
-    if (player.playing) player.pause();
-    else player.play();
+    setManuallyPaused((prev) => !prev);
+    onVideoPlay?.();
   };
 
   const seek = (x: number) => {
     const percent = Math.max(0, Math.min(1, x / barWidth));
     const time = percent * duration;
-    player.currentTime = time;
     setPosition(time);
+    positionRef.current = time;
+    return time;
   };
 
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
 
       onPanResponderGrant: (e) => {
+        wasPlayingRef.current = isPlaying && !manuallyPaused;
+        setIsDragging(true);
         seek(e.nativeEvent.locationX);
       },
 
       onPanResponderMove: (e) => {
         seek(e.nativeEvent.locationX);
       },
+
+      onPanResponderRelease: () => {
+        videoRef.current?.seek(positionRef.current);
+        setIsDragging(false);
+      },
+
+      onPanResponderTerminate: () => {
+        videoRef.current?.seek(positionRef.current);
+        setIsDragging(false);
+      },
     }),
   ).current;
 
-  const progress = (position / duration) * 100;
+  const progress = duration > 0 ? (position / duration) * 100 : 0;
+  const shouldPlay = isPlaying && isFocused && !manuallyPaused && !isDragging;
 
   return (
     <View style={styles.container}>
       <Pressable style={styles.video} onPress={togglePlay}>
-        <VideoView
-          player={player}
+        <Video
+          ref={videoRef}
+          source={{ uri }}
           style={styles.video}
-          nativeControls={false}
-          contentFit="contain"
+          resizeMode="contain"
+          repeat
+          paused={!shouldPlay}
+          onLoad={handleLoad}
+          onProgress={handleProgress}
+          progressUpdateInterval={250}
+          playInBackground={false}
+          playWhenInactive={false}
         />
       </Pressable>
 
-      <View style={styles.progressContainer} {...panResponder.panHandlers}>
-        <View style={[styles.progress, { width: `${progress}%` }]} />
+      <View
+        style={styles.touchArea}
+        hitSlop={{ top: 15, bottom: 15 }}
+        {...panResponder.panHandlers}
+      >
+        <View
+          style={[
+            styles.progressContainer,
+            isDragging && styles.progressContainerActive,
+          ]}
+        >
+          <View style={[styles.progress, { width: `${progress}%` }]} />
+
+          {isDragging && (
+            <View style={[styles.thumb, { left: `${progress}%` }]} />
+          )}
+        </View>
       </View>
     </View>
   );
@@ -94,22 +144,44 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "black",
   },
-
   video: {
     width: SCREEN_WIDTH,
     height: "100%",
   },
-
-  progressContainer: {
+  touchArea: {
     position: "absolute",
     bottom: 0,
-    height: 1,
-    width: "100%",
-    backgroundColor: "rgba(255,255,255,0.45)",
+    left: 0,
+    right: 0,
+    height: TOUCH_AREA_HEIGHT,
+    justifyContent: "flex-end",
+    elevation: 999,
   },
-
+  progressContainer: {
+    height: BAR_HEIGHT,
+    width: "100%",
+    backgroundColor: "rgba(255,255,255,0.3)",
+  },
+  progressContainerActive: {
+    height: BAR_HEIGHT_ACTIVE,
+  },
   progress: {
-    height: 6,
+    height: "100%",
     backgroundColor: "#fff",
+  },
+  thumb: {
+    position: "absolute",
+    top: "50%",
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: "#fff",
+    marginLeft: -6,
+    marginTop: -6,
+    shadowColor: "#000",
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
+    shadowOffset: { width: 0, height: 1 },
+    elevation: 2,
   },
 });

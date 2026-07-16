@@ -4,6 +4,7 @@ import { Alert, TouchableOpacity } from "react-native";
 import { Text, View, XStack } from "tamagui";
 import { addLike, removeLike } from "../services/masterServices";
 import { useAppDispatch } from "../store/reduxHookType";
+import { logger } from "../utils/logger";
 import { socketClient } from "../utils/socketClient";
 import { Icon } from "./Icon";
 
@@ -33,8 +34,10 @@ const OptionBottom: React.FC<OptionBottomProps> = ({
   const dispatch = useAppDispatch();
   const [isLiked, setIsLiked] = useState(false);
   const [localLikeCount, setLocalLikeCount] = useState(0);
-
-  // محاسبه movieId بر اساس positionVideo
+  logger.info(
+    "videovideovideovideovideovideovideovideovideovideovideovideovideovideovideovideo",
+    video?.isLikedInserted,
+  );
   const movieId = useMemo(() => {
     if (!video) return null;
     return positionVideo === 0
@@ -42,32 +45,26 @@ const OptionBottom: React.FC<OptionBottomProps> = ({
       : video?.attachmentMatched?.attachmentId;
   }, [video, positionVideo]);
 
-  // محاسبه وضعیت اولیه لایک برای این movieId خاص
   useEffect(() => {
     if (!movieId || !video) return;
 
-    // اگر video.likes داریم و این movieId در آن وجود دارد
     if (video?.likes?.[movieId]) {
       setIsLiked(video.likes[movieId].isLiked || false);
     } else {
-      // اگر ساختار قدیمی داریم (isLikedInserted/isLikedMatched)
       const initialLikeStatus =
         positionVideo === 0 ? video?.isLikedInserted : video?.isLikedMatched;
       setIsLiked(initialLikeStatus || false);
     }
   }, [video, positionVideo, movieId]);
 
-  // محاسبه تعداد لایک‌ها
   useEffect(() => {
     if (countLiked !== undefined) {
       setLocalLikeCount(countLiked);
     } else if (video && movieId) {
-      // اول از video.likes چک کن
       if (video?.likes?.[movieId]) {
         const likeInfo = video.likes[movieId];
         setLocalLikeCount(likeInfo.count || 0);
       } else {
-        // اگر video.likes نبود، از ساختار قدیمی استفاده کن
         const baseCount =
           positionVideo === 0
             ? video?.likeInserted || 0
@@ -77,7 +74,6 @@ const OptionBottom: React.FC<OptionBottomProps> = ({
     }
   }, [countLiked, video, positionVideo, movieId]);
 
-  // اگر externalIsLiked تغییر کرد، state را آپدیت کن
   useEffect(() => {
     if (externalIsLiked !== undefined) {
       setIsLiked(externalIsLiked);
@@ -85,19 +81,29 @@ const OptionBottom: React.FC<OptionBottomProps> = ({
   }, [externalIsLiked]);
 
   const handleLikeClick = useCallback(async () => {
-    if (!movieId) return;
+    console.log("====== LIKE CLICK START ======");
+    console.log("current isLiked:", isLiked);
+    console.log("newLikeStatus:", !isLiked);
+    console.log("movieId:", movieId);
+    console.log("userIdLogin:", userIdLogin);
+    console.log("addLike function:", addLike);
+    console.log("removeLike function:", removeLike);
+    console.log("socket connected:", socketClient?.connected);
 
-    // وضعیت جدید (معکوس وضعیت فعلی)
     const newLikeStatus = !isLiked;
 
-    // فوراً UI را آپدیت کن
     setIsLiked(newLikeStatus);
 
-    // آپدیت موقت تعداد لایک
     if (newLikeStatus) {
-      setLocalLikeCount((prev) => prev + 1);
+      setLocalLikeCount((prev) => {
+        console.log("like count before +:", prev);
+        return prev + 1;
+      });
     } else {
-      setLocalLikeCount((prev) => Math.max(0, prev - 1));
+      setLocalLikeCount((prev) => {
+        console.log("like count before -:", prev);
+        return Math.max(0, prev - 1);
+      });
     }
 
     const postData = {
@@ -105,38 +111,53 @@ const OptionBottom: React.FC<OptionBottomProps> = ({
       movieId: movieId,
     };
 
+    console.log("like postData:", postData);
+
     try {
       if (isLiked) {
-        // اگر قبلاً لایک کرده، حالا آنلایک می‌کند
-        await removeLike(postData);
+        console.log("calling removeLike...");
+        const removeRes = await removeLike(postData);
+        console.log("removeLike response:", removeRes);
+
         if (socketClient) {
+          console.log("emit remove_liked:", postData);
           socketClient.emit("remove_liked", postData);
+        } else {
+          console.log("socketClient is null/undefined");
         }
       } else {
-        // اگر قبلاً لایک نکرده، حالا لایک می‌کند
-        await addLike(postData);
+        console.log("calling addLike...");
+        const addRes = await addLike(postData);
+        console.log("addLike response:", addRes);
+
         if (socketClient) {
+          console.log("emit add_liked:", postData);
           socketClient.emit("add_liked", postData);
+        } else {
+          console.log("socketClient is null/undefined");
         }
       }
 
-      // dispatch(
-      //   updateLikeStatus({
-      //     movieId,
-      //     isLiked: newLikeStatus,
-      //     positionVideo,
-      //   }),
-      // );
-    } catch (error) {
-      console.error("Error in like operation:", error);
+      console.log("====== LIKE CLICK SUCCESS ======");
+    } catch (error: any) {
+      console.log("====== LIKE CLICK ERROR ======");
+      console.log("error:", error);
+      console.log("error message:", error?.message);
+      console.log("error status:", error?.response?.status);
+      console.log("error data:", error?.response?.data);
+      console.log("error headers:", error?.response?.headers);
+
       Alert.alert("Error", "Failed to update like status");
-      // در صورت خطا، UI را به حالت قبلی برگردان
+
       setIsLiked(isLiked);
+
       if (isLiked) {
         setLocalLikeCount((prev) => prev - 1);
       } else {
         setLocalLikeCount((prev) => prev + 1);
       }
+    } finally {
+      console.log("====== LIKE CLICK END ======");
     }
   }, [isLiked, movieId, userIdLogin, socketClient, dispatch, positionVideo]);
 
@@ -198,11 +219,14 @@ const OptionBottom: React.FC<OptionBottomProps> = ({
           <View flex={1} alignItems="flex-end">
             <XStack gap={2} alignItems="center">
               {showLiked && movieId && (
-                <TouchableOpacity onPress={handleLikeClick}>
+                <TouchableOpacity
+                  onPress={handleLikeClick}
+                  style={{ padding: 8, zIndex: 999 }}
+                >
                   {isLiked ? (
-                    <Icon name="thumb-up" color="#3b82f6" />
+                    <Icon name="thumb-up" size={30} color="#ffffff" />
                   ) : (
-                    <Icon name="thumb-up-off-alt" color="white" />
+                    <Icon name="thumb-up-off-alt" size={30} color="white" />
                   )}
                 </TouchableOpacity>
               )}

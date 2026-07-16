@@ -1,5 +1,4 @@
-import { useVideoPlayer } from "expo-video";
-import React, { useEffect } from "react";
+import React from "react";
 import { Dimensions, StyleSheet, View } from "react-native";
 import { useAppSelector } from "../store/reduxHookType";
 import { getImageUrl } from "../utils/fileHelper";
@@ -36,20 +35,20 @@ export default function VideoSection({
       ? getImageUrl(video?.attachmentInserted)
       : getImageUrl(video?.attachmentMatched);
 
-  const player = useVideoPlayer(videoUrl ?? "", (p) => {
-    p.loop = true;
-    p.muted = false;
-  });
+  // const player = useVideoPlayer(videoUrl ?? "", (p) => {
+  //   p.loop = true;
+  //   p.muted = false;
+  // });
 
-  useEffect(() => {
-    if (!player) return;
+  // useEffect(() => {
+  //   if (!player) return;
 
-    if (isPlaying) {
-      player.play();
-    } else {
-      player.pause();
-    }
-  }, [player, isPlaying]);
+  //   if (isPlaying) {
+  //     player.play();
+  //   } else {
+  //     player.pause();
+  //   }
+  // }, [player, isPlaying]);
 
   if (!videoUrl) {
     return <View style={styles.placeholder} />;
@@ -68,12 +67,12 @@ export default function VideoSection({
         toggleDropdown={toggleDropdown}
         dropdownItems={dropdownItems}
       />
-
       <View style={styles.videoContainer}>
         <View style={styles.videoCenter}>
           <CustomVideo
-            handleVideo={() => console.log("clicked")}
-            player={player}
+            uri={videoUrl}
+            isPlaying={isPlaying}
+            onVideoPlay={() => onVideoPlay()}
           />
           <OptionBottom
             userIdLogin={userIdLogin}

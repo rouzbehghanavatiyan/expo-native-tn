@@ -130,3 +130,11 @@ export const commentList = async (movieId: number) => {
 export const topScoreList = async () => {
   return await api.get(`/topScoreList`);
 };
+
+export const addLike = async (data: any) => {
+  return await api.post(`/addLike`, data);
+};
+
+export const removeLike = async (postData: any) => {
+  return await api.delete(`/removeLike`, { data: postData });
+};

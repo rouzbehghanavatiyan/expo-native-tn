@@ -92,7 +92,6 @@ export const uploadFullProcessThunk = createAsyncThunk(
       formData.append("AttachmentName", "movies");
       formData.append("width", "300");
       formData.append("height", "300");
-
       formData.append("FormFile", {
         uri: allFormData?.video?.uri,
         name: allFormData?.video?.name || "video.mp4",

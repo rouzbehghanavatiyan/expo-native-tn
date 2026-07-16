@@ -19,7 +19,7 @@ const formatIconName = (name: string) => {
 
 export const Icon: React.FC<IconProps> = ({
   name,
-  size = 24,
+  size = 28,
   color = "#444444",
   onPress,
   style,
