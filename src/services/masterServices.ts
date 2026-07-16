@@ -80,8 +80,13 @@ export const attachmentListByInviteId = async (postData: {
 //   });
 // };
 
-export const addAttachment = async (postData: any) => {
-  return await api.post(`/addAttachment`, postData);
+export const addAttachment = async (postData: FormData) => {
+  const response = await api.post(`/addAttachment`, postData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+  return response.data;
 };
 
 export const removeFollower = async (postData: any) => {

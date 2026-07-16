@@ -71,8 +71,6 @@ export const uploadFullProcessThunk = createAsyncThunk(
         modeId: 3,
       };
 
-      logger.info("postData postData postData", postData);
-
       const movieRes = await addMovie(postData);
       const movieDataRes = movieRes?.data?.data;
 
@@ -80,16 +78,33 @@ export const uploadFullProcessThunk = createAsyncThunk(
         throw new Error("Error in recording initial movie information");
       }
 
+      // const formData = new FormData();
+      // formData.append("formFile", allFormData?.video);
+      // formData.append("formFile", allFormData?.imageCover);
+      // formData.append("attachmentId", movieDataRes?.id);
+      // formData.append("attachmentType", "mo");
+      // formData.append("attachmentName", "movies");
+      // formData.append("width", "300");
+      // formData.append("height", "300");
       const formData = new FormData();
-      formData.append("formFile", allFormData?.video);
-      formData.append("formFile", allFormData?.imageCover);
-      formData.append("attachmentId", movieDataRes?.id);
-      formData.append("attachmentType", "mo");
-      formData.append("attachmentName", "movies");
+      formData.append("AttachmentId", String(movieDataRes?.id ?? ""));
+      formData.append("AttachmentType", "mo");
+      formData.append("AttachmentName", "movies");
       formData.append("width", "300");
       formData.append("height", "300");
-      for (let pair of formData.entries()) {
-        console.log(`${pair[0]}:`, pair[1]);
+
+      formData.append("FormFile", {
+        uri: allFormData?.video?.uri,
+        name: allFormData?.video?.name || "video.mp4",
+        type: allFormData?.video?.type || "video/mp4",
+      } as any);
+
+      if (allFormData?.imageCover) {
+        formData.append("CoverImage", {
+          uri: allFormData.imageCover.uri,
+          name: allFormData.imageCover.name || "cover.jpg",
+          type: allFormData.imageCover.type || "image/jpeg",
+        } as any);
       }
       const attachRes = await addAttachment(formData);
       logger.info("attachRes attachRes attachRes", attachRes);
