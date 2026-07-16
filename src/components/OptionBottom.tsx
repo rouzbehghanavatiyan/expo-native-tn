@@ -115,27 +115,17 @@ const OptionBottom: React.FC<OptionBottomProps> = ({
 
     try {
       if (isLiked) {
-        console.log("calling removeLike...");
         const removeRes = await removeLike(postData);
-        console.log("removeLike response:", removeRes);
-
-        if (socketClient) {
-          console.log("emit remove_liked:", postData);
-          socketClient.emit("remove_liked", postData);
-        } else {
-          console.log("socketClient is null/undefined");
+        if (removeRes?.data?.status !== 0) {
+          throw new Error(removeRes?.data?.message || "Remove like failed");
         }
+        socketClient?.emit("remove_liked", postData);
       } else {
-        console.log("calling addLike...");
         const addRes = await addLike(postData);
-        console.log("addLike response:", addRes);
-
-        if (socketClient) {
-          console.log("emit add_liked:", postData);
-          socketClient.emit("add_liked", postData);
-        } else {
-          console.log("socketClient is null/undefined");
+        if (addRes?.data?.status !== 0) {
+          throw new Error(addRes?.data?.message || "Add like failed");
         }
+        socketClient?.emit("add_liked", postData);
       }
 
       console.log("====== LIKE CLICK SUCCESS ======");
