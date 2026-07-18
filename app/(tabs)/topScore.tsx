@@ -1,7 +1,9 @@
+import BaseButton from "@/src/components/BaseButtom";
 import Notification from "@/src/components/Notification";
 import TopScoreItem from "@/src/components/TopScoreItem";
 import { topScoreList } from "@/src/services/masterServices";
 import { FontAwesome5, MaterialIcons } from "@expo/vector-icons";
+import * as Notifications from "expo-notifications";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -23,6 +25,7 @@ export default function TopScoreScreen() {
   const [activeTab, setActiveTab] = useState<"topScore" | "notification">(
     "topScore",
   );
+  console.log("HElloWorddddddddddddddddddddddddddddd");
 
   const [categories, setCategories] = useState<Category[]>([
     {
@@ -63,8 +66,24 @@ export default function TopScoreScreen() {
     }
   };
 
+  const sendTestNotification = async () => {
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: "تست نوتیفیکیشن",
+        body: "شما وارد صفحه Top Score شدید",
+        sound: "default",
+        data: {
+          screen: "topScore",
+          type: "test",
+        },
+      },
+      trigger: null,
+    });
+  };
+
   useEffect(() => {
     handleGetAllScore();
+    sendTestNotification();
   }, []);
 
   return (
@@ -109,6 +128,10 @@ export default function TopScoreScreen() {
             >
               Notification
             </Text>
+            <BaseButton onClick={sendTestNotification}>
+              {" "}
+              Hello notif{" "}
+            </BaseButton>
           </XStack>
         </TouchableOpacity>
       </XStack>

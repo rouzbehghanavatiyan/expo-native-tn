@@ -4,7 +4,6 @@ import { Alert, TouchableOpacity } from "react-native";
 import { Text, View, XStack } from "tamagui";
 import { addLike, removeLike } from "../services/masterServices";
 import { useAppDispatch } from "../store/reduxHookType";
-import { logger } from "../utils/logger";
 import { socketClient } from "../utils/socketClient";
 import { Icon } from "./Icon";
 
@@ -34,10 +33,7 @@ const OptionBottom: React.FC<OptionBottomProps> = ({
   const dispatch = useAppDispatch();
   const [isLiked, setIsLiked] = useState(false);
   const [localLikeCount, setLocalLikeCount] = useState(0);
-  logger.info(
-    "videovideovideovideovideovideovideovideovideovideovideovideovideovideovideovideo",
-    video?.isLikedInserted,
-  );
+
   const movieId = useMemo(() => {
     if (!video) return null;
     return positionVideo === 0

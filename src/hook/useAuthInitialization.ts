@@ -1,14 +1,14 @@
 import {
-    categoryList,
-    followerList,
-    followingList,
-    profileAttachment,
+  categoryList,
+  followerList,
+  followingList,
+  profileAttachment,
 } from "@/src/services/masterServices";
 import {
-    RsetAllFollowerList,
-    RsetCategory,
-    RsetUserId,
-    RsetUserLogin,
+  RsetAllFollowerList,
+  RsetCategory,
+  RsetUserId,
+  RsetUserLogin,
 } from "@/src/slices/main";
 import { logger } from "@/src/utils/logger";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -50,7 +50,7 @@ export function useAuthInitialization() {
       if (!targetUserId || isNaN(targetUserId)) return;
 
       try {
-        const [cat, followingRes, followerRes] = await Promise.all([
+        const [cat, followerRes] = await Promise.all([
           categoryList(),
           followingList(targetUserId),
           followerList(targetUserId),
@@ -58,8 +58,6 @@ export function useAuthInitialization() {
 
         dispatch(RsetCategory(cat?.data?.data || []));
         dispatch(RsetAllFollowerList(followerRes?.data?.data || []));
-
-        logger.info("following list", followingRes?.data?.data || []);
       } catch (error) {
         logger.error("loadUserMasterData error", error);
       }

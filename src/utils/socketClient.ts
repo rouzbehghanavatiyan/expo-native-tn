@@ -1,6 +1,9 @@
-// export const socketClient = io("http://192.168.133.157:4005", {
 import { io } from "socket.io-client";
-const socketIp = process.env.EXPO_PUBLIC_SOCKET;
+
+const socketIp = process.env.EXPO_PUBLIC_SOCKET || "http://172.16.30.22:4005";
+
+console.log("socket", socketIp);
+console.log("EXPO_PUBLIC_SOCKET =", process.env.EXPO_PUBLIC_SOCKET);
 
 export const socketClient = io(socketIp, {
   autoConnect: false,
@@ -9,5 +12,5 @@ export const socketClient = io(socketIp, {
   reconnectionAttempts: Infinity,
   reconnectionDelay: 1000,
   timeout: 20000,
-  transports: ["websocket"],
+  // transports: ["websocket"],
 });

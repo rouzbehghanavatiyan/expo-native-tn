@@ -177,26 +177,50 @@ export const useShowWatch = ({
   //   [fetchNextPage],
   // );
 
+  // const handleSlideChange = useCallback(
+  //   (index: number) => {
+  //     setActiveSlideIndex(index);
+  //     setOpenDropdowns({});
+
+  //     const currentItem = dataRef.current[index];
+
+  //     // index زیرو-بیس: 0,2,4 => اسلاید نمایشی 1,3,5 (فرد) => ویدیوی بالا
+  //     // index زیرو-بیس: 1,3,5 => اسلاید نمایشی 2,4,6 (زوج) => ویدیوی پایین
+  //     const currentVideoId =
+  //       index % 2 === 0
+  //         ? currentItem?.attachmentInserted?.attachmentId
+  //         : currentItem?.attachmentMatched?.attachmentId;
+
+  //     if (currentVideoId) {
+  //       setCurrentlyPlayingId(currentVideoId);
+  //     }
+
+  //     const threshold = dataRef.current.length - 3;
+
+  //     if (
+  //       index >= threshold &&
+  //       paginationRef.current.hasMore &&
+  //       !isLoadingRef.current
+  //     ) {
+  //       fetchNextPage();
+  //     }
+  //   },
+  //   [fetchNextPage],
+  // );
+
   const handleSlideChange = useCallback(
     (index: number) => {
       setActiveSlideIndex(index);
       setOpenDropdowns({});
 
       const currentItem = dataRef.current[index];
-
-      // index زیرو-بیس: 0,2,4 => اسلاید نمایشی 1,3,5 (فرد) => ویدیوی بالا
-      // index زیرو-بیس: 1,3,5 => اسلاید نمایشی 2,4,6 (زوج) => ویدیوی پایین
-      const currentVideoId =
-        index % 2 === 0
-          ? currentItem?.attachmentInserted?.attachmentId
-          : currentItem?.attachmentMatched?.attachmentId;
+      const currentVideoId = currentItem?.attachmentInserted?.attachmentId;
 
       if (currentVideoId) {
         setCurrentlyPlayingId(currentVideoId);
       }
 
       const threshold = dataRef.current.length - 3;
-
       if (
         index >= threshold &&
         paginationRef.current.hasMore &&

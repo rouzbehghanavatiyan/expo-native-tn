@@ -1,5 +1,5 @@
 import { useIsFocused } from "@react-navigation/native";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import {
   Dimensions,
   PanResponder,
@@ -32,31 +32,24 @@ const CustomVideo = ({ uri, isPlaying, onVideoPlay }: CustomVideoProps) => {
   const [position, setPosition] = useState(0);
   const [duration, setDuration] = useState(1);
   const [isDragging, setIsDragging] = useState(false);
-  const [manuallyPaused, setManuallyPaused] = useState(false);
 
   const positionRef = useRef(0);
   const wasPlayingRef = useRef(false);
 
   const barWidth = SCREEN_WIDTH;
 
-  // اگه از بیرون آیتم عوض بشه، حالت پاز دستی رو ریست کن
-  useEffect(() => {
-    setManuallyPaused(false);
-  }, [uri]);
-
   const handleLoad = (data: OnLoadData) => {
     setDuration(data.duration || 1);
   };
 
   const handleProgress = (data: OnProgressData) => {
-    if (isDragging) return; // حین درگ کاربر، آپدیت خودکار رو نادیده بگیر
+    if (isDragging) return;
     setPosition(data.currentTime);
     positionRef.current = data.currentTime;
   };
 
   const togglePlay = () => {
-    setManuallyPaused((prev) => !prev);
-    onVideoPlay?.();
+    onVideoPlay?.(); // تنها منبع تصمیم‌گیری: هوک
   };
 
   const seek = (x: number) => {
@@ -71,22 +64,18 @@ const CustomVideo = ({ uri, isPlaying, onVideoPlay }: CustomVideoProps) => {
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
-
       onPanResponderGrant: (e) => {
-        wasPlayingRef.current = isPlaying && !manuallyPaused;
+        wasPlayingRef.current = isPlaying;
         setIsDragging(true);
         seek(e.nativeEvent.locationX);
       },
-
       onPanResponderMove: (e) => {
         seek(e.nativeEvent.locationX);
       },
-
       onPanResponderRelease: () => {
         videoRef.current?.seek(positionRef.current);
         setIsDragging(false);
       },
-
       onPanResponderTerminate: () => {
         videoRef.current?.seek(positionRef.current);
         setIsDragging(false);
@@ -95,25 +84,27 @@ const CustomVideo = ({ uri, isPlaying, onVideoPlay }: CustomVideoProps) => {
   ).current;
 
   const progress = duration > 0 ? (position / duration) * 100 : 0;
-  const shouldPlay = isPlaying && isFocused && !manuallyPaused && !isDragging;
+  const shouldPlay = isPlaying && isFocused && !isDragging;
 
+  // جایگزین بخش return
   return (
     <View style={styles.container}>
-      <Pressable style={styles.video} onPress={togglePlay}>
-        <Video
-          ref={videoRef}
-          source={{ uri }}
-          style={styles.video}
-          resizeMode="contain"
-          repeat
-          paused={!shouldPlay}
-          onLoad={handleLoad}
-          onProgress={handleProgress}
-          progressUpdateInterval={250}
-          playInBackground={false}
-          playWhenInactive={false}
-        />
-      </Pressable>
+      <Video
+        ref={videoRef}
+        source={{ uri }}
+        style={styles.video}
+        resizeMode="contain"
+        repeat
+        paused={!shouldPlay}
+        onLoad={handleLoad}
+        onProgress={handleProgress}
+        progressUpdateInterval={250}
+        playInBackground={false}
+        playWhenInactive={false}
+      />
+
+      {/* لایه شفاف برای تشخیص تاچ روی صفحه (پلی/پاز) */}
+      <Pressable style={styles.touchOverlay} onPress={togglePlay} />
 
       <View
         style={styles.touchArea}
@@ -148,6 +139,13 @@ const styles = StyleSheet.create({
     width: SCREEN_WIDTH,
     height: "100%",
   },
+  touchOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    bottom: TOUCH_AREA_HEIGHT, // برای اینکه روی ناحیه اسکرابر (نوار پیشرفت) نیفتد
+    zIndex: 10,
+    elevation: 10, // بسیار مهم در اندروید برای قرار گرفتن روی لایه نیتیو ویدیو
+    backgroundColor: "transparent",
+  },
   touchArea: {
     position: "absolute",
     bottom: 0,
@@ -156,6 +154,7 @@ const styles = StyleSheet.create({
     height: TOUCH_AREA_HEIGHT,
     justifyContent: "flex-end",
     elevation: 999,
+    zIndex: 2, // اضافه کردن zIndex برای اطمینان از قرارگیری روی ویدیو
   },
   progressContainer: {
     height: BAR_HEIGHT,
@@ -185,3 +184,99 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
 });
+
+// import React, { useRef } from "react";
+// import { Pressable, StyleSheet, View } from "react-native";
+// import Animated, {
+//   useAnimatedStyle,
+//   useSharedValue,
+// } from "react-native-reanimated";
+
+// import Video, {
+//   OnProgressData,
+//   ResizeMode,
+//   VideoRef,
+// } from "react-native-video";
+
+// interface CustomVideoProps {
+//   uri: string;
+//   isPlaying: boolean;
+//   onVideoPlay?: () => void;
+// }
+// const CustomVideo = ({ uri, isPlaying, onVideoPlay }: CustomVideoProps) => {
+//   const videoRef = useRef<VideoRef>(null);
+
+//   const progress = useSharedValue(0);
+
+//   const animatedProgressStyle = useAnimatedStyle(() => {
+//     return {
+//       width: `${progress.value * 100}%`,
+//     };
+//   });
+
+//   const handleProgress = (data: OnProgressData) => {
+//     if (data.seekableDuration > 0) {
+//       progress.value = data.currentTime / data.seekableDuration;
+//     }
+//   };
+
+//   return (
+//     <View style={styles.container}>
+//       <Video
+//         ref={videoRef}
+//         source={{ uri }}
+//         style={styles.video}
+//         resizeMode={ResizeMode.COVER}
+//         paused={!isPlaying}
+//         onProgress={handleProgress}
+//         progressUpdateInterval={250}
+//       />
+
+//       <Pressable style={styles.touchOverlay} onPress={onVideoPlay} />
+
+//       <View style={styles.progressBarContainer}>
+//         <Animated.View
+//           style={[styles.progressBarFill, animatedProgressStyle]}
+//         />
+//       </View>
+//     </View>
+//   );
+// };
+
+// export default CustomVideo;
+
+// const styles = StyleSheet.create({
+//   container: {
+//     // به جای flex: 1 از عرض و ارتفاع کامل استفاده کنید
+//     width: "100%",
+//     height: "100%",
+//     position: "absolute", // برای اینکه روی بقیه المان‌ها تداخل ایجاد نکند و بک‌گراند باشد
+//     backgroundColor: "#000",
+//   },
+//   video: {
+//     ...StyleSheet.absoluteFillObject,
+//   },
+//   touchOverlay: {
+//     ...StyleSheet.absoluteFillObject,
+//     bottom: 40,
+//     zIndex: 10,
+//     elevation: 10,
+//     backgroundColor: "transparent",
+//   },
+//   progressBarContainer: {
+//     position: "absolute",
+//     bottom: 10,
+//     left: 10,
+//     right: 10,
+//     height: 4,
+//     backgroundColor: "rgba(255, 255, 255, 0.3)",
+//     borderRadius: 2,
+//     zIndex: 20,
+//     elevation: 20,
+//   },
+//   progressBarFill: {
+//     height: "100%",
+//     backgroundColor: "#FF0000",
+//     borderRadius: 2,
+//   },
+// });

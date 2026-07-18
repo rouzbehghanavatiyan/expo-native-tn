@@ -30,6 +30,7 @@
       [
         "expo-notifications",
         {
+          "icon": "./src/assets/images/logocircle.png",
           "color": "#ffffff"
         }
       ],

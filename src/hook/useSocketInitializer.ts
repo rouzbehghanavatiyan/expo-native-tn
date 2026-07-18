@@ -33,7 +33,9 @@ export function useSocketInitializer({
     };
 
     const handleConnectError = (error: any) => {
-      console.log("❌ Socket connect_error:", error?.message || error);
+      console.log("❌ Socket connect_error message:", error?.message);
+      console.log("❌ Socket connect_error description:", error?.description);
+      console.log("❌ Socket connect_error context:", error?.context);
 
       dispatch(
         RsetSocketConfig({
