@@ -4,7 +4,7 @@ import React from "react";
 import { View } from "tamagui";
 import { useModeHandler } from "../hook/useModeHandler";
 import { useVideoHandler } from "../hook/useVideoHandler";
-import EditVideo from "./EditVideo";
+// import EditVideo from "./EditVideo";
 import { Icon } from "./Icon";
 import MainTitle from "./MainTitle";
 import SoftLink from "./SoftLink";
@@ -66,8 +66,6 @@ const Mode: React.FC<ModeProps> = ({
     return acc;
   }, {});
 
-  console.log(showEditMovie);
-
   return (
     <View bg="white">
       <MainTitle title="Mode" />
@@ -77,7 +75,7 @@ const Mode: React.FC<ModeProps> = ({
         isLoading={isLoading}
         handleAcceptCategory={handleModeSelection}
       />
-      {showEditMovie && (
+      {/* {showEditMovie && (
         <EditVideo
           mode={mode}
           allFormData={allFormData}
@@ -85,7 +83,7 @@ const Mode: React.FC<ModeProps> = ({
           setShowEditMovie={setShowEditMovie}
           coverImage={coverImage}
         />
-      )}
+      )} */}
     </View>
   );
 };

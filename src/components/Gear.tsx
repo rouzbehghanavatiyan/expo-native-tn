@@ -6,7 +6,7 @@ import { useVideoHandler } from "../hook/useVideoHandler";
 import { subSubCategoryList } from "../services/masterServices";
 import { useAppDispatch } from "../store/reduxHookType";
 import asyncWrapper from "../utils/asyncWrapper";
-import EditVideo from "./EditVideo";
+// import EditVideo from "./EditVideo";
 import { Icon } from "./Icon";
 import MainTitle from "./MainTitle";
 import SoftLink from "./SoftLink";
@@ -104,7 +104,7 @@ const Gear: React.FC<any> = ({
         isLoading={isLoading}
       />
 
-      {showEditMovie && (
+      {/* {showEditMovie && (
         <EditVideo
           mode={selectedGearMode}
           allFormData={allFormData}
@@ -112,7 +112,7 @@ const Gear: React.FC<any> = ({
           setShowEditMovie={setShowEditMovie}
           coverImage={coverImage}
         />
-      )}
+      )} */}
     </View>
   );
 };

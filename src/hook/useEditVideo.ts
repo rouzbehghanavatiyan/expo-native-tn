@@ -9,7 +9,7 @@ import {
   uploadFullProcessThunk,
 } from "@/src/slices/video";
 import { useNavigation } from "@react-navigation/native";
-import { useRouter } from "expo-router";
+import { useRouter, useSegments } from "expo-router";
 import { useCallback, useEffect, useRef } from "react";
 import { useAppDispatch, useAppSelector } from "../store/reduxHookType";
 import { socketClient } from "../utils/socketClient";
@@ -24,6 +24,8 @@ export const useEditVideo = ({
   const navigation = useNavigation<any>();
   const dispatch = useAppDispatch();
   const router = useRouter();
+  const segments = useSegments();
+
   const {
     videoSrc,
     isLoading,
@@ -55,6 +57,7 @@ export const useEditVideo = ({
         mode,
         allFormData,
         router,
+        segments,
         socketClient,
         movieMeta: movieData,
       }),

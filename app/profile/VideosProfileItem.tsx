@@ -1,14 +1,15 @@
+import TimerTornoment from "@/src/components/TimerTornoment";
 import VideoSection from "@/src/components/VideoSection";
+import { logger } from "@/src/utils/logger";
 import React from "react";
 import { Dimensions, StyleSheet, View } from "react-native";
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const VIDEO_WIDTH = (SCREEN_WIDTH - 30 * 2) * 0.6;
 const VIDEO_HEIGHT = VIDEO_WIDTH * (345 / 200);
 const ITEM_HEIGHT = VIDEO_HEIGHT * 2;
 
 export default function VideosProfileItem({
-  endTime,
   video,
   videoLikes,
   activeVideoId,
@@ -16,11 +17,13 @@ export default function VideosProfileItem({
   onPlay,
 }: any) {
   const [playingPosition, setPlayingPosition] = React.useState<number>(-1);
-  console.log("video video video", video);
+  logger.info("video video video", video);
 
-  const handleVideoPlay = (position: number) => {
-    setPlayingPosition((prev) => (prev === position ? -1 : position));
-  };
+  const startTime = video?.inviteMatched?.insertDate;
+
+  const endTime =
+    video?.inviteMatched?.insertDate !== -1 ||
+    video?.inviteInserted?.insertDate !== -1;
 
   const resultInserted =
     video?.likeInserted > video?.likeMatched
@@ -64,10 +67,9 @@ export default function VideosProfileItem({
   return (
     <View style={styles.container}>
       {videoSections.map((section, index) => {
-        const uniqueId = `${video.id}-${section.position}`;
-        const isCurrentlyPlaying = activeVideoId === uniqueId;
         const videoId = `${video.inviteInserted.id}-${section.position}`;
         const isPlaying = activeVideoId === videoId;
+
         return (
           <View key={index} style={styles.half}>
             <VideoSection
@@ -93,6 +95,20 @@ export default function VideosProfileItem({
                 }
               }}
             />
+
+            {endTime && (
+              <View style={styles.timerOverlay}>
+                <View style={styles.timerBox}>
+                  <TimerTornoment
+                    video={video}
+                    startTime={startTime}
+                    duration={3600}
+                    active={true}
+                    onComplete={() => {}}
+                  />
+                </View>
+              </View>
+            )}
           </View>
         );
       })}
@@ -107,6 +123,20 @@ const styles = StyleSheet.create({
   },
   half: {
     height: VIDEO_HEIGHT,
+    position: "relative",
+  },
+  timerOverlay: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    top: "50%",
+    zIndex: 50,
+    alignItems: "center",
+  },
+  timerBox: {
+    width: "83%",
+    borderRadius: 999,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
-`1`;

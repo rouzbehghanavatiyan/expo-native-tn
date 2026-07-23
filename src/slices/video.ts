@@ -54,7 +54,7 @@ export const removeInviteThunk = createAsyncThunk(
 export const uploadFullProcessThunk = createAsyncThunk(
   "video/uploadFullProcess",
   async (
-    { userId, gearId, mode, allFormData, movieMeta, router }: any,
+    { userId, gearId, segments, mode, allFormData, movieMeta, router }: any,
     { rejectWithValue, dispatch },
   ) => {
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
@@ -119,26 +119,26 @@ export const uploadFullProcessThunk = createAsyncThunk(
         ...inviteData,
         senderUserId: userId,
       });
-      socketClient.once("receive_invite", (matchData: any) => {
-        console.log("✅✅✅✅✅✅✅ Match found!", timeoutId, matchData);
-        if (timeoutId) clearTimeout(timeoutId);
-        dispatch(RsetShowTimerButtn(false));
-        router.replace("/(tabs)/profile");
-      });
 
       let isMatched = false;
 
       const handleReceiveInvite = (data: any) => {
+        console.log("✅✅✅✅✅✅✅ Match found!", data);
         console.log("✅ Match created:", data);
-        isMatched = true;
-        if (timeoutId) {
-          clearTimeout(timeoutId);
-          timeoutId = null;
-        }
+
         dispatch(RsetShowTimerButtn(false));
+        router.replace("/(tabs)/profile");
         socketClient.off("receive_invite", handleReceiveInvite);
       };
       socketClient.once("receive_invite", handleReceiveInvite);
+      console.log("timeoutId timeoutId", timeoutId);
+      console.log(typeof inviteData?.userId);
+
+      if (inviteData?.userId !== 0) {
+        router.replace("/(tabs)/profile");
+        dispatch(RsetShowTimerButtn(false));
+        socketClient.off("receive_invite", handleReceiveInvite);
+      }
       timeoutId = setTimeout(() => {
         if (isMatched) return;
         socketClient.off("receive_invite", handleReceiveInvite);
@@ -152,7 +152,7 @@ export const uploadFullProcessThunk = createAsyncThunk(
       }, 120000);
 
       return {
-        modeType: mode?.typeMode,
+        modeType: 3,
         movieData: movieDataRes,
         inviteData,
       };
@@ -238,14 +238,17 @@ const videoSlice = createSlice({
 
         state.resMovieData = movieData;
         state.movieData.movieId = movieData?.id;
+        console.log(
+          "VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVALID FULLFAILD",
+        );
 
         if (inviteData) {
           state.movieData.inviteId = inviteData.id;
         }
 
-        if (modeType === 4) {
-          state.currentStep = 3;
-        }
+        // if (modeType === 4) {
+        //   state.currentStep = 3;
+        // }
       })
       .addCase(uploadFullProcessThunk.rejected, (state, action) => {
         state.isLoading = false;

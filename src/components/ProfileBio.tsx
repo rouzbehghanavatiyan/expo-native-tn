@@ -96,10 +96,18 @@ const ProfileBio: React.FC<ProfileBioProps> = ({
                 left={0}
                 right={0}
                 bottom={0}
+                border="1"
+                borderRadius="$4"
+                borderColor="$grey400"
                 justifyContent="center"
                 alignItems="center"
               >
-                <Text fontWeight="bold" fontSize={10} color="white" zIndex={10}>
+                <Text
+                  fontWeight="bold"
+                  fontSize={10}
+                  color="$grey900"
+                  zIndex={10}
+                >
                   {rankPercentage}%
                 </Text>
               </View>

@@ -134,3 +134,7 @@ export const removeLike = async (postData: any) => {
 export const removeInvite = async (invId: number) => {
   return await api.delete(`/removeInvite?inviteId=${invId}`);
 };
+
+export const addScoure = async (data: any) => {
+  return await api.post(`/addScoure`, data);
+};

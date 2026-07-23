@@ -41,7 +41,7 @@ const VideoPreviewStep: React.FC<any> = ({
   });
   const router = useRouter();
   const MAX_DURATION = 60;
-  
+
   const handleSliderChange = (values: number[]) => {
     let start = values[0];
     let end = values[1];
@@ -107,11 +107,14 @@ const VideoPreviewStep: React.FC<any> = ({
   const dispatch = useAppDispatch();
 
   const handleNextPress = () => {
+    const selectedDuration = trimRange[1] - trimRange[0];
+
     onMovieDataChange({
       trimStart: trimRange[0],
       trimEnd: trimRange[1],
-      duration,
+      duration: selectedDuration,
     });
+
     dispatch(goToStep(2));
   };
 
