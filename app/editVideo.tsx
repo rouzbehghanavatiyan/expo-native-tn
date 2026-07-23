@@ -58,7 +58,7 @@ export default function EditVideoScreen() {
             movieData={movieData}
             onMovieDataChange={(data) => dispatch(updateMovieData(data))}
             onCancel={handleBack}
-            onNext={handleNextStep} // ← این باید trimData دریافت کند
+            onNext={handleNextStep} 
           />
         ) : null;
       case 2:

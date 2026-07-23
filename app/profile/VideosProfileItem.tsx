@@ -3,9 +3,8 @@ import React from "react";
 import { Dimensions, StyleSheet, View } from "react-native";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
-
-const VIDEO_WIDTH = 200;
-const VIDEO_HEIGHT = 500;
+const VIDEO_WIDTH = (SCREEN_WIDTH - 30 * 2) * 0.6;
+const VIDEO_HEIGHT = VIDEO_WIDTH * (345 / 200);
 const ITEM_HEIGHT = VIDEO_HEIGHT * 2;
 
 export default function VideosProfileItem({
@@ -17,6 +16,7 @@ export default function VideosProfileItem({
   onPlay,
 }: any) {
   const [playingPosition, setPlayingPosition] = React.useState<number>(-1);
+  console.log("video video video", video);
 
   const handleVideoPlay = (position: number) => {
     setPlayingPosition((prev) => (prev === position ? -1 : position));
@@ -107,9 +107,6 @@ const styles = StyleSheet.create({
   },
   half: {
     height: VIDEO_HEIGHT,
-    // برای جلوگیری از بهم خوردن سایز به خاطر border، بهتر است از مرز داخلی یا عدم استفاده از آن در حالت مربع استفاده کنید
-    // borderBottomWidth: 1,
-    // borderBottomColor: "#111",
   },
 });
 `1`;

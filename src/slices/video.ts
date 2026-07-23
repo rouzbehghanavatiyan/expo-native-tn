@@ -77,26 +77,15 @@ export const uploadFullProcessThunk = createAsyncThunk(
       if (movieRes?.data?.status !== 0) {
         throw new Error("Error in recording initial movie information");
       }
-
-      // const formData = new FormData();
-      // formData.append("formFile", allFormData?.video);
-      // formData.append("formFile", allFormData?.imageCover);
-      // formData.append("attachmentId", movieDataRes?.id);
-      // formData.append("attachmentType", "mo");
-      // formData.append("attachmentName", "movies");
-      // formData.append("width", "300");
-      // formData.append("height", "300");
       const formData = new FormData();
-      formData.append("AttachmentId", String(movieDataRes?.id ?? ""));
-      formData.append("AttachmentType", "mo");
-      formData.append("AttachmentName", "movies");
-      formData.append("width", "300");
-      formData.append("height", "300");
-      formData.append("FormFile", {
-        uri: allFormData?.video?.uri,
-        name: allFormData?.video?.name || "video.mp4",
-        type: allFormData?.video?.type || "video/mp4",
-      } as any);
+
+      if (allFormData?.video) {
+        formData.append("FormFile", {
+          uri: allFormData.video.uri,
+          name: allFormData.video.name || "video.mp4",
+          type: allFormData.video.type || "video/mp4",
+        } as any);
+      }
 
       if (allFormData?.imageCover) {
         formData.append("CoverImage", {
@@ -105,13 +94,14 @@ export const uploadFullProcessThunk = createAsyncThunk(
           type: allFormData.imageCover.type || "image/jpeg",
         } as any);
       }
-      const attachRes = await addAttachment(formData);
-      logger.info("attachRes attachRes attachRes", attachRes);
+      formData.append("AttachmentId", String(movieDataRes?.id ?? ""));
+      formData.append("attachmentType", "pf");
+      formData.append("attachmentName", "profile");
 
-      if (attachRes?.data?.status !== 0) {
+      const attachRes = await addAttachment(formData);
+      if (attachRes?.status !== 0) {
         throw new Error("Error uploading attachments");
       }
-
       const requestData = {
         parentId: null,
         userId: Number(userId),
@@ -121,7 +111,7 @@ export const uploadFullProcessThunk = createAsyncThunk(
 
       const inviteRes = await addInvite(requestData);
       const inviteData = inviteRes?.data?.data;
-      logger.info("inviteRes inviteRes inviteRes", inviteRes);
+      logger.info("inviteRes inviteRes inviteRes", inviteRes?.data);
       dispatch(RsetIsLoading(false));
       dispatch(RsetShowTimerButtn(true));
       socketClient.emit("register_user", userId);
@@ -171,10 +161,25 @@ export const uploadFullProcessThunk = createAsyncThunk(
       dispatch(RsetIsLoading(false));
       dispatch(RsetShowTimerButtn(false));
 
-      console.log("❌ Upload error:", error);
-      Alert.alert("Error", error?.message || "Upload failed");
+      // این بخش اضافه/اصلاح شود:
+      if (error.isAxiosError && error.response) {
+        console.log(
+          "❌ Axios Error Response Data:",
+          JSON.stringify(error.response.data, null, 2),
+        );
+        console.log(
+          "❌ Axios Error Validation details:",
+          error.response.data?.errors,
+        );
+      } else {
+        console.log("❌ Generic Upload error:", error);
+      }
 
-      return rejectWithValue(error.message || "Upload failed");
+      const errorMessage =
+        error.response?.data?.message || error?.message || "Upload failed";
+      Alert.alert("Error", errorMessage);
+
+      return rejectWithValue(errorMessage);
     }
   },
 );

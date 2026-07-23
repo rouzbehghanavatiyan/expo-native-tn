@@ -119,7 +119,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#1900ff",
     overflow: "hidden",
   },
-
   video: {
     width: SCREEN_WIDTH,
     height: "100%",

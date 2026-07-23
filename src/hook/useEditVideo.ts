@@ -48,7 +48,6 @@ export const useEditVideo = ({
   }, [showEditMovie, allFormData?.video, userIdLogin, dispatch]);
 
   const handleUploadVideo = useCallback(() => {
-
     dispatch(
       uploadFullProcessThunk({
         userId: userIdLogin,

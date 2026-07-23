@@ -72,14 +72,6 @@ export const attachmentListByInviteId = async (postData: {
   return res.data;
 };
 
-// export const addAttachment = async (postData: any) => {
-//   return await api.post(`/addAttachment`, postData, {
-//     headers: {
-//       "Content-Type": "multipart/form-data",
-//     },
-//   });
-// };
-
 export const addAttachment = async (postData: FormData) => {
   const response = await api.post(`/addAttachment`, postData, {
     headers: {
@@ -137,4 +129,8 @@ export const addLike = async (data: any) => {
 
 export const removeLike = async (postData: any) => {
   return await api.delete(`/removeLike`, { data: postData });
+};
+
+export const removeInvite = async (invId: number) => {
+  return await api.delete(`/removeInvite?inviteId=${invId}`);
 };

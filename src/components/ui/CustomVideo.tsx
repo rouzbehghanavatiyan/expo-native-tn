@@ -104,7 +104,7 @@ const CustomVideo = ({ uri, isPlaying, onVideoPlay }: CustomVideoProps) => {
           ref={videoRef}
           source={{ uri }}
           style={styles.video}
-          resizeMode="contain"
+          resizeMode="stretch"
           repeat
           paused={!shouldPlay}
           onLoad={handleLoad}
