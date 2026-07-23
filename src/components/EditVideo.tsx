@@ -27,6 +27,7 @@ const EditVideoRoute = () => {
       router.replace("/");
     }
   };
+  console.log("edit wordddddddddddddddddddddddddddddddddddddddd531251512");
 
   const {
     videoSrc,

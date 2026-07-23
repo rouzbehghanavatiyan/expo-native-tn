@@ -3,7 +3,6 @@ import { useRouter } from "expo-router";
 import * as VideoThumbnails from "expo-video-thumbnails";
 import { useState } from "react";
 import { Platform } from "react-native";
-
 import { prepareVideoFileThunk } from "../slices/video";
 import { useAppDispatch } from "../store/reduxHookType";
 
@@ -17,21 +16,21 @@ export const useVideoHandler = () => {
   const [allFormData, setAllFormData] = useState<any>();
   const [videoError, setVideoError] = useState<string | null>(null);
 
-  const triggerVideoUpload = async (modeData?: any) => {
-    setVideoError(null);
+const triggerVideoUpload = async (modeData?: any) => {
+  setVideoError(null);
 
-    const permissionResult =
-      await ImagePicker.requestMediaLibraryPermissionsAsync();
+  const permissionResult =
+    await ImagePicker.requestMediaLibraryPermissionsAsync();
 
-    if (!permissionResult.granted) {
-      setVideoError("Gallery access is required.");
-      return;
-    }
+  if (!permissionResult.granted) {
+    setVideoError("Gallery access is required.");
+    return;
+  }
 
+  try {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["videos"],
-      allowsEditing: true,
-      videoMaxDuration: 30,
+      allowsEditing: false,
       videoQuality: ImagePicker.UIImagePickerControllerQualityType.Medium,
     });
 
@@ -41,66 +40,61 @@ export const useVideoHandler = () => {
 
     const asset = result.assets[0];
 
-    const maxDurationMs = 30 * 1000;
-
-    if (asset.duration && asset.duration > maxDurationMs) {
-      setVideoError("Dear user, your video should not exceed 30 seconds.");
+    if (!asset.uri) {
+      setVideoError("Video file is not available.");
       return;
     }
 
     setVideoFile(asset);
-
     dispatch(prepareVideoFileThunk(asset));
 
-    try {
-      let thumbnailUri = "";
+    let thumbnailUri = "";
 
-      if (Platform.OS !== "web") {
-        const timeMs = asset.duration ? Math.floor(asset.duration / 2) : 1000;
+    if (Platform.OS !== "web") {
+      const timeMs = asset.duration ? Math.floor(asset.duration / 2) : 1000;
 
-        const thumbnailResult = await VideoThumbnails.getThumbnailAsync(
-          asset.uri,
-          {
-            time: timeMs,
-          },
-        );
+      const thumbnailResult = await VideoThumbnails.getThumbnailAsync(
+        asset.uri,
+        { time: timeMs },
+      );
 
-        thumbnailUri = thumbnailResult.uri;
-      } else {
-        thumbnailUri = asset.uri;
-      }
-
-      setCoverImage(thumbnailUri);
-
-      const formData = {
-        imageCover: {
-          uri: thumbnailUri,
-          name: allFormData?.imageCover?.name || "cover.jpg",
-          type: allFormData?.imageCover?.type || "image/jpeg",
-        },
-        video: {
-          uri: asset.uri,
-          name: allFormData?.video?.name || "video.mp4",
-          type: allFormData?.video?.type || "video/mp4",
-        },
-      };
-
-      setAllFormData(formData);
-
-      router.push({
-        pathname: "/editVideo",
-        params: {
-          coverImage: thumbnailUri,
-          allFormData: JSON.stringify(formData),
-          videoSrc: asset.uri,
-          ...(modeData ? { mode: JSON.stringify(modeData) } : {}),
-        },
-      });
-    } catch (e) {
-      console.error("Thumbnail Error Details:", e);
-      setVideoError("Error loading video file...");
+      thumbnailUri = thumbnailResult.uri;
+    } else {
+      thumbnailUri = asset.uri;
     }
-  };
+
+    setCoverImage(thumbnailUri);
+
+    const formData = {
+      imageCover: {
+        uri: thumbnailUri,
+        name: allFormData?.imageCover?.name || "cover.jpg",
+        type: allFormData?.imageCover?.type || "image/jpeg",
+      },
+      video: {
+        uri: asset.uri,
+        name: allFormData?.video?.name || "video.mp4",
+        type: allFormData?.video?.type || "video/mp4",
+      },
+    };
+
+    setAllFormData(formData);
+
+    router.push({
+      pathname: "/editVideo",
+      params: {
+        coverImage: thumbnailUri,
+        allFormData: JSON.stringify(formData),
+        videoSrc: asset.uri,
+        ...(modeData ? { mode: JSON.stringify(modeData) } : {}),
+      },
+    });
+  } catch (e) {
+    console.error("Video picker error:", e);
+    setVideoError("Error selecting video.");
+  }
+};
+
 
   return {
     coverImage,

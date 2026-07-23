@@ -41,7 +41,7 @@ const VideoPreviewStep: React.FC<any> = ({
   });
   const router = useRouter();
   const MAX_DURATION = 60;
-
+  
   const handleSliderChange = (values: number[]) => {
     let start = values[0];
     let end = values[1];

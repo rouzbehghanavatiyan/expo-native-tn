@@ -48,7 +48,7 @@ export default function EditVideoScreen() {
     allFormData,
     mode,
   });
-
+  
   const renderStepContent = () => {
     switch (currentStep) {
       case 1:
@@ -58,7 +58,7 @@ export default function EditVideoScreen() {
             movieData={movieData}
             onMovieDataChange={(data) => dispatch(updateMovieData(data))}
             onCancel={handleBack}
-            onNext={handleNextStep} 
+            handleNextStep={handleNextStep} 
           />
         ) : null;
       case 2:
