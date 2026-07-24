@@ -64,15 +64,12 @@ const Skill: React.FC<any> = ({
   }, {});
 
   const handleBack = () => {
-    if (step > 1) {
-      setStep((prev) => prev - 1);
-    } else {
-      router.back();
-    }
+    navigation.goBack();
   };
+
   return (
     <View borderRadius="$2">
-      <MainTitle handleBack={handleBack} title="Skill" />
+      <MainTitle title="Skill" />
       <SoftLink
         iconMap={arenaIconMap}
         handleAcceptCategory={handleAcceptCategory}

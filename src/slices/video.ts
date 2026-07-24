@@ -19,7 +19,7 @@ import {
 const initialState: VideoState = {
   videoSrc: null,
   videoFile: null,
-  showTimeout: false,
+  showTimeout: false, // 👈 برای کنترل مودال خطا و عدم یافتن حریف
   isLoading: false,
   error: null,
   currentStep: 1,
@@ -80,6 +80,7 @@ export const uploadFullProcessThunk = createAsyncThunk(
       if (movieRes?.data?.status !== 0) {
         throw new Error("Error in recording initial movie information");
       }
+
       const formData = new FormData();
 
       if (allFormData?.video) {
@@ -105,16 +106,19 @@ export const uploadFullProcessThunk = createAsyncThunk(
       if (attachRes?.status !== 0) {
         throw new Error("Error uploading attachments");
       }
+
       const requestData = {
         parentId: null,
         userId: Number(userId),
         movieId: Number(movieDataRes?.id),
         status: 0,
       };
+
       console.log("Test rerender from: video sliceee");
       const inviteRes = await addInvite(requestData);
       const inviteData = inviteRes?.data?.data;
       logger.info("inviteRes inviteRes inviteRes", inviteRes?.data);
+
       dispatch(RsetIsLoading(false));
       dispatch(RsetShowTimerButtn(true));
       socketClient.emit("register_user", userId);
@@ -123,20 +127,15 @@ export const uploadFullProcessThunk = createAsyncThunk(
         senderUserId: userId,
       });
 
-      let isMatched = false;
-
       const handleReceiveInvite = (data: any) => {
         console.log("✅✅✅✅✅✅✅ Match found!", data);
-        console.log("✅ Match created:", data);
         stopMatchTimer();
-        // dispatch(setWaitingForMatch(false));
         dispatch(RsetShowTimerButtn(false));
         socketClient.off("receive_invite", handleReceiveInvite);
-
         router.replace("/(tabs)/profile");
       };
+
       socketClient.once("receive_invite", handleReceiveInvite);
-      console.log(typeof inviteData?.userId);
 
       if (inviteData?.userId !== 0) {
         stopMatchTimer();
@@ -146,12 +145,8 @@ export const uploadFullProcessThunk = createAsyncThunk(
       } else {
         startMatchTimer(() => {
           socketClient.off("receive_invite", handleReceiveInvite);
-          // dispatch(setWaitingForMatch(false));
           dispatch(RsetShowTimerButtn(false));
-          Alert.alert(
-            "No Match Found",
-            "Unfortunately, no tournament match was found.",
-          );
+          dispatch(setShowTimeout(true));
 
           router.replace("/(tabs)/watch");
         });
@@ -171,10 +166,6 @@ export const uploadFullProcessThunk = createAsyncThunk(
         console.log(
           "❌ Axios Error Response Data:",
           JSON.stringify(error.response.data, null, 2),
-        );
-        console.log(
-          "❌ Axios Error Validation details:",
-          error.response.data?.errors,
         );
       } else {
         console.log("❌ Generic Upload error:", error);
@@ -196,7 +187,6 @@ const videoSlice = createSlice({
     RsetIsLoading: (state, action: PayloadAction<boolean>) => {
       state.isLoading = action.payload;
     },
-
     setVideoSrc(state, action: PayloadAction<string>) {
       state.videoSrc = action.payload;
     },
@@ -209,12 +199,7 @@ const videoSlice = createSlice({
     ) {
       state.movieData = { ...state.movieData, ...action.payload };
     },
-    // clearVideo(state) {
-    //   state.videoSrc = "";
-    //   state.movieData = null;
-    // },
     resetVideoState: () => initialState,
-
     setMovieMeta: (state, action) => {
       state.movieData.title = action.payload.title ?? state.movieData.title;
       state.movieData.desc = action.payload.desc ?? state.movieData.desc;
@@ -225,6 +210,10 @@ const videoSlice = createSlice({
     },
     setWaitingForMatch(state, action: PayloadAction<boolean>) {
       state.isWaitingForMatch = action.payload;
+    },
+    setShowTimeout(state, action: PayloadAction<boolean>) {
+      // 👈 اضافه شد
+      state.showTimeout = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -240,23 +229,13 @@ const videoSlice = createSlice({
       })
       .addCase(uploadFullProcessThunk.fulfilled, (state, action) => {
         state.uploadStatus = "success";
-        state.isLoading = false; // اضافه شد تا لودینگ متوقف شود
-
-        const { movieData, inviteData, modeType } = action.payload;
-
+        state.isLoading = false;
+        const { movieData, inviteData } = action.payload;
         state.resMovieData = movieData;
         state.movieData.movieId = movieData?.id;
-        console.log(
-          "VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVALID FULLFAILD",
-        );
-
         if (inviteData) {
           state.movieData.inviteId = inviteData.id;
         }
-
-        // if (modeType === 4) {
-        //   state.currentStep = 3;
-        // }
       })
       .addCase(uploadFullProcessThunk.rejected, (state, action) => {
         state.isLoading = false;
@@ -277,6 +256,7 @@ export const {
   RsetIsLoading,
   updateMovieData,
   setVideoSrc,
+  setShowTimeout,
 } = videoSlice.actions;
 
 export default videoSlice.reducer;

@@ -1,3 +1,4 @@
+import { MatchTimeoutModal } from "@/src/common/MatchTimeoutModal";
 import FilteredWatch from "@/src/components/FilteredWatch";
 import MainTitle from "@/src/components/MainTitle";
 import { stopMatchTimer } from "@/src/components/TimerForFindMatch";
@@ -21,7 +22,7 @@ export default function WatchScreen() {
   const [skills, setSkills] = useState<any[]>([]);
   const [selectFiltered, setSelectFiltered] = useState<number>(0);
   const [loading, setLoading] = useState(false);
-
+  const showTimeout = useAppSelector((state) => state?.video?.showTimeout);
   const handleGetFiltered = async () => {
     try {
       const res = await subCategoryList(1);
@@ -112,40 +113,43 @@ export default function WatchScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <FlatList
-        ListHeaderComponent={
-          <>
-            {skills && (
-              <>
-                <MainTitle title="Filtered" />
-                <FilteredWatch
-                  skills={skills}
-                  handleGetAllMatch={handleFilterChange}
-                  selectFiltered={selectFiltered}
-                  setSelectFiltered={setSelectFiltered}
-                />
-              </>
-            )}
-          </>
-        }
-        data={data}
-        numColumns={2}
-        keyExtractor={(item, index) => index.toString()}
-        renderItem={({ item, index }) => (
-          <VideoGroup
-            group={item}
-            index={index}
-            onPress={() => handleShowMatch(item)}
-          />
-        )}
-        onEndReached={() => handleGetAllMatch(selectFiltered, false)}
-        onEndReachedThreshold={0.5}
-        ListFooterComponent={
-          loading ? <ActivityIndicator size="large" /> : null
-        }
-      />
-    </View>
+    <>
+      <View style={styles.container}>
+        <FlatList
+          ListHeaderComponent={
+            <>
+              {skills && (
+                <>
+                  <MainTitle title="Filtered" />
+                  <FilteredWatch
+                    skills={skills}
+                    handleGetAllMatch={handleFilterChange}
+                    selectFiltered={selectFiltered}
+                    setSelectFiltered={setSelectFiltered}
+                  />
+                </>
+              )}
+            </>
+          }
+          data={data}
+          numColumns={2}
+          keyExtractor={(item, index) => index.toString()}
+          renderItem={({ item, index }) => (
+            <VideoGroup
+              group={item}
+              index={index}
+              onPress={() => handleShowMatch(item)}
+            />
+          )}
+          onEndReached={() => handleGetAllMatch(selectFiltered, false)}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={
+            loading ? <ActivityIndicator size="large" /> : null
+          }
+        />
+      </View>
+      {showTimeout && <MatchTimeoutModal />}
+    </>
   );
 }
 
