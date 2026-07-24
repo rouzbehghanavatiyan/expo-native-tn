@@ -1,12 +1,10 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
-// تایپ‌های ورودی هوک
 interface PaginationOptions {
   take?: number;
   extraParams?: Record<string, any>;
 }
 
-// ساختار خروجی هوک
 interface PaginationResult<T> {
   data: T[];
   isLoading: boolean;
@@ -26,83 +24,78 @@ export const usePagination = <T = any>(
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [hasMore, setHasMore] = useState<boolean>(true);
 
-  // برای جلوگیری از رندرهای اضافی، از JSON.stringify برای وابستگی extraParams استفاده می‌کنیم
+  // 🔒 قفل synchronous — بر خلاف state، بلافاصله و بدون تاخیر رندر آپدیت می‌شود
+  const isFetchingRef = useRef(false);
+  const hasMoreRef = useRef(true);
+
   const extraParamsString = JSON.stringify(extraParams);
 
   const fetchData = useCallback(
     async (currentPage: number, isRefresh: boolean = false) => {
+      // اگر همین الان در حال فچ هستیم، اجازه ورود مجدد نده
+      if (isFetchingRef.current) return;
+      isFetchingRef.current = true;
       setIsLoading(true);
+
       try {
         const skip = (currentPage - 1) * take;
-
         const response = await fetchFunction({
           skip,
           take,
           ...JSON.parse(extraParamsString),
         });
 
-        // --- بخش اصلاح شده ---
-        // بررسی کنید داده‌های شما در بک‌اند دقیقاً در کدام کلید قرار دارند
-        // مثال: اگر خروجی axios باشد معمولا response.data است.
-        // اگر بک‌اند دیتای صفحه‌بندی را داخل response.data.list بفرستد، باید آن را اینجا تغییر دهید.
-
         let fetchedItems: any = [];
-
         if (Array.isArray(response)) {
           fetchedItems = response;
         } else if (response?.data && Array.isArray(response.data)) {
           fetchedItems = response.data;
         } else if (response?.data?.data && Array.isArray(response.data.data)) {
           fetchedItems = response.data.data;
-        } else if (
-          response?.data?.items &&
-          Array.isArray(response.data.items)
-        ) {
-          fetchedItems = response.data.items; // در صورت وجود کلید items
-        } else {
-          console.warn(
-            "استخراج آرایه ناموفق بود. ساختار response را بررسی کنید:",
-            response,
-          );
+        } else if (response?.data?.items && Array.isArray(response.data.items)) {
+          fetchedItems = response.data.items;
         }
 
-        // اطمینان نهایی از اینکه newData حتما آرایه است
         const newData: T[] = Array.isArray(fetchedItems) ? fetchedItems : [];
-        // ----------------------
 
         setData((prevData) =>
           isRefresh ? newData : [...prevData, ...newData],
         );
 
-        setHasMore(newData.length >= take);
+        const stillHasMore = newData.length >= take;
+        hasMoreRef.current = stillHasMore;
+        setHasMore(stillHasMore);
       } catch (error) {
         console.error("Error fetching paginated data: ", error);
+        hasMoreRef.current = false;
         setHasMore(false);
       } finally {
         setIsLoading(false);
+        isFetchingRef.current = false;
       }
     },
     [fetchFunction, take, extraParamsString],
   );
 
-  // فراخوانی API زمانی که شماره صفحه تغییر می‌کند
   useEffect(() => {
     fetchData(page, page === 1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, fetchData]);
 
-  // تابع برای دریافت صفحه بعدی (فراخوانی در onEndReached)
-  const fetchNextPage = () => {
-    if (!isLoading && hasMore) {
-      setPage((prevPage) => prevPage + 1);
-    }
-  };
+  const fetchNextPage = useCallback(() => {
+    // چک روی ref، نه روی state — چون state با تاخیر یک رندر آپدیت می‌شود
+    if (isFetchingRef.current || !hasMoreRef.current) return;
+    setPage((prevPage) => prevPage + 1);
+  }, []);
 
-  // تابع برای رفرش کردن لیست (فراخوانی در onRefresh)
-  const refresh = () => {
-    setPage(1);
+  const refresh = useCallback(() => {
+    isFetchingRef.current = false;
+    hasMoreRef.current = true;
     setHasMore(true);
-    // fetchData(1, true) توسط useEffect پس از تغییر page به 1 هندل می‌شود
-  };
+    setPage(1);
+    // اگر صفحه از قبل 1 بوده، useEffect دوباره اجرا نمی‌شود، پس دستی صدا بزن
+    fetchData(1, true);
+  }, [fetchData]);
 
   return { data, isLoading, hasMore, fetchNextPage, refresh };
 };

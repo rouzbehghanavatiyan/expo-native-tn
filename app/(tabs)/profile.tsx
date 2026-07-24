@@ -1,24 +1,35 @@
 import ProfileAchievements from "@/src/components/ProfileAchievements";
 import ProfileBio from "@/src/components/ProfileBio";
 import ProfileHeader from "@/src/components/ProfileHeader";
-import { usePagination } from "@/src/hook/usePagination";
 import { userAttachmentList } from "@/src/services/masterServices";
 import { useAppSelector } from "@/src/store/reduxHookType";
 import { getImageUrl } from "@/src/utils/fileHelper";
 import { socketClient } from "@/src/utils/socketClient";
 import { useNavigation, useRoute } from "@react-navigation/native";
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { FlatList, SafeAreaView } from "react-native";
-import { Spinner, YStack } from "tamagui";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { ActivityIndicator, FlatList, SafeAreaView } from "react-native";
+import { Spinner, View, YStack } from "tamagui";
 import VideosProfileItem from "../profile/VideosProfileItem";
+import { useLoadMore } from "@/src/components/useLoadMore"; // مطمئن شوید مسیر درست است
 
 const Profile: React.FC = () => {
-  const navigation = useNavigation();
   const route = useRoute<any>();
-  const main = useAppSelector((state) => state?.main);
+  const userLogin = useAppSelector((state) => state?.main?.userLogin);
+  const followerCountRedux = useAppSelector(
+    (state) => state?.main?.allFollowerList?.length ?? 0,
+  );
+  const followingCountRedux = useAppSelector(
+    (state) => state?.main?.allFollowingList?.length ?? 0,
+  );
+
   const userIdWhantToShow = route.params?.userData;
-  const userId = main?.userLogin?.user?.id;
-  const [isFetchingMore, setIsFetchingMore] = useState(false);
+
   const [activeVideoId, setActiveVideoId] = useState<string | null>(null);
   const [percentage, setPercentage] = useState<number>(0);
   const [videoLikes, setVideoLikes] = useState<Record<string, number>>({});
@@ -26,19 +37,25 @@ const Profile: React.FC = () => {
 
   const findImg: any = !!userIdWhantToShow?.user
     ? getImageUrl(userIdWhantToShow?.profile)
-    : getImageUrl(main?.userLogin?.profile);
+    : getImageUrl(userLogin?.profile);
 
-  const { data, isLoading, hasMore, fetchNextPage } = usePagination(
-    userAttachmentList,
-    {
-      take: 6,
-      extraParams: {
-        id: userIdWhantToShow?.user?.id || main?.userLogin?.user?.id,
-      },
+  const targetUserId = userIdWhantToShow?.user?.id ?? userLogin?.user?.id;
+
+  const fetchVideos = useCallback(
+    async (params: { skip: number; take: number }) => {
+      const response = await userAttachmentList({
+        ...params,
+        id: targetUserId,
+      });
+      console.log("REsponse", response);
+
+      return response?.data ?? [];
     },
+    [targetUserId],
   );
 
-  console.log(userIdWhantToShow);
+  const { items, loading, loadMore } = useLoadMore(fetchVideos);
+  console.log("items", items);
 
   useEffect(() => {
     const handleGetAddLike = (data: { userId: number; movieId: number }) => {
@@ -56,37 +73,46 @@ const Profile: React.FC = () => {
     };
 
     if (socketClient?.on) {
-      socketClient?.on("add_liked_response", handleGetAddLike);
-      socketClient?.on("remove_liked_response", handleGetRemoveLike);
+      socketClient.on("add_liked_response", handleGetAddLike);
+      socketClient.on("remove_liked_response", handleGetRemoveLike);
     }
     return () => {
       if (socketClient) {
-        socketClient?.off("add_liked_response", handleGetAddLike);
-        socketClient?.off("remove_liked_response", handleGetRemoveLike);
+        socketClient.off("add_liked_response", handleGetAddLike);
+        socketClient.off("remove_liked_response", handleGetRemoveLike);
       }
     };
-  }, [socketClient]);
+  }, []);
 
   useEffect(() => {
-    const score = userIdWhantToShow?.score || main?.userLogin?.score || 0;
+    const score = userIdWhantToShow?.score || userLogin?.score || 0;
     let calc = score <= 100 ? score : score % 100 || 100;
     setPercentage(Math.min(Math.max(calc, 1), 100));
-  }, [main?.userLogin?.score, userIdWhantToShow]);
+  }, [userLogin?.score, userIdWhantToShow]);
 
   const renderHeader = () => (
     <YStack bg="$grey100" gap="$4" p="$2">
       <ProfileHeader
         userImage={findImg}
         userName={
-          userIdWhantToShow?.user?.userName || main?.userLogin?.user?.userName
+          userIdWhantToShow?.user?.userName || userLogin?.user?.userName 
         }
-        score={userIdWhantToShow?.score || main?.userLogin?.score}
-        followersCount={main?.allFollowerList?.length}
-        followingCount={main?.allFollowingList?.length}
-        // onEditPress={onOpen}
+        score={
+          userIdWhantToShow?.score || userLogin?.score
+        }
+        followersCount={
+          userIdWhantToShow?.followersCount ??
+          followerCountRedux?.length ??
+          0
+        }
+        followingCount={
+          userIdWhantToShow?.followingCount ??
+          followingCountRedux?.length ??
+          0
+        }
       />
       <ProfileBio
-        rankScore={main?.userLogin?.score}
+        rankScore={userIdWhantToShow?.score ?? userLogin?.userLogin?.score}
         rankPercentage={percentage}
       />
       <ProfileAchievements />
@@ -94,38 +120,34 @@ const Profile: React.FC = () => {
   );
 
   const itsMatchingWithTimer = useMemo(() => {
-    return data?.some(
+    return items?.some(
       (item: any) =>
         item?.inviteInserted?.insertDate !== -1 ||
         item?.inviteMatched?.insertDate !== -1,
     );
-  }, [data]);
+  }, [items]);
 
   useEffect(() => {
-    if (!isLoading && itsMatchingWithTimer && data?.length) {
-      const timer = setTimeout(() => {
-        flatListRef.current?.scrollToOffset({
-          offset: 54,
-          animated: true,
-        });
-        // flatListRef.current?.scrollToIndex({
-        //   index: 0,
-        //   animated: true,
-        //   viewOffset: 54,
-        // });
-      }, 300);
-
-      return () => clearTimeout(timer);
-    }
-  }, [itsMatchingWithTimer, isLoading, data]);
+    if (!itsMatchingWithTimer) return;
+    const timer = setTimeout(() => {
+      flatListRef.current?.scrollToOffset({ offset: 54, animated: true });
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [itsMatchingWithTimer]);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
       <YStack f={1} bg="$backgroundDefault">
         <FlatList
-          data={data}
+          data={items || []} // جلوگیری از کرش اگر items هنوز null باشد
+          keyExtractor={(item, index) =>
+            (
+              item?.inviteInserted?.id ??
+              item?.inviteMatched?.id ??
+              index
+            ).toString()
+          }
           ref={flatListRef}
-          keyExtractor={(item) => item.inviteInserted.id.toString()}
           ListHeaderComponent={renderHeader}
           renderItem={({ item }) => (
             <VideosProfileItem
@@ -135,29 +157,17 @@ const Profile: React.FC = () => {
               videoLikes={videoLikes}
             />
           )}
-          onEndReachedThreshold={0.3}
-          ListFooterComponent={() =>
-            isLoading ? (
-              <YStack p="$4" jc="center" ai="center">
-                <Spinner color="$primaryMain" size="large" />
-              </YStack>
+          onEndReachedThreshold={0.5}
+          initialNumToRender={3}
+          ListFooterComponent={
+            loading ? (
+              <View style={{ padding: 16, alignItems: "center" }}>
+                <ActivityIndicator />
+              </View>
             ) : null
           }
-          // refreshControl={
-          //   <RefreshControl
-          //     refreshing={isLoading && data.length === 0}
-          //     onRefresh={refresh}
-          //   />
-          // }
-          onEndReached={async () => {
-            if (hasMore && !isLoading && !isFetchingMore) {
-              setIsFetchingMore(true);
-              await fetchNextPage();
-              setIsFetchingMore(false);
-            }
-          }}
+          onEndReached={loadMore}
           removeClippedSubviews
-          initialNumToRender={6}
           maxToRenderPerBatch={6}
           windowSize={5}
         />

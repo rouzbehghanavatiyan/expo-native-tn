@@ -34,10 +34,6 @@ const OptionBottom: React.FC<OptionBottomProps> = ({
   const dispatch = useAppDispatch();
   const [isLiked, setIsLiked] = useState(false);
   const [localLikeCount, setLocalLikeCount] = useState(0);
-  logger.info(
-    "videovideovideovideovideovideovideovideovideovideovideovideovideovideovideovideo",
-    video?.isLikedInserted,
-  );
   const movieId = useMemo(() => {
     if (!video) return null;
     return positionVideo === 0

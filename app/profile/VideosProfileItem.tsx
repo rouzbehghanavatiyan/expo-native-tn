@@ -67,7 +67,7 @@ export default function VideosProfileItem({
   return (
     <View style={styles.container}>
       {videoSections.map((section, index) => {
-        const videoId = `${video.inviteInserted.id}-${section.position}`;
+        const videoId = `${video?.inviteInserted?.id ?? video?.inviteMatched?.id}-${section.position}`;
         const isPlaying = activeVideoId === videoId;
 
         return (

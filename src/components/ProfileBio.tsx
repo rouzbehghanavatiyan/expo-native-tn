@@ -55,10 +55,6 @@ const ProfileBio: React.FC<ProfileBioProps> = ({
   const fetchCurrentStatus = async () => {
     try {
       const response = await getStatus();
-      console.log(
-        "responseresponseresponseresponseresponseresponseresponseresponseresponseresponseresponse",
-        response,
-      );
       const { code, message, data } = response?.data;
 
       if (code === 0) {
@@ -71,7 +67,6 @@ const ProfileBio: React.FC<ProfileBioProps> = ({
 
   useEffect(() => {
     fetchCurrentStatus();
-    console.log("VVVVVVVVVVVVVVVVVVVVVVVVVV");
   }, []);
 
   return (
