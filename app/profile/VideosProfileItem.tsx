@@ -10,14 +10,14 @@ const VIDEO_HEIGHT = VIDEO_WIDTH * (345 / 200);
 const ITEM_HEIGHT = VIDEO_HEIGHT * 2;
 
 export default function VideosProfileItem({
-  video,
+  video,showCountLiked,
+  itsMatchingWithTimer,
   videoLikes,
   activeVideoId,
   isActive = true,
   onPlay,
 }: any) {
   const [playingPosition, setPlayingPosition] = React.useState<number>(-1);
-  logger.info("video video video", video);
 
   const startTime = video?.inviteMatched?.insertDate;
 
@@ -64,6 +64,8 @@ export default function VideosProfileItem({
     },
   ];
 
+  console.log(endTime,videoLikes);
+
   return (
     <View style={styles.container}>
       {videoSections.map((section, index) => {
@@ -73,6 +75,8 @@ export default function VideosProfileItem({
         return (
           <View key={index} style={styles.half}>
             <VideoSection
+            showCountLiked={showCountLiked}
+            itsMatchingWithTimer={itsMatchingWithTimer}
               activeVideoId={activeVideoId}
               video={video}
               width={VIDEO_WIDTH}
@@ -129,7 +133,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: 0,
     right: 0,
-    top: "50%",
+    top: "97%",
     zIndex: 50,
     alignItems: "center",
   },

@@ -5,7 +5,7 @@ import { userAttachmentList } from "@/src/services/masterServices";
 import { useAppSelector } from "@/src/store/reduxHookType";
 import { getImageUrl } from "@/src/utils/fileHelper";
 import { socketClient } from "@/src/utils/socketClient";
-import { useNavigation, useRoute } from "@react-navigation/native";
+import { useRoute } from "@react-navigation/native";
 import React, {
   useCallback,
   useEffect,
@@ -16,7 +16,9 @@ import React, {
 import { ActivityIndicator, FlatList, SafeAreaView } from "react-native";
 import { Spinner, View, YStack } from "tamagui";
 import VideosProfileItem from "../profile/VideosProfileItem";
-import { useLoadMore } from "@/src/components/useLoadMore"; // مطمئن شوید مسیر درست است
+import { useLoadMore } from "@/src/components/useLoadMore";
+import { logger } from "@/src/utils/logger";
+import { stopMatchTimer } from "@/src/components/TimerForFindMatch";
 
 const Profile: React.FC = () => {
   const route = useRoute<any>();
@@ -55,7 +57,7 @@ const Profile: React.FC = () => {
   );
 
   const { items, loading, loadMore } = useLoadMore(fetchVideos);
-  console.log("items", items);
+  logger.info("items", items);
 
   useEffect(() => {
     const handleGetAddLike = (data: { userId: number; movieId: number }) => {
@@ -77,6 +79,7 @@ const Profile: React.FC = () => {
       socketClient.on("remove_liked_response", handleGetRemoveLike);
     }
     return () => {
+      stopMatchTimer();
       if (socketClient) {
         socketClient.off("add_liked_response", handleGetAddLike);
         socketClient.off("remove_liked_response", handleGetRemoveLike);
@@ -95,20 +98,14 @@ const Profile: React.FC = () => {
       <ProfileHeader
         userImage={findImg}
         userName={
-          userIdWhantToShow?.user?.userName || userLogin?.user?.userName 
+          userIdWhantToShow?.user?.userName || userLogin?.user?.userName
         }
-        score={
-          userIdWhantToShow?.score || userLogin?.score
-        }
+        score={userIdWhantToShow?.score || userLogin?.score}
         followersCount={
-          userIdWhantToShow?.followersCount ??
-          followerCountRedux?.length ??
-          0
+          userIdWhantToShow?.followersCount ?? followerCountRedux?.length ?? 0
         }
         followingCount={
-          userIdWhantToShow?.followingCount ??
-          followingCountRedux?.length ??
-          0
+          userIdWhantToShow?.followingCount ?? followingCountRedux?.length ?? 0
         }
       />
       <ProfileBio
@@ -134,12 +131,13 @@ const Profile: React.FC = () => {
     }, 300);
     return () => clearTimeout(timer);
   }, [itsMatchingWithTimer]);
+  console.log("Test rerender from: profile");
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
       <YStack f={1} bg="$backgroundDefault">
         <FlatList
-          data={items || []} // جلوگیری از کرش اگر items هنوز null باشد
+          data={items || []}
           keyExtractor={(item, index) =>
             (
               item?.inviteInserted?.id ??
@@ -151,6 +149,7 @@ const Profile: React.FC = () => {
           ListHeaderComponent={renderHeader}
           renderItem={({ item }) => (
             <VideosProfileItem
+              itsMatchingWithTimer={itsMatchingWithTimer}
               activeVideoId={activeVideoId}
               onPlay={(id: string | null) => setActiveVideoId(id)}
               video={item}

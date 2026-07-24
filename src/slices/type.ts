@@ -1,6 +1,7 @@
 export interface VideoState {
   videoSrc: string | null;
   videoFile: any | null;
+  isWaitingForMatch?: boolean;
   showTimeout: boolean;
   isLoading: boolean;
   error: string | null;

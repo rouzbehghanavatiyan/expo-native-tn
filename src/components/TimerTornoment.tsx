@@ -60,7 +60,12 @@ const TimerTornoment: React.FC<TimerTornomentProps> = ({
   };
 
   useEffect(() => {
-    if (!active || startTime === null || startTime === undefined || startTime === -1) {
+    if (
+      !active ||
+      startTime === null ||
+      startTime === undefined ||
+      startTime === -1
+    ) {
       return;
     }
 
@@ -102,7 +107,7 @@ const TimerTornoment: React.FC<TimerTornomentProps> = ({
   return (
     <View style={styles.wrapper}>
       <View style={styles.left}>
-        <Icon name="chat-bubble-outline" size={16} color="#777777" />
+        {/* <Icon name="hour-glass-top" size={16} color="#ffffff" /> */}
         <Text style={styles.timeText}>{formatTime(remainingSeconds)}</Text>
       </View>
 
@@ -136,21 +141,24 @@ const styles = StyleSheet.create({
     marginRight: 4,
   },
   timeText: {
+    backgroundColor: "#ffffff1a",
+    padding: 2,
+    borderRadius: 5,
     marginLeft: 4,
     fontSize: 12,
     fontWeight: "700",
-    color: "#777777",
+    color: "#ffffff",
   },
   progressTrack: {
     flex: 1,
     height: 4,
-    backgroundColor: "#1f2937",
+    backgroundColor: "#7e7e7ea1",
     borderRadius: 999,
     overflow: "hidden",
   },
   progressFill: {
     height: 4,
-    backgroundColor: "#6b7280",
+    backgroundColor: "#ffffff",
     borderRadius: 999,
   },
 });

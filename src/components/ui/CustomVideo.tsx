@@ -67,6 +67,8 @@ const CustomVideo = ({ uri, isPlaying, onVideoPlay }: CustomVideoProps) => {
     return time;
   };
 
+  console.log("Test rerender from custom video");
+
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,

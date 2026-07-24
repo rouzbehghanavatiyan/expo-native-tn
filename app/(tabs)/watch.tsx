@@ -1,5 +1,6 @@
 import FilteredWatch from "@/src/components/FilteredWatch";
 import MainTitle from "@/src/components/MainTitle";
+import { stopMatchTimer } from "@/src/components/TimerForFindMatch";
 import VideoGroup from "@/src/components/VideoGroup";
 import { attachmentList, subCategoryList } from "@/src/services/masterServices";
 import {
@@ -31,6 +32,7 @@ export default function WatchScreen() {
       console.log(err);
     }
   };
+  console.log("Test rerender from: watch");
 
   const handleGetAllMatch = async (skillId: number, reset = false) => {
     if (loading) return;
@@ -47,7 +49,7 @@ export default function WatchScreen() {
         take,
         subCatId: skillId,
       });
-
+      console.log("resssssssssssssssssssssssss", res);
       const newData = res?.data || [];
 
       if (reset) {
@@ -87,6 +89,7 @@ export default function WatchScreen() {
   };
 
   useEffect(() => {
+    stopMatchTimer();
     handleGetFiltered();
   }, []);
 

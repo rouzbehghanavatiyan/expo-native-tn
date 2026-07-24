@@ -28,7 +28,8 @@ export function AppInitializer({ children }: { children: React.ReactNode }) {
   }, [isChat, params?.user]);
 
   const { isInitializing } = useAuthInitialization();
-
+  console.log("check for rerender :appinitialiser");
+  
   useAuthRedirect({
     isInitializing,
     token,

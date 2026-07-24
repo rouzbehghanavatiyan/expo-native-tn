@@ -9,7 +9,8 @@ import CustomVideo from "./ui/CustomVideo";
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export default function VideoSection({
-  score,
+  score,showCountLiked,
+  itsMatchingWithTimer,
   videoLikes,
   isLiked: externalIsLiked,
   isFollowed: externalIsFollowed,
@@ -75,6 +76,8 @@ export default function VideoSection({
             onVideoPlay={() => onVideoPlay()}
           />
           <OptionBottom
+          showCountLiked={showCountLiked}
+          itsMatchingWithTimer={itsMatchingWithTimer}
             userIdLogin={userIdLogin}
             video={video}
             endTime={endTime}

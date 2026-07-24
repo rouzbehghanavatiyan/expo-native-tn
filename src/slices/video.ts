@@ -11,6 +11,10 @@ import { logger } from "../utils/logger";
 import { socketClient } from "../utils/socketClient";
 import { RsetShowTimerButtn } from "./main";
 import { VideoState } from "./type";
+import {
+  startMatchTimer,
+  stopMatchTimer,
+} from "../components/TimerForFindMatch";
 
 const initialState: VideoState = {
   videoSrc: null,
@@ -19,6 +23,7 @@ const initialState: VideoState = {
   isLoading: false,
   error: null,
   currentStep: 1,
+  isWaitingForMatch: false,
   uploadStatus: "idle",
   resMovieData: null,
   movieData: {
@@ -57,8 +62,6 @@ export const uploadFullProcessThunk = createAsyncThunk(
     { userId, gearId, segments, mode, allFormData, movieMeta, router }: any,
     { rejectWithValue, dispatch },
   ) => {
-    let timeoutId: ReturnType<typeof setTimeout> | null = null;
-
     try {
       const gearIdStorage = await AsyncStorage.getItem("gearId");
 
@@ -108,7 +111,7 @@ export const uploadFullProcessThunk = createAsyncThunk(
         movieId: Number(movieDataRes?.id),
         status: 0,
       };
-
+      console.log("Test rerender from: video sliceee");
       const inviteRes = await addInvite(requestData);
       const inviteData = inviteRes?.data?.data;
       logger.info("inviteRes inviteRes inviteRes", inviteRes?.data);
@@ -125,31 +128,34 @@ export const uploadFullProcessThunk = createAsyncThunk(
       const handleReceiveInvite = (data: any) => {
         console.log("✅✅✅✅✅✅✅ Match found!", data);
         console.log("✅ Match created:", data);
-
+        stopMatchTimer();
+        // dispatch(setWaitingForMatch(false));
         dispatch(RsetShowTimerButtn(false));
-        router.replace("/(tabs)/profile");
         socketClient.off("receive_invite", handleReceiveInvite);
+
+        router.replace("/(tabs)/profile");
       };
       socketClient.once("receive_invite", handleReceiveInvite);
-      console.log("timeoutId timeoutId", timeoutId);
       console.log(typeof inviteData?.userId);
 
       if (inviteData?.userId !== 0) {
+        stopMatchTimer();
         router.replace("/(tabs)/profile");
         dispatch(RsetShowTimerButtn(false));
         socketClient.off("receive_invite", handleReceiveInvite);
-      }
-      timeoutId = setTimeout(() => {
-        if (isMatched) return;
-        socketClient.off("receive_invite", handleReceiveInvite);
-        dispatch(RsetShowTimerButtn(false));
-        Alert.alert(
-          "No Match Found",
-          "Unfortunately, no tournament match was found.",
-        );
+      } else {
+        startMatchTimer(() => {
+          socketClient.off("receive_invite", handleReceiveInvite);
+          // dispatch(setWaitingForMatch(false));
+          dispatch(RsetShowTimerButtn(false));
+          Alert.alert(
+            "No Match Found",
+            "Unfortunately, no tournament match was found.",
+          );
 
-        router.replace("/(tabs)/watch");
-      }, 120000);
+          router.replace("/(tabs)/watch");
+        });
+      }
 
       return {
         modeType: 3,
@@ -157,11 +163,10 @@ export const uploadFullProcessThunk = createAsyncThunk(
         inviteData,
       };
     } catch (error: any) {
-      if (timeoutId) clearTimeout(timeoutId);
+      stopMatchTimer();
       dispatch(RsetIsLoading(false));
       dispatch(RsetShowTimerButtn(false));
 
-      // این بخش اضافه/اصلاح شود:
       if (error.isAxiosError && error.response) {
         console.log(
           "❌ Axios Error Response Data:",
@@ -217,6 +222,9 @@ const videoSlice = createSlice({
     },
     goToStep: (state, action: PayloadAction<number>) => {
       state.currentStep = action.payload;
+    },
+    setWaitingForMatch(state, action: PayloadAction<boolean>) {
+      state.isWaitingForMatch = action.payload;
     },
   },
   extraReducers: (builder) => {
