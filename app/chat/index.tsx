@@ -1,3 +1,4 @@
+import { Icon } from "@/src/components/Icon";
 import ImageRank from "@/src/components/ImageRank";
 import MainTitle from "@/src/components/MainTitle";
 import { allUserMessagese } from "@/src/services/masterServices";
@@ -5,7 +6,6 @@ import { useAppSelector } from "@/src/store/reduxHookType";
 import { getImageUrl } from "@/src/utils/fileHelper";
 import { socketClient } from "@/src/utils/socketClient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { MailOpen } from "@tamagui/lucide-icons";
 import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import { Pressable } from "react-native";
@@ -237,7 +237,7 @@ const ChatRoom: React.FC = () => {
               p="$4"
               borderRadius="$4"
             >
-              <MailOpen size={26} color="#333" />
+              <Icon name="main-open" color="gray" size={26} />
               <Text color="$gray11" fontSize="$5">
                 Empty messages
               </Text>

@@ -142,6 +142,7 @@ const HomeScreen: React.FC = () => {
             renderItem={({ item, index }) => (
               <View style={{ width, height: usableHeight }}>
                 <ShowWatchSlide
+                  itemHeight={usableHeight} // ✅ ارتفاع دقیق مستقیم پاس داده می‌شود
                   showLiked={false}
                   showScore
                   showResult

@@ -1,4 +1,5 @@
 import { Icon } from "@/src/components/Icon";
+import VideoSkeleton from "@/src/components/VideoSkeleton";
 import ShowWatchSlide from "@/src/components/VideoSlide";
 import { attachmentListByInviteId } from "@/src/services/masterServices";
 import {
@@ -22,6 +23,7 @@ import {
   Dimensions,
   FlatList,
   StyleSheet,
+  Text,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -31,6 +33,10 @@ const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 export default function ShowWatchScreen() {
   const { inviteId } = useLocalSearchParams<{ inviteId: string }>();
   const dispatch = useAppDispatch();
+
+  // رفرنس برای رهگیری اولین لود موفق
+  const hasFetchedOnce = useRef(false);
+
   const { data, pagination } = useAppSelector(
     (state) => state.main.showWatchMatch,
   );
@@ -82,6 +88,8 @@ export default function ShowWatchScreen() {
       } catch (error: any) {
         console.log("error:", error?.message);
       } finally {
+        // تغییر وضعیت اولین لود موفق به محض پایان درخواست اول
+        hasFetchedOnce.current = true;
         loadingRef.current = false;
         setLoading(false);
       }
@@ -89,15 +97,17 @@ export default function ShowWatchScreen() {
     [inviteId, dispatch],
   );
 
+  // با تغییر inviteId وضعیت لود اولیه را ریست می‌کنیم
   useEffect(() => {
-    paginationRef.current = pagination;
-  }, [pagination]);
-
-  useEffect(() => {
+    hasFetchedOnce.current = false;
     dispatch(resetShowWatchState());
     paginationRef.current = { take: 6, skip: 0, hasMore: true };
     fetchVideos(true);
   }, [inviteId, fetchVideos]);
+
+  useEffect(() => {
+    paginationRef.current = pagination;
+  }, [pagination]);
 
   const onViewableItemsChanged = useRef(({ viewableItems }: any) => {
     if (viewableItems?.length > 0) {
@@ -115,47 +125,69 @@ export default function ShowWatchScreen() {
 
   logger.info("datadatadatadatadatadatadata", data?.icon);
 
+  // شرایط نمایش بر اساس الگوی مد نظر شما
+  const showInitialLoader =
+    !hasFetchedOnce.current && (!data || data.length === 0);
+  const showEmptyState =
+    hasFetchedOnce.current && !loading && (!data || data.length === 0);
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
       <View style={styles.container}>
-        <FlatList
-          data={data}
-          keyExtractor={(item, index) => `${item?.id ?? index}`}
-          renderItem={({ item, index }) => (
-            <View style={styles.page}>
-              <ShowWatchSlide
-                showLiked={true}
-                video={item}
-                endTime
-                index={index}
-                isActive={currentIndex === index}
-              />
-              <View style={styles.centerIcon}>
-                <Icon
-                  name={item?.icon}
-                  color="rgba(255,255,255,0.45)"
-                  size={20}
-                />
-              </View>
+        {showInitialLoader ? (
+          // نمایش اسکلتون قبل از اولین دریافت اطلاعات
+          <VideoSkeleton count={1} section="itsShowWatch" isSwapper={false} />
+        ) : showEmptyState ? (
+          // نمایش وضعیت خالی در صورتی که پاسخی آمد و داده‌ای وجود نداشت
+          <View style={styles.emptyWrapper}>
+            <View style={styles.emptyCard}>
+              <Text style={styles.emptyTitle}>No Content Available</Text>
+              <Text style={styles.emptyText}>
+                There are no videos available to view at the moment.
+              </Text>
             </View>
-          )}
-          pagingEnabled
-          showsVerticalScrollIndicator={false}
-          decelerationRate="fast"
-          snapToAlignment="start"
-          getItemLayout={(_, index) => ({
-            length: SCREEN_HEIGHT,
-            offset: SCREEN_HEIGHT * index,
-            index,
-          })}
-          onViewableItemsChanged={onViewableItemsChanged}
-          viewabilityConfig={viewabilityConfig}
-          onEndReached={() => fetchVideos(false)}
-          onEndReachedThreshold={0.5}
-          ListFooterComponent={
-            loading ? <ActivityIndicator size="small" color="#fff" /> : null
-          }
-        />
+          </View>
+        ) : (
+          // نمایش لیست اصلی ویدیوها پس از لود موفقیت‌آمیز
+          <FlatList
+            data={data}
+            keyExtractor={(item, index) => `${item?.id ?? index}`}
+            renderItem={({ item, index }) => (
+              <View style={styles.page}>
+                <ShowWatchSlide
+                  showLiked={true}
+                  video={item}
+                  endTime
+                  index={index}
+                  isActive={currentIndex === index}
+                />
+                <View style={styles.centerIcon}>
+                  <Icon
+                    name={item?.icon}
+                    color="rgba(255,255,255,0.45)"
+                    size={20}
+                  />
+                </View>
+              </View>
+            )}
+            pagingEnabled
+            showsVerticalScrollIndicator={false}
+            decelerationRate="fast"
+            snapToAlignment="start"
+            getItemLayout={(_, index) => ({
+              length: SCREEN_HEIGHT,
+              offset: SCREEN_HEIGHT * index,
+              index,
+            })}
+            onViewableItemsChanged={onViewableItemsChanged}
+            viewabilityConfig={viewabilityConfig}
+            onEndReached={() => fetchVideos(false)}
+            onEndReachedThreshold={0.5}
+            ListFooterComponent={
+              loading ? <ActivityIndicator size="small" color="#fff" /> : null
+            }
+          />
+        )}
       </View>
     </SafeAreaView>
   );
@@ -182,9 +214,44 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.45)",
     justifyContent: "center",
     alignItems: "center",
-
     transform: [{ translateX: -20 }, { translateY: -20 }],
-
-    backgroundColor: "rgba(0,0,0,0.25)", // اختیاری
+    backgroundColor: "rgba(0,0,0,0.25)",
+  },
+  emptyWrapper: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 16,
+    backgroundColor: "#000",
+  },
+  emptyCard: {
+    width: "100%",
+    maxWidth: 420,
+    borderWidth: 1,
+    borderColor: "#333",
+    borderRadius: 12,
+    padding: 20,
+    backgroundColor: "#1c1c1e",
+    shadowColor: "#000",
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    elevation: 3,
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#fff",
+    marginBottom: 12,
+    textAlign: "center",
+  },
+  emptyText: {
+    fontSize: 14,
+    lineHeight: 21,
+    color: "#aaa",
+    textAlign: "center",
   },
 });

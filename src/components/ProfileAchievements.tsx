@@ -1,9 +1,9 @@
 import React from "react";
 import { Image, Text, XStack, YStack } from "tamagui";
 
-const cupLevel = require("../assets/ranks/cup1.png");
-const cup3 = require("../assets/ranks/cup1.png");
-const cup4 = require("../assets/ranks/cup1.png");
+const cupLevel = require("../assets/cups/cup1.png");
+const cup3 = require("../assets/cups/cup1.png");
+const cup4 = require("../assets/cups/cup1.png");
 
 const ProfileAchievements: React.FC = () => {
   const achievements = [

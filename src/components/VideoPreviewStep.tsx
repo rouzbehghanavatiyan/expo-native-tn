@@ -1,8 +1,13 @@
 import MultiSlider from "@ptomasroos/react-native-multi-slider";
-import { AVPlaybackStatus, ResizeMode, Video } from "expo-av";
 import { useRouter } from "expo-router";
 import React, { useRef, useState } from "react";
 import { Dimensions, Pressable, StyleSheet } from "react-native";
+import Video, {
+  OnLoadData,
+  OnProgressData,
+  ResizeMode,
+  VideoRef,
+} from "react-native-video";
 import { Text, View, XStack } from "tamagui";
 import { goToStep } from "../slices/video";
 import { useAppDispatch } from "../store/reduxHookType";
@@ -14,32 +19,27 @@ interface VideoPreviewStepProps {
   videoSrc: string;
   movieData: any;
   onMovieDataChange: (data: any) => void;
-  onCancel: () => void;
-  // handleNextStep: (trimData?: {
-  //   startTime: number;
-  //   endTime: number;
-  //   originalSrc: string;
-  //   duration: number;
-  // }) => void;
+  onCancel?: () => void;
+  handleNextStep?: (trimData?: any) => void;
 }
 
-const VideoPreviewStep: React.FC<any> = ({
+const VideoPreviewStep: React.FC<VideoPreviewStepProps> = ({
   videoSrc,
   movieData,
   onMovieDataChange,
-  // onCancel,
   handleNextStep,
 }) => {
-  const videoRef = useRef<Video>(null);
-  const [isPlaying, setIsPlaying] = useState(true);
-  const [title, setTitle] = useState("");
-  const [duration, setDuration] = useState(0);
-  const [trimRange, setTrimRange] = useState([0, 0]);
+  const videoRef = useRef<VideoRef>(null);
+  const [isPlaying, setIsPlaying] = useState<boolean>(true);
+  const [duration, setDuration] = useState<number>(0);
+  const [trimRange, setTrimRange] = useState<[number, number]>([0, 0]);
   const [videoLayout, setVideoLayout] = useState({
     width: SCREEN_WIDTH - 32,
     height: 300,
   });
+
   const router = useRouter();
+  const dispatch = useAppDispatch();
   const MAX_DURATION = 60;
 
   const handleSliderChange = (values: number[]) => {
@@ -51,60 +51,53 @@ const VideoPreviewStep: React.FC<any> = ({
     }
 
     setTrimRange([start, end]);
-    videoRef.current?.setPositionAsync(start * 1000);
+    videoRef.current?.seek(start);
   };
 
-  const handleVideoLoad = (status: any) => {
-    if (!status.isLoaded) return;
-
-    if (status.durationMillis) {
-      const secs = status.durationMillis / 1000;
+  const handleVideoLoad = (data: OnLoadData) => {
+    if (data.duration) {
+      const secs = data.duration;
       setDuration(secs);
-      setTrimRange([0, secs]);
+      setTrimRange([0, Math.min(secs, MAX_DURATION)]);
     }
 
-    if (status.naturalSize) {
-      const { width: natW, height: natH } = status.naturalSize;
-      const videoRatio = natW / natH;
-      const maxWidth = SCREEN_WIDTH - 32;
-      const maxHeight = SCREEN_HEIGHT * 0.55;
-      const containerRatio = maxWidth / maxHeight;
+    if (data.naturalSize) {
+      const { width: natW, height: natH } = data.naturalSize;
+      if (natW > 0 && natH > 0) {
+        const videoRatio = natW / natH;
+        const maxWidth = SCREEN_WIDTH - 32;
+        const maxHeight = SCREEN_HEIGHT * 0.55;
+        const containerRatio = maxWidth / maxHeight;
 
-      let finalWidth: number;
-      let finalHeight: number;
+        let finalWidth: number;
+        let finalHeight: number;
 
-      if (videoRatio > containerRatio) {
-        finalWidth = maxWidth;
-        finalHeight = maxWidth / videoRatio;
-      } else {
-        finalHeight = maxHeight;
-        finalWidth = maxHeight * videoRatio;
+        if (videoRatio > containerRatio) {
+          finalWidth = maxWidth;
+          finalHeight = maxWidth / videoRatio;
+        } else {
+          finalHeight = maxHeight;
+          finalWidth = maxHeight * videoRatio;
+        }
+
+        setVideoLayout({ width: finalWidth, height: finalHeight });
       }
-
-      setVideoLayout({ width: finalWidth, height: finalHeight });
     }
   };
-  const handlePlaybackStatusUpdate = (status: AVPlaybackStatus) => {
-    if (!status.isLoaded || trimRange[1] === 0) return;
 
-    const currentSecs = status.positionMillis / 1000;
+  const handleProgress = (data: OnProgressData) => {
+    if (trimRange[1] === 0) return;
+
+    const currentSecs = data.currentTime;
 
     if (currentSecs >= trimRange[1]) {
-      videoRef.current?.setPositionAsync(trimRange[0] * 1000);
+      videoRef.current?.seek(trimRange[0]);
     }
   };
-  const togglePlay = async () => {
-    if (!videoRef.current) return;
 
-    if (isPlaying) {
-      await videoRef.current.pauseAsync();
-    } else {
-      await videoRef.current.playAsync();
-    }
-
-    setIsPlaying(!isPlaying);
+  const togglePlay = () => {
+    setIsPlaying((prev) => !prev);
   };
-  const dispatch = useAppDispatch();
 
   const handleNextPress = () => {
     const selectedDuration = trimRange[1] - trimRange[0];
@@ -147,14 +140,15 @@ const VideoPreviewStep: React.FC<any> = ({
               resizeMode={ResizeMode.CONTAIN}
               style={StyleSheet.absoluteFillObject}
               onLoad={handleVideoLoad}
-              onPlaybackStatusUpdate={handlePlaybackStatusUpdate}
-              shouldPlay={isPlaying}
-              isLooping={false}
-              isMuted={false}
+              onProgress={handleProgress}
+              paused={!isPlaying}
+              repeat={false}
+              muted={false}
             />
           </Pressable>
         </View>
       </View>
+
       <View padding={20} paddingBottom={62} backgroundColor="#1f2937">
         {duration > 0 ? (
           <>
@@ -196,6 +190,7 @@ const VideoPreviewStep: React.FC<any> = ({
             Loading...
           </Text>
         )}
+
         <XStack justifyContent="space-between" alignItems="center" gap="$2">
           <BaseButton
             flex={1}

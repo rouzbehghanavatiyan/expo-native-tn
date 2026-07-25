@@ -1,6 +1,6 @@
-import { AlertTriangle } from "@tamagui/lucide-icons";
 import React from "react";
 import { Adapt, Button, Dialog, Sheet, Text, XStack, YStack } from "tamagui";
+import { Icon } from "../Icon";
 
 interface AppModalProps {
   isOpen: boolean;
@@ -18,7 +18,8 @@ export const AppModal = ({
   onOpenChange,
   title = "Alert",
   message,
-  icon = <AlertTriangle size={32} color="#F79009" />,
+  icon = <Icon name="alert-triangle" color="#F79009" size={32} />,
+
   onAccept,
   acceptText = "Accept",
   cancelText = "Cancel",

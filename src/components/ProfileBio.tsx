@@ -17,14 +17,14 @@ const Started = require("../assets/ranks/starter.png");
 const bronseBase1 = require("../assets/ranks/bronze.png");
 const bronseBase2 = require("../assets/ranks/bronze.png");
 const bronseBase3 = require("../assets/ranks/bronze.png");
-const silver1 = require("../assets/ranks/silver.png");
-const silver2 = require("../assets/ranks/silver.png");
-const silver3 = require("../assets/ranks/silver.png");
-const gold1 = require("../assets/ranks/gold.png");
-const gold2 = require("../assets/ranks/gold.png");
-const gold3 = require("../assets/ranks/gold.png");
+const silver1 = require("../assets/ranks/silverMain.png");
+const silver2 = require("../assets/ranks/silverMain.png");
+const silver3 = require("../assets/ranks/silverMain.png");
+const gold1 = require("../assets/ranks/goldMain.png");
+const gold2 = require("../assets/ranks/goldMain.png");
+const gold3 = require("../assets/ranks/goldMain.png");
 const ruby = require("../assets/ranks/ruby.png");
-const word = require("../assets/ranks/world.png");
+const word = require("../assets/ranks/worldMain.png");
 
 interface ProfileBioProps {
   rankPercentage: number;

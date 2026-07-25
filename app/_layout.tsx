@@ -3,14 +3,16 @@ import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { PortalProvider as GorhomPortalProvider } from "@gorhom/portal";
 import { useFonts } from "expo-font";
 import { Slot } from "expo-router";
-import { ActivityIndicator } from "react-native";
+import { StatusBar } from "expo-status-bar";
+import { ActivityIndicator, LogBox } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Provider } from "react-redux";
-import { PortalProvider, TamaguiProvider, View } from "tamagui";
-
+import { TamaguiProvider, View } from "tamagui";
 import tamaguiConfig from "../tamagui.config";
-import { AppInitializer } from "./AppInitializer";
+import AppInitializer from "./AppInitializer";
+
+LogBox.ignoreLogs(["Missing setup for zeego", "@tamagui/native/setup-zeego"]);
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
@@ -21,32 +23,29 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
+      <StatusBar
+        style="dark"
+        backgroundColor="transparent"
+        translucent={true}
+      />
       <TamaguiProvider config={tamaguiConfig} defaultTheme="light">
-        <PortalProvider shouldAddRootHost>
-          <SafeAreaProvider>
-            <Provider store={store}>
-              <GorhomPortalProvider>
-                <BottomSheetModalProvider>
-                  <AppInitializer>
-                    {fontsLoaded ? (
-                      // <ConfirmDialogProvider>
-                      <Slot />
-                    ) : (
-                      // </ConfirmDialogProvider>
-                      <View
-                        flex={1}
-                        justifyContent="center"
-                        alignItems="center"
-                      >
-                        <ActivityIndicator />
-                      </View>
-                    )}
-                  </AppInitializer>
-                </BottomSheetModalProvider>
-              </GorhomPortalProvider>
-            </Provider>
-          </SafeAreaProvider>
-        </PortalProvider>
+        <SafeAreaProvider>
+          <Provider store={store}>
+            <GorhomPortalProvider>
+              <BottomSheetModalProvider>
+                <AppInitializer>
+                  {fontsLoaded ? (
+                    <Slot />
+                  ) : (
+                    <View flex={1} justifyContent="center" alignItems="center">
+                      <ActivityIndicator />
+                    </View>
+                  )}
+                </AppInitializer>
+              </BottomSheetModalProvider>
+            </GorhomPortalProvider>
+          </Provider>
+        </SafeAreaProvider>
       </TamaguiProvider>
     </GestureHandlerRootView>
   );

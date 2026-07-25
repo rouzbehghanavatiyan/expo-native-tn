@@ -1,9 +1,12 @@
 import ProfileAchievements from "@/src/components/ProfileAchievements";
 import ProfileBio from "@/src/components/ProfileBio";
 import ProfileHeader from "@/src/components/ProfileHeader";
+import { stopMatchTimer } from "@/src/components/TimerForFindMatch";
+import { useLoadMore } from "@/src/components/useLoadMore";
 import { userAttachmentList } from "@/src/services/masterServices";
 import { useAppSelector } from "@/src/store/reduxHookType";
 import { getImageUrl } from "@/src/utils/fileHelper";
+import { logger } from "@/src/utils/logger";
 import { socketClient } from "@/src/utils/socketClient";
 import { useRoute } from "@react-navigation/native";
 import React, {
@@ -14,11 +17,8 @@ import React, {
   useState,
 } from "react";
 import { ActivityIndicator, FlatList, SafeAreaView } from "react-native";
-import { Spinner, View, YStack } from "tamagui";
+import { View, YStack } from "tamagui";
 import VideosProfileItem from "../profile/VideosProfileItem";
-import { useLoadMore } from "@/src/components/useLoadMore";
-import { logger } from "@/src/utils/logger";
-import { stopMatchTimer } from "@/src/components/TimerForFindMatch";
 
 const Profile: React.FC = () => {
   const route = useRoute<any>();

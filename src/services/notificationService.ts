@@ -9,7 +9,7 @@ const notifBaseURL = process.env.EXPO_PUBLIC_NOTIF;
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
-    shouldShowAlert: true,
+    // shouldShowAlert: true,
     shouldPlaySound: true,
     shouldSetBadge: false,
     shouldShowBanner: true,
@@ -26,17 +26,19 @@ export async function registerForPushNotifications(
       return null;
     }
 
-    const { status: existingStatus } =
-      await Notifications.getPermissionsAsync();
-    let finalStatus = existingStatus;
+    const perm = await Notifications.getPermissionsAsync();
+    logger.info("Permissions:", perm);
 
-    if (existingStatus !== "granted") { 
-      const { status } = await Notifications.requestPermissionsAsync();
-      finalStatus = status;
+    let finalStatus = perm.status;
+
+    if (finalStatus !== "granted") {
+      const requested = await Notifications.requestPermissionsAsync();
+      logger.info("Requested permissions:", requested);
+      finalStatus = requested.status;
     }
 
     if (finalStatus !== "granted") {
-      logger.warn("اجازه notification داده نشد");
+      logger.warn("Notification permission not granted");
       return null;
     }
 
@@ -44,8 +46,6 @@ export async function registerForPushNotifications(
       await Notifications.setNotificationChannelAsync("default", {
         name: "default",
         importance: Notifications.AndroidImportance.MAX,
-        vibrationPattern: [0, 250, 250, 250],
-        lightColor: "#FF231F7C",
       });
     }
 
@@ -53,28 +53,24 @@ export async function registerForPushNotifications(
       Constants.expoConfig?.extra?.eas?.projectId ??
       Constants.easConfig?.projectId;
 
-    logger.info("Resolved EAS projectId:", projectId);
+    logger.info("projectId:", projectId);
 
     if (!projectId) {
       logger.warn("projectId پیدا نشد");
       return null;
     }
 
-    const { data: expoPushToken } = await Notifications.getExpoPushTokenAsync({
-      projectId,
-    });
+    const token = await Notifications.getExpoPushTokenAsync({ projectId });
 
-    logger.info("Expo push token:", expoPushToken);
-
-    // await saveSubscription({
-    //   userId,
-    //   token: expoPushToken,
-    //   platform: Platform.OS,
-    // });
-
-    return expoPushToken;
-  } catch (error) {
-    logger.error("registerForPushNotifications error:", error);
+    logger.info("Expo token:", token);
+    return token.data;
+  } catch (error: any) {
+    logger.error("registerForPushNotifications error message:", error?.message);
+    logger.error(
+      "registerForPushNotifications error response:",
+      error?.response,
+    );
+    logger.error("registerForPushNotifications raw:", error);
     return null;
   }
 }
