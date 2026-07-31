@@ -37,6 +37,8 @@ const OptionBottom: React.FC<OptionBottomProps> = ({
   const dispatch = useAppDispatch();
   const [isLiked, setIsLiked] = useState(false);
   const [localLikeCount, setLocalLikeCount] = useState(0);
+  console.log(itsMatchingWithTimer, showCountLiked);
+
   const movieId = useMemo(() => {
     if (!video) return null;
     return positionVideo === 0
@@ -120,7 +122,11 @@ const OptionBottom: React.FC<OptionBottomProps> = ({
         }
         socketClient?.emit("remove_liked", postData);
       } else {
+        console.log("11111111111111111111111111111111111111111111111111111111");
+
         const addRes = await addLike(postData);
+        console.log("2222222222222222222222222222222222222222222", addRes);
+
         if (addRes?.data?.status !== 0) {
           throw new Error(addRes?.data?.message || "Add like failed");
         }
@@ -165,7 +171,7 @@ const OptionBottom: React.FC<OptionBottomProps> = ({
 
   const resultStyle: any = getResultStyle();
 
-  console.log("HELLLLLLLLLLLLLLLLLLLLLLO",);
+  console.log("HELLLLLLLLLLLLLLLLLLLLLLO");
 
   return (
     <View position="absolute" bottom={0} left={0} right={0} zIndex={10}>
@@ -189,11 +195,7 @@ const OptionBottom: React.FC<OptionBottomProps> = ({
           </View>
           {!itsMatchingWithTimer && (
             <View flex={1} alignItems="center">
-              <View
-                px={2}
-                py={1}
-                borderRadius="$3"
-              >
+              <View px={2} py={1} borderRadius="$3">
                 <Text
                   color={resultStyle.color}
                   fontSize="$3"
@@ -207,7 +209,7 @@ const OptionBottom: React.FC<OptionBottomProps> = ({
           )}
           <View flex={1} alignItems="flex-end">
             <XStack gap={2} alignItems="center">
-              {itsMatchingWithTimer && (
+              {itsMatchingWithTimer && !showCountLiked && (
                 <TouchableOpacity
                   onPress={handleLikeClick}
                   style={{ padding: 8, zIndex: 999 }}
@@ -219,7 +221,7 @@ const OptionBottom: React.FC<OptionBottomProps> = ({
                   )}
                 </TouchableOpacity>
               )}
-              {itsMatchingWithTimer && !showCountLiked && (
+              {!itsMatchingWithTimer && !showCountLiked && (
                 <XStack gap={1} alignItems="center">
                   <Text margin={2} pt={1} color="gray" fontSize="$5">
                     {localLikeCount}

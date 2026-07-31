@@ -1,6 +1,8 @@
 import ProfileAchievements from "@/src/components/ProfileAchievements";
 import ProfileBio from "@/src/components/ProfileBio";
 import ProfileHeader from "@/src/components/ProfileHeader";
+import { stopMatchTimer } from "@/src/components/TimerForFindMatch";
+import { useLoadMore } from "@/src/components/useLoadMore";
 import { userAttachmentList } from "@/src/services/masterServices";
 import { useAppSelector } from "@/src/store/reduxHookType";
 import { getImageUrl } from "@/src/utils/fileHelper";
@@ -14,11 +16,8 @@ import React, {
   useState,
 } from "react";
 import { ActivityIndicator, FlatList, SafeAreaView } from "react-native";
-import { Spinner, View, YStack } from "tamagui";
+import { View, YStack } from "tamagui";
 import VideosProfileItem from "../profile/VideosProfileItem";
-import { useLoadMore } from "@/src/components/useLoadMore";
-import { logger } from "@/src/utils/logger";
-import { stopMatchTimer } from "@/src/components/TimerForFindMatch";
 
 const Profile: React.FC = () => {
   const route = useRoute<any>();
@@ -55,9 +54,30 @@ const Profile: React.FC = () => {
     },
     [targetUserId],
   );
-
   const { items, loading, loadMore } = useLoadMore(fetchVideos);
-  logger.info("items", items);
+
+  const itsMatchingWithTimer = useMemo(() => {
+    console.log("userLogin", userLogin);
+
+    return items?.some(
+      (item: any) =>
+        item?.inviteInserted?.insertDate !== -1 ||
+        item?.inviteMatched?.insertDate !== -1,
+    );
+  }, [userLogin]);
+
+  console.log(
+    "itsMatchingWithTimer itsMatchingWithTimer itsMatchingWithTimer",
+    itsMatchingWithTimer,
+  );
+
+  useEffect(() => {
+    if (!itsMatchingWithTimer) return;
+    const timer = setTimeout(() => {
+      flatListRef.current?.scrollToOffset({ offset: 230, animated: true });
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [itsMatchingWithTimer]);
 
   useEffect(() => {
     const handleGetAddLike = (data: { userId: number; movieId: number }) => {
@@ -115,23 +135,6 @@ const Profile: React.FC = () => {
       <ProfileAchievements />
     </YStack>
   );
-
-  const itsMatchingWithTimer = useMemo(() => {
-    return items?.some(
-      (item: any) =>
-        item?.inviteInserted?.insertDate !== -1 ||
-        item?.inviteMatched?.insertDate !== -1,
-    );
-  }, [items]);
-
-  useEffect(() => {
-    if (!itsMatchingWithTimer) return;
-    const timer = setTimeout(() => {
-      flatListRef.current?.scrollToOffset({ offset: 54, animated: true });
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [itsMatchingWithTimer]);
-  console.log("Test rerender from: profile");
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>

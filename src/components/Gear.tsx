@@ -1,12 +1,9 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
 import React, { useEffect, useState } from "react";
 import { View } from "tamagui";
 import { useVideoHandler } from "../hook/useVideoHandler";
 import { subSubCategoryList } from "../services/masterServices";
-import { useAppDispatch } from "../store/reduxHookType";
 import asyncWrapper from "../utils/asyncWrapper";
-// import EditVideo from "./EditVideo";
 import { Icon } from "./Icon";
 import MainTitle from "./MainTitle";
 import SoftLink from "./SoftLink";
@@ -17,7 +14,6 @@ const Gear: React.FC<any> = ({
   updateStepData,
 }) => {
   const navigation = useNavigation<any>();
-  const dispatch = useAppDispatch();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [allSubSubCategory, setAllSubSubCategory] = useState<any>();
   const [selectedGearMode, setSelectedGearMode] = useState<any>({
@@ -25,24 +21,14 @@ const Gear: React.FC<any> = ({
     typeMode: null,
   });
 
-  const {
-    coverImage,
-    showEditMovie,
-    allFormData,
-    setShowEditMovie,
-    triggerVideoUpload,
-    videoError,
-  } = useVideoHandler();
+  const { triggerVideoUpload } = useVideoHandler();
 
   const handleGetCategory = asyncWrapper(async () => {
     setIsLoading(true);
-
     const res = await subSubCategoryList(currentStep?.skill?.id);
-
     setIsLoading(false);
 
     const { data, status } = res?.data || {};
-
     if (status === 0) {
       setAllSubSubCategory(data || []);
     }
@@ -53,21 +39,15 @@ const Gear: React.FC<any> = ({
   }, []);
 
   const handleAcceptCategory = async (data: any) => {
-    const arenaIdStr = await AsyncStorage.getItem("arenaId");
-    const arenaId = Number(arenaIdStr);
+    // گرفتن آی‌دیِ استپ اول مستقیما از State اصلی که مستقل از سوییچ Remember باشد
+    const arenaId = currentStep?.arena?.id;
 
     if (arenaId !== 1002) {
-      setSelectedGearMode({
-        show: true,
-        typeMode: data.id,
-      });
-
+      setSelectedGearMode({ show: true, typeMode: data.id });
       setCurrentStep({ ...currentStep, number: 4 });
-      updateStepData(3, { name: data.name, icon: data.icon });
 
-      await AsyncStorage.setItem("gearId", String(data.id));
-      await AsyncStorage.setItem("gearIconName", data.icon);
-      await AsyncStorage.setItem("gearName", data.name);
+      // توجه: آیدی رو به عنوان پارامتر اضافه کردیم تا در UpdateStepData ذخیره شود
+      updateStepData(3, { name: data.name, icon: data.icon, id: data.id });
 
       triggerVideoUpload();
     } else {
@@ -89,30 +69,18 @@ const Gear: React.FC<any> = ({
         />
       );
     }
-
     return acc;
   }, {});
 
   return (
     <View>
       <MainTitle showBack title="Gear" />
-
       <SoftLink
         iconMap={arenaIconMap}
         handleAcceptCategory={handleAcceptCategory}
         categories={categoriesWithIcons || []}
         isLoading={isLoading}
       />
-
-      {/* {showEditMovie && (
-        <EditVideo
-          mode={selectedGearMode}
-          allFormData={allFormData}
-          showEditMovie={showEditMovie}
-          setShowEditMovie={setShowEditMovie}
-          coverImage={coverImage}
-        />
-      )} */}
     </View>
   );
 };

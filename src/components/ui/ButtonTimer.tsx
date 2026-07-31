@@ -44,14 +44,15 @@ export const ButtonTimer: React.FC<TimerProps> = ({
 
   return (
     <XStack alignItems="center" gap="$2">
-      <Text color="white">{formatTime(seconds)}</Text>
-
+      <Text fontSize={20} color="white">
+        {formatTime(seconds)}
+      </Text>
       <XStack alignItems="center" gap="$2">
-        <Text color="white" opacity={0.8}>
+        <Text fontSize={20} color="white" opacity={0.8}>
           Matching
         </Text>
 
-        <Spinner size="small" color="white" />
+        <Spinner paddingTop={8} size="small" color="white" />
       </XStack>
     </XStack>
   );

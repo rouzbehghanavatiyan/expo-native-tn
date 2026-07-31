@@ -1,6 +1,3 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useNavigation } from "@react-navigation/native";
-import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { View } from "tamagui";
 import { subCategoryList } from "../services/masterServices";
@@ -16,9 +13,7 @@ const Skill: React.FC<any> = ({
   updateStepData,
 }) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const navigation = useNavigation();
-  const [step, setStep] = useState(1);
-  const router = useRouter();
+
   const handleGetCategory = asyncWrapper(async () => {
     setIsLoading(true);
     const res = await subCategoryList(currentStep?.arena?.id);
@@ -36,10 +31,6 @@ const Skill: React.FC<any> = ({
       id: data.id,
       icon: data.icon,
     });
-
-    await AsyncStorage.setItem("skillId", String(data.id));
-    await AsyncStorage.setItem("skillIconName", data.icon);
-    await AsyncStorage.setItem("skillName", data.name);
   };
 
   useEffect(() => {
@@ -62,10 +53,6 @@ const Skill: React.FC<any> = ({
     }
     return acc;
   }, {});
-
-  const handleBack = () => {
-    navigation.goBack();
-  };
 
   return (
     <View borderRadius="$2">

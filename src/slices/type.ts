@@ -4,6 +4,7 @@ export interface VideoState {
   isWaitingForMatch?: boolean;
   showTimeout: boolean;
   isLoading: boolean;
+  showDeactivatedModal: boolean;
   error: string | null;
   currentStep: number;
   uploadStatus: "idle" | "success" | "failed";

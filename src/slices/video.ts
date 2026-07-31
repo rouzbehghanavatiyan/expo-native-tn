@@ -2,6 +2,10 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { Alert } from "react-native";
 import {
+  startMatchTimer,
+  stopMatchTimer,
+} from "../components/TimerForFindMatch";
+import {
   addAttachment,
   addInvite,
   addMovie,
@@ -11,17 +15,14 @@ import { logger } from "../utils/logger";
 import { socketClient } from "../utils/socketClient";
 import { RsetShowTimerButtn } from "./main";
 import { VideoState } from "./type";
-import {
-  startMatchTimer,
-  stopMatchTimer,
-} from "../components/TimerForFindMatch";
 
 const initialState: VideoState = {
   videoSrc: null,
   videoFile: null,
-  showTimeout: false, // 👈 برای کنترل مودال خطا و عدم یافتن حریف
+  showTimeout: false,
   isLoading: false,
   error: null,
+  showDeactivatedModal: false,
   currentStep: 1,
   isWaitingForMatch: false,
   uploadStatus: "idle",
@@ -50,8 +51,13 @@ export const prepareVideoFileThunk = createAsyncThunk(
 
 export const removeInviteThunk = createAsyncThunk(
   "video/removeInvite",
-  async (inviteId: number) => {
-    await removeInvite(inviteId);
+  async (inviteId: number, { dispatch }) => {
+    const res = await removeInvite(inviteId);
+
+    if (res?.data?.status === 0) {
+      dispatch(setShowDeactivatedModal(true));
+    }
+
     return inviteId;
   },
 );
@@ -215,6 +221,10 @@ const videoSlice = createSlice({
       // 👈 اضافه شد
       state.showTimeout = action.payload;
     },
+    setShowDeactivatedModal(state, action: PayloadAction<boolean>) {
+      // 👈 ردیوسر جدید اضافه شد
+      state.showDeactivatedModal = action.payload;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -257,6 +267,7 @@ export const {
   updateMovieData,
   setVideoSrc,
   setShowTimeout,
+  setShowDeactivatedModal,
 } = videoSlice.actions;
 
 export default videoSlice.reducer;

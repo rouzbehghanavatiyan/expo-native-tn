@@ -1,12 +1,15 @@
-import MultiSlider from "@ptomasroos/react-native-multi-slider";
-import { AVPlaybackStatus, ResizeMode, Video } from "expo-av";
+import { AVPlaybackStatus, Video } from "expo-av";
 import { useRouter } from "expo-router";
 import React, { useRef, useState } from "react";
-import { Dimensions, Pressable, StyleSheet } from "react-native";
-import { Text, View, XStack } from "tamagui";
-import { goToStep } from "../slices/video";
-import { useAppDispatch } from "../store/reduxHookType";
+import { Dimensions, Image, ImageStyle, Pressable } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Spinner, View, XStack } from "tamagui";
+import { RsetShowTimerButtn } from "../slices/main";
+import { goToStep, removeInviteThunk } from "../slices/video";
+import { useAppDispatch, useAppSelector } from "../store/reduxHookType";
 import BaseButton from "./BaseButtom";
+import { Icon } from "./Icon";
+import { ButtonTimer } from "./ui/ButtonTimer";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -15,26 +18,32 @@ interface VideoPreviewStepProps {
   movieData: any;
   onMovieDataChange: (data: any) => void;
   onCancel: () => void;
-  // handleNextStep: (trimData?: {
-  //   startTime: number;
-  //   endTime: number;
-  //   originalSrc: string;
-  //   duration: number;
-  // }) => void;
+  coverImage?: string;
+  handleNextStep?: any;
+  onAccept: any;
+  isLoading: any;
 }
 
-const VideoPreviewStep: React.FC<any> = ({
+const VideoPreviewStep: React.FC<VideoPreviewStepProps> = ({
   videoSrc,
+  isLoading,
   movieData,
   onMovieDataChange,
-  // onCancel,
+  coverImage,
   handleNextStep,
+  onAccept,
 }) => {
   const videoRef = useRef<Video>(null);
   const [isPlaying, setIsPlaying] = useState(true);
   const [title, setTitle] = useState("");
   const [duration, setDuration] = useState(0);
   const [trimRange, setTrimRange] = useState([0, 0]);
+  const showTimerButtn = useAppSelector((state) => state.main.showTimerButtn);
+
+  const [selectedIcon, setSelectedIcon] = useState<
+    "AspectRatio" | "CheckBoxOutlineBlank" | null
+  >("CheckBoxOutlineBlank");
+
   const [videoLayout, setVideoLayout] = useState({
     width: SCREEN_WIDTH - 32,
     height: 300,
@@ -52,6 +61,16 @@ const VideoPreviewStep: React.FC<any> = ({
 
     setTrimRange([start, end]);
     videoRef.current?.setPositionAsync(start * 1000);
+  };
+
+  const handleCanceled = async () => {
+    router.replace("/(tabs)/watch");
+    console.log("showTimerButtn showTimerButtn", showTimerButtn);
+    // if (true) {
+    // } else {
+    // }
+    await dispatch(removeInviteThunk(movieData?.inviteId));
+    dispatch(RsetShowTimerButtn(false));
   };
 
   const handleVideoLoad = (status: any) => {
@@ -84,6 +103,7 @@ const VideoPreviewStep: React.FC<any> = ({
       setVideoLayout({ width: finalWidth, height: finalHeight });
     }
   };
+
   const handlePlaybackStatusUpdate = (status: AVPlaybackStatus) => {
     if (!status.isLoaded || trimRange[1] === 0) return;
 
@@ -93,6 +113,7 @@ const VideoPreviewStep: React.FC<any> = ({
       videoRef.current?.setPositionAsync(trimRange[0] * 1000);
     }
   };
+
   const togglePlay = async () => {
     if (!videoRef.current) return;
 
@@ -104,6 +125,7 @@ const VideoPreviewStep: React.FC<any> = ({
 
     setIsPlaying(!isPlaying);
   };
+
   const dispatch = useAppDispatch();
 
   const handleNextPress = () => {
@@ -124,100 +146,117 @@ const VideoPreviewStep: React.FC<any> = ({
     return `${m}:${s.toString().padStart(2, "0")}`;
   };
 
+  // تعیین استایل و resizeMode بر اساس آیکون انتخاب شده
+  const imageStyle: ImageStyle = {
+    width: selectedIcon === "AspectRatio" ? SCREEN_WIDTH : SCREEN_WIDTH - 32, // تمام عرض یا با حاشیه
+    height: SCREEN_HEIGHT * 0.5,
+    resizeMode: selectedIcon === "AspectRatio" ? "stretch" : "contain", // تغییر resizeMode
+    backgroundColor: "black",
+    borderRadius: selectedIcon === "AspectRatio" ? 0 : 12, // حذف حاشیه گرد در حالت تمام‌عرض (اختیاری)
+  };
+
   return (
-    <View flex={1} backgroundColor="#000000">
-      <View
-        flex={1}
-        justifyContent="center"
-        alignItems="center"
-        paddingHorizontal={16}
-      >
-        <View
-          style={{
-            width: videoLayout.width,
-            height: videoLayout.height,
-            backgroundColor: "black",
-            overflow: "hidden",
-          }}
-        >
-          <Pressable style={{ flex: 1 }} onPress={togglePlay}>
-            <Video
-              ref={videoRef}
-              source={{ uri: videoSrc }}
-              resizeMode={ResizeMode.CONTAIN}
-              style={StyleSheet.absoluteFillObject}
-              onLoad={handleVideoLoad}
-              onPlaybackStatusUpdate={handlePlaybackStatusUpdate}
-              shouldPlay={isPlaying}
-              isLooping={false}
-              isMuted={false}
-            />
-          </Pressable>
+    <SafeAreaView style={{ flex: 1 }}>
+      <View flex={1}>
+        <View flex={1} justifyContent="center" alignItems="center">
+          <View
+            flex={1}
+            justifyContent="flex-start"
+            alignItems="center"
+            paddingHorizontal={0}
+            width="100%"
+          >
+            {!!coverImage && (
+              <View width="100%" alignItems="center">
+                <View width="100%" alignItems="center" backgroundColor="black">
+                  <Image
+                    source={{ uri: coverImage }}
+                    alt="Video Cover"
+                    style={imageStyle}
+                  />
+                </View>
+                <View
+                  width={SCREEN_WIDTH - 32}
+                  height={1}
+                  backgroundColor="#374151"
+                  marginTop="$1"
+                  marginBottom="$5"
+                />
+                {showTimerButtn ? (
+                  <View marginTop={60}>
+                    <ButtonTimer show={showTimerButtn} startTime={120} />
+                  </View>
+                ) : (
+                  <Icon size={110} name="Question" color="white" />
+                )}
+              </View>
+            )}
+          </View>
+        </View>
+        <View padding={20} paddingBottom={22} backgroundColor="#1f2937">
+          <XStack
+            justifyContent="center"
+            alignItems="center"
+            gap="$6"
+            marginBottom="$4"
+          >
+            <Pressable
+              onPress={() => setSelectedIcon("AspectRatio")}
+              style={{
+                borderWidth: selectedIcon === "AspectRatio" ? 1 : 0,
+                borderColor:
+                  selectedIcon === "AspectRatio" ? "#22c55e" : "transparent",
+                borderRadius: 12,
+                padding: 4,
+              }}
+            >
+              <Icon size={45} name="CheckBoxOutlineBlank" color="white" />
+            </Pressable>
+            <Pressable
+              onPress={() => setSelectedIcon("CheckBoxOutlineBlank")}
+              style={{
+                borderWidth: selectedIcon === "CheckBoxOutlineBlank" ? 1 : 0,
+                borderColor:
+                  selectedIcon === "CheckBoxOutlineBlank"
+                    ? "#22c55e"
+                    : "transparent",
+                borderRadius: 12,
+                padding: 4,
+              }}
+            >
+              <Icon size={45} name="AspectRatio" color="white" />
+            </Pressable>
+          </XStack>
+          <XStack justifyContent="space-between" alignItems="center" gap="$2">
+            <BaseButton
+              flex={1}
+              size="$3"
+              bg="$greenMain"
+              chromeless
+              loading={isLoading}
+              disabled={showTimerButtn && true}
+              // onPress={handleNextPress}
+              onPress={onAccept}
+            >
+              {showTimerButtn ? (
+                <Spinner size="small" color="white" />
+              ) : (
+                "Start"
+              )}
+            </BaseButton>
+            <BaseButton
+              flex={1}
+              size="$3"
+              bg="transparent"
+              chromeless
+              onPress={handleCanceled}
+            >
+              Cancel
+            </BaseButton>
+          </XStack>
         </View>
       </View>
-      <View padding={20} paddingBottom={62} backgroundColor="#1f2937">
-        {duration > 0 ? (
-          <>
-            <XStack justifyContent="space-between" marginTop={8}>
-              <Text color="#9ca3af">{formatTime(trimRange[0])}</Text>
-              <Text color="#10b981">
-                {formatTime(trimRange[1] - trimRange[0])} / 1:00
-              </Text>
-              <Text color="#9ca3af">{formatTime(trimRange[1])}</Text>
-            </XStack>
-
-            <View alignItems="center" marginBottom={16}>
-              <MultiSlider
-                values={[trimRange[0], trimRange[1]]}
-                min={0}
-                max={duration}
-                step={0.5}
-                sliderLength={SCREEN_WIDTH - 80}
-                onValuesChange={handleSliderChange}
-                selectedStyle={{ backgroundColor: "#10b981" }}
-                unselectedStyle={{ backgroundColor: "#4b5563" }}
-                markerStyle={{
-                  backgroundColor: "#059669",
-                  height: 24,
-                  width: 24,
-                  borderRadius: 12,
-                  shadowColor: "#000",
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.3,
-                  shadowRadius: 4,
-                  elevation: 4,
-                }}
-                trackStyle={{ height: 6, borderRadius: 3 }}
-              />
-            </View>
-          </>
-        ) : (
-          <Text textAlign="center" color="#9ca3af" marginBottom={16}>
-            Loading...
-          </Text>
-        )}
-        <XStack justifyContent="space-between" alignItems="center" gap="$2">
-          <BaseButton
-            flex={1}
-            size="$3"
-            bg="$greenMain"
-            chromeless
-            onPress={handleNextPress}
-          >
-            Next
-          </BaseButton>
-          <BaseButton
-            flex={1}
-            size="$3"
-            bg="transparent"
-            chromeless
-            onPress={() => router.back()}
-          >
-            Cancel
-          </BaseButton>
-        </XStack>
-      </View>
-    </View>
+    </SafeAreaView>
   );
 };
 

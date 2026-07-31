@@ -36,36 +36,8 @@ const Sot: React.FC = () => {
   const [stepsData, setStepsData] = useState(initialSteps);
   const [rememberMe, setRememberMe] = useState<boolean>(false);
   const [allSubCategory, setAllSubCategory] = useState<any>();
-  const [currentStep, setCurrentStep] = useState(initialCurrentStep);
+  const [currentStep, setCurrentStep] = useState<any>(initialCurrentStep);
 
-  useEffect(() => {
-    AsyncStorage.getItem("rememberMe").then((val) => {
-      setRememberMe(val === "true");
-    });
-  }, []);
-
-  useEffect(() => {
-    AsyncStorage.setItem("rememberMe", String(rememberMe));
-  }, [rememberMe]);
-
-  // const updateStepData = (stepNumber: number, data: any) => {
-  //   const updatedSteps: any = stepsData?.map((step, index) =>
-  //     index === stepNumber - 1 ? { title: data.name, icon: data.icon } : step,
-  //   );
-  //   setStepsData(updatedSteps);
-
-  //   setCurrentStep((prev) => ({
-  //     ...prev,
-  //     [stepNumber === 1
-  //       ? "arena"
-  //       : stepNumber === 2
-  //         ? "skill"
-  //         : stepNumber === 3
-  //           ? "gear"
-  //           : ""]: data,
-  //     number: stepNumber + 1,
-  //   }));
-  // };
   const updateStepData = async (stepNumber: number, data: any) => {
     const updatedSteps: any = stepsData?.map((step, index) =>
       index === stepNumber - 1 ? { title: data.name, icon: data.icon } : step,
@@ -104,7 +76,7 @@ const Sot: React.FC = () => {
       }
     }
 
-    setCurrentStep((prev) => ({
+    setCurrentStep((prev: any) => ({
       ...prev,
       [stepNumber === 1
         ? "arena"
@@ -123,58 +95,30 @@ const Sot: React.FC = () => {
     setAllSubCategory([]);
   };
 
-  const renderCurrentStep = () => {
-    switch (currentStep.number) {
-      case 1:
-        return (
-          <Arena
-            allSubCategory={allSubCategory}
-            setAllSubCategory={setAllSubCategory}
-            currentStep={currentStep}
-            setCurrentStep={setCurrentStep}
-            updateStepData={updateStepData}
-          />
-        );
-      case 2:
-        return (
-          <Skill
-            allSubCategory={allSubCategory}
-            setAllSubCategory={setAllSubCategory}
-            currentStep={currentStep}
-            setCurrentStep={setCurrentStep}
-            updateStepData={updateStepData}
-          />
-        );
-      case 3:
-      default:
-        return (
-          <Gear
-            currentStep={currentStep}
-            setCurrentStep={setCurrentStep}
-            updateStepData={updateStepData}
-          />
-        );
-    }
-  };
-
   const checkChoiceSot = async () => {
-    if (!rememberMe) {
-      await AsyncStorage.multiRemove([
-        "arenaId",
-        "skillId",
-        "gearId",
-        "arenaIconName",
-        "skillIconName",
-        "gearIconName",
-        "arenaName",
-        "skillName",
-        "gearName",
-      ]);
-      resetSot();
-      return;
-    }
-
     try {
+      const rememberStr = await AsyncStorage.getItem("rememberMe");
+      const isRemember = rememberStr === "true";
+      setRememberMe(isRemember);
+
+      if (!isRemember) {
+        // پاک کردن کامل حافظه اگر وضعیت قبل خاموش بوده
+        await AsyncStorage.multiRemove([
+          "arenaId",
+          "skillId",
+          "gearId",
+          "arenaIconName",
+          "skillIconName",
+          "gearIconName",
+          "arenaName",
+          "skillName",
+          "gearName",
+        ]);
+        resetSot();
+        return;
+      }
+
+      // در صورتی که سوییچ روشن باشد بازیابی اطلاعات
       const arenaId = await AsyncStorage.getItem("arenaId");
       const skillId = await AsyncStorage.getItem("skillId");
       const arenaIconName = await AsyncStorage.getItem("arenaIconName");
@@ -230,9 +174,55 @@ const Sot: React.FC = () => {
     checkChoiceSot();
   }, []);
 
-  const handleRememberMeChange = (val: boolean) => {
+  const handleRememberMeChange = async (val: boolean) => {
     setRememberMe(val);
-    if (!val) resetSot();
+    await AsyncStorage.setItem("rememberMe", String(val));
+
+    if (!val) {
+      // اگر کاربر سوییچ را خاموش کرد: اطلاعات هم از گوشی هم از فرم ریست شود
+      await AsyncStorage.multiRemove([
+        "arenaId",
+        "skillId",
+        "gearId",
+        "arenaIconName",
+        "skillIconName",
+        "gearIconName",
+        "arenaName",
+        "skillName",
+        "gearName",
+      ]);
+      resetSot();
+    } else {
+      // اگر کاربر سوییچ را روشن کرد مقادیر فعلی را ذخیره می‌کنیم
+      if (currentStep.arena) updateStepData(1, currentStep.arena);
+      if (currentStep.skill) updateStepData(2, currentStep.skill);
+      if (currentStep.gear) updateStepData(3, currentStep.gear);
+    }
+  };
+
+  const renderCurrentStep = () => {
+    switch (currentStep.number) {
+      case 1:
+        return <Arena updateStepData={updateStepData} />;
+      case 2:
+        return (
+          <Skill
+            allSubCategory={allSubCategory}
+            setAllSubCategory={setAllSubCategory}
+            currentStep={currentStep}
+            updateStepData={updateStepData}
+          />
+        );
+      case 3:
+      default:
+        return (
+          <Gear
+            currentStep={currentStep}
+            setCurrentStep={setCurrentStep}
+            updateStepData={updateStepData}
+          />
+        );
+    }
   };
 
   return (
@@ -287,9 +277,7 @@ const Sot: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  container: { flex: 1 },
   rememberRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -298,24 +286,15 @@ const styles = StyleSheet.create({
     marginTop: 12,
     marginBottom: 4,
   },
-  rememberLabel: {
-    fontSize: 14,
-    fontWeight: "bold",
-  },
-  stepsSection: {
-    marginTop: 12,
-    marginBottom: 8,
-    alignItems: "center",
-  },
+  rememberLabel: { fontSize: 14, fontWeight: "bold" },
+  stepsSection: { marginTop: 12, marginBottom: 8, alignItems: "center" },
   stepsRow: {
     flexDirection: "row",
     gap: 16,
     paddingHorizontal: 16,
     alignItems: "flex-start",
   },
-  stepItem: {
-    alignItems: "center",
-  },
+  stepItem: { alignItems: "center" },
   stepCircle: {
     width: 80,
     height: 80,
@@ -324,26 +303,16 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     padding: 4,
   },
-  stepCircleActive: {
-    backgroundColor: "#22c55e", // bg-green معادل
-  },
-  stepCircleInactive: {
-    backgroundColor: "#e5e7eb", // bg-gray-200
-  },
+  stepCircleActive: { backgroundColor: "#22c55e" },
+  stepCircleInactive: { backgroundColor: "#e5e7eb" },
   stepTitle: {
     color: "white",
     fontSize: 11,
     marginTop: 2,
     textAlign: "center",
   },
-  stepLabel: {
-    fontSize: 12,
-    color: "#4b5563",
-    marginTop: 8,
-  },
-  content: {
-    flex: 1,
-  },
+  stepLabel: { fontSize: 12, color: "#4b5563", marginTop: 8 },
+  content: { flex: 1 },
 });
 
 export default Sot;

@@ -53,7 +53,11 @@ export const createStatus = async (postData: any) => {
 };
 
 export const getStatus = async () => {
-  return await chatApi.get(`/ api/status/getStatus`);
+  return await chatApi.get(`/api/status/getStatus`);
+};
+
+export const allStore = async () => {
+  return await chatApi.get(`/api/store/allStore`);
 };
 
 export const userMessages = async (

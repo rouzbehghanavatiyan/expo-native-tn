@@ -1,3 +1,4 @@
+import { DeactivatedModal } from "@/src/common/DeactivatedModal";
 import { MatchTimeoutModal } from "@/src/common/MatchTimeoutModal";
 import FilteredWatch from "@/src/components/FilteredWatch";
 import MainTitle from "@/src/components/MainTitle";
@@ -23,6 +24,9 @@ export default function WatchScreen() {
   const [selectFiltered, setSelectFiltered] = useState<number>(0);
   const [loading, setLoading] = useState(false);
   const showTimeout = useAppSelector((state) => state?.video?.showTimeout);
+  const showDeactivatedModal = useAppSelector(
+    (state) => state?.video?.showDeactivatedModal,
+  );
   const handleGetFiltered = async () => {
     try {
       const res = await subCategoryList(1);
@@ -149,6 +153,7 @@ export default function WatchScreen() {
         />
       </View>
       {showTimeout && <MatchTimeoutModal />}
+      {showDeactivatedModal && <DeactivatedModal />}
     </>
   );
 }

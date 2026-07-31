@@ -1,4 +1,3 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import React from "react";
 import { StyleSheet, View } from "react-native";
 import { useAppSelector } from "../store/reduxHookType";
@@ -19,10 +18,6 @@ const Arena: React.FC<any> = ({ updateStepData }) => {
     if (data.icon === "robot") {
       return;
     }
-
-    await AsyncStorage.setItem("arenaId", String(data.id));
-    await AsyncStorage.setItem("arenaIconName", data.icon);
-    await AsyncStorage.setItem("arenaName", data.name);
   };
 
   const arenaIconMap = main?.category?.reduce((acc: any, category: any) => {
@@ -52,13 +47,8 @@ const Arena: React.FC<any> = ({ updateStepData }) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    height: "100%",
-    borderRadius: 8,
-  },
-  icon: {
-    marginHorizontal: 12, // معادل mx-3
-  },
+  container: { height: "100%", borderRadius: 8 },
+  icon: { marginHorizontal: 12 },
 });
 
 export default Arena;

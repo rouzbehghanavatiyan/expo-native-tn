@@ -25,7 +25,7 @@ const AppHeader = () => {
     }),
     [pathname],
   );
-  
+
   const titleMap: Record<string, string> = {
     "/profile": "Profile",
     "/notification": "Notifications",
@@ -60,9 +60,7 @@ const AppHeader = () => {
 
   const ActionIcons = () => (
     <View style={styles.iconContainer}>
-      <TouchableOpacity
-      // onPress={() => router.push("/store")}
-      >
+      <TouchableOpacity onPress={() => router.push("/store")}>
         <Ionicons name="ticket-outline" size={22} color="#10153D" />
       </TouchableOpacity>
 

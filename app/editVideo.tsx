@@ -1,4 +1,3 @@
-import { CoverConfirmStep } from "@/src/components/CoverConfirmStep";
 import VideoPreviewStep from "@/src/components/VideoPreviewStep";
 import { useEditVideo } from "@/src/hook/useEditVideo";
 import { setVideoSrc, updateMovieData } from "@/src/slices/video";
@@ -48,7 +47,7 @@ export default function EditVideoScreen() {
     allFormData,
     mode,
   });
-  
+
   const renderStepContent = () => {
     switch (currentStep) {
       case 1:
@@ -56,20 +55,23 @@ export default function EditVideoScreen() {
           <VideoPreviewStep
             videoSrc={videoSrc}
             movieData={movieData}
+            onAccept={handleUploadVideo}
+            coverImage={coverImage}
             onMovieDataChange={(data) => dispatch(updateMovieData(data))}
             onCancel={handleBack}
-            handleNextStep={handleNextStep} 
+            isLoading={isLoadingBtn}
+            handleNextStep={handleNextStep}
           />
         ) : null;
-      case 2:
-        return (
-          <CoverConfirmStep
-            coverImage={coverImage}
-            onBack={handleBack}
-            onAccept={handleUploadVideo}
-            isLoading={isLoadingBtn}
-          />
-        );
+      // case 2:
+      //   return (
+      //     <CoverConfirmStep
+      //       coverImage={coverImage}
+      //       onBack={handleBack}
+      //       onAccept={handleUploadVideo}
+      //       isLoading={isLoadingBtn}
+      //     />
+      //   );
       default:
         return null;
     }
