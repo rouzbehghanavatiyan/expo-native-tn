@@ -7,7 +7,11 @@ import { useLocalSearchParams, usePathname } from "expo-router";
 import React, { useMemo } from "react";
 import { useSelector } from "react-redux";
 
-export function AppInitializer({ children }: { children: React.ReactNode }) {
+export default function AppInitializer({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const main = useSelector((state: any) => state.main);
   const pathname = usePathname();
   const params = useLocalSearchParams();
@@ -15,43 +19,23 @@ export function AppInitializer({ children }: { children: React.ReactNode }) {
   const userId = main?.userId;
   const userLoginId = main?.userLogin?.user?.id || main?.userLogin?.userId;
   const isChat = pathname?.includes("chat");
+
   const receiveUserId = useMemo(() => {
     if (!isChat) return null;
-
     const rawUser = params?.user;
-
-    if (Array.isArray(rawUser)) {
-      return Number(rawUser[0]) || null;
-    }
-
+    if (Array.isArray(rawUser)) return Number(rawUser[0]) || null;
     return Number(rawUser) || null;
   }, [isChat, params?.user]);
 
   const { isInitializing } = useAuthInitialization();
-  console.log("check for rerender :appinitialiser");
-  
-  useAuthRedirect({
-    isInitializing,
-    token,
-    userId,
-    userLoginId,
-  });
 
-  useSocketInitializer({
-    userLoginId,
-    userId,
-  });
-
+  useAuthRedirect({ isInitializing, token, userId, userLoginId });
+  useSocketInitializer({ userLoginId, userId });
   usePushNotifications();
 
   if (isInitializing) {
     return <AppLoading />;
   }
 
-  return (
-    <>
-      {children}
-      {isInitializing && <AppLoading overlay />}
-    </>
-  );
+  return <>{children}</>;
 }

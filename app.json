@@ -1,11 +1,11 @@
 {
   "expo": {
+    "icon": "./src/assets/images/android_icon_safe_foreground.png",
     "name": "clashtalent",
     "slug": "clashtalent",
     "jsEngine": "hermes",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./src/assets/images/logocircle.png",
     "scheme": "clashtalent",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -17,9 +17,9 @@
       "jsEngine": "hermes",
       "softwareKeyboardLayoutMode": "pan",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./src/assets/images/logocircle.png",
-        "backgroundImage": "./src/assets/images/bronze-3.png"
+        "foregroundImage": "./src/assets/images/android_icon_safe_foreground.png",
+        "backgroundColor": "#FFFFFF",
+        "backgroundImage": "./src/assets/images/android_icon_background_white.png"
       },
       "edgeToEdgeEnabled": true,
       "package": "clashtalent.com",
@@ -33,6 +33,7 @@
       [
         "expo-notifications",
         {
+          "icon": "./src/assets/images/logocircle.png",
           "color": "#ffffff"
         }
       ],

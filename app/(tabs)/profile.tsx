@@ -6,6 +6,7 @@ import { useLoadMore } from "@/src/components/useLoadMore";
 import { userAttachmentList } from "@/src/services/masterServices";
 import { useAppSelector } from "@/src/store/reduxHookType";
 import { getImageUrl } from "@/src/utils/fileHelper";
+import { logger } from "@/src/utils/logger";
 import { socketClient } from "@/src/utils/socketClient";
 import { useRoute } from "@react-navigation/native";
 import React, {

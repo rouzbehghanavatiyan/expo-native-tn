@@ -1,7 +1,7 @@
-import { Trash2 } from "@tamagui/lucide-icons";
 import React, { useState } from "react";
 import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 import { Text, XStack, YStack } from "tamagui";
+import { Icon } from "./Icon";
 import ImageRank from "./ImageRank";
 
 const Notification = () => {
@@ -13,7 +13,7 @@ const Notification = () => {
 
   const renderRightActions = () => (
     <YStack width={80} bg="#ef4444" ai="center" jc="center">
-      <Trash2 color="white" size={24} />
+      <Icon name="trash" color="white" size={24} />
     </YStack>
   );
 

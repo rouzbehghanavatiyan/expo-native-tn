@@ -1,6 +1,7 @@
 import Logo from "@/src/assets/images/logocircle.png";
 import BaseButton from "@/src/components/BaseButtom";
 import BaseInput from "@/src/components/BaseInput";
+import { Icon } from "@/src/components/Icon";
 import { login } from "@/src/services/authService";
 import {
   categoryList,
@@ -19,11 +20,10 @@ import {
 import { useAppDispatch } from "@/src/store/reduxHookType";
 import { validateFormLogin } from "@/src/utils/errorValidation";
 import { FormErrors, FormValues } from "@/src/utils/GlobalType";
-import { Check, Eye, EyeOff } from "@tamagui/lucide-icons";
 import { Link, useRouter } from "expo-router";
 import { jwtDecode } from "jwt-decode";
 import { useState } from "react";
-import { Modal, Pressable } from "react-native"; // اضافه شدن Modal و Pressable
+import { Alert, Modal, Pressable } from "react-native"; // اضافه شدن Modal و Pressable
 import { Checkbox, Image, Text, View, XStack, YStack } from "tamagui";
 
 const LoginScreen: React.FC<any> = () => {
@@ -184,9 +184,9 @@ const LoginScreen: React.FC<any> = () => {
                     cursor="pointer"
                   >
                     {showPassword ? (
-                      <EyeOff size={20} color="gray" />
+                      <Icon name="eye" size={20} color="gray" />
                     ) : (
-                      <Eye size={20} color="gray" />
+                      <Icon name="eye" size={20} color="gray" />
                     )}
                   </View>
                 }
@@ -198,7 +198,7 @@ const LoginScreen: React.FC<any> = () => {
             <XStack alignItems="center" gap="$2">
               <Checkbox id="remember-me" size="$8" defaultChecked={false}>
                 <Checkbox.Indicator>
-                  <Check />
+                  <Icon name="check" size={20} color="gray" />
                 </Checkbox.Indicator>
               </Checkbox>
 
@@ -285,7 +285,6 @@ const LoginScreen: React.FC<any> = () => {
                 <BaseButton
                   onPress={() => setShowErrorModal(false)}
                   bg="$primaryMain"
-                  color="white"
                   width={80}
                 >
                   OK

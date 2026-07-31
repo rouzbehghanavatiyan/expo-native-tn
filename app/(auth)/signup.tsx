@@ -1,11 +1,11 @@
 import Logo from "@/src/assets/images/logocircle.png";
 import BaseButton from "@/src/components/BaseButtom";
 import BaseInput from "@/src/components/BaseInput";
+import { Icon } from "@/src/components/Icon";
 import { useMessageModal } from "@/src/hook/useMessageModal";
 import { registerUser } from "@/src/services/masterServices";
 import { validateForm } from "@/src/utils/errorValidation";
 import { FormErrors, FormValues } from "@/src/utils/GlobalType";
-import { Eye, EyeOff } from "@tamagui/lucide-icons";
 import { Link, useRouter } from "expo-router";
 import React, { useState } from "react";
 import { Image, Text, View, XStack, YStack } from "tamagui";
@@ -141,7 +141,7 @@ export default function SignUpScreen() {
                 cursor="pointer"
               >
                 {showPassword ? (
-                  <EyeOff size={20} color="gray" />
+                  <Icon name="eye-off" color="gray" />
                 ) : (
                   <Eye size={20} color="gray" />
                 )}
