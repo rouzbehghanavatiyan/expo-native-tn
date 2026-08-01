@@ -1,3 +1,4 @@
+import axios from "axios";
 import { api } from "./api";
 
 export const attachmentList = async (postData: {
@@ -73,11 +74,16 @@ export const attachmentListByInviteId = async (postData: {
 };
 
 export const addAttachment = async (postData: FormData) => {
-  const response = await api.post(`/addAttachment`, postData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
+  // const response = await api.post(`/addAttachment`, postData, {
+  const response = await axios.post(
+    `http://localhost:7049/api/Attachment/addAttachment`,
+    postData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
     },
-  });
+  );
   return response.data;
 };
 
@@ -104,7 +110,11 @@ export const addInvite = async (postData: any) => {
 };
 
 export const addMovie = async (data: any) => {
-  return await api.post(`/addMovie`, data);
+  // return await api.post(`/addMovie`, data);
+  return await axios.post(
+    `http://localhost:7049/api/Attachment/addMovie`,
+    data,
+  );
 };
 
 export const registerUser = async (postData: any) => {

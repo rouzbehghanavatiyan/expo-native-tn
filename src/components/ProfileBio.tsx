@@ -14,16 +14,21 @@ import { getStatus } from "../services/nestServices";
 import { Icon } from "./Icon";
 
 const Started = require("../assets/ranks/starter.png");
-const bronseBase1 = require("../assets/ranks/bronze.png");
-const bronseBase2 = require("../assets/ranks/bronze.png");
-const bronseBase3 = require("../assets/ranks/bronze.png");
-const silver1 = require("../assets/ranks/silverMain.png");
-const silver2 = require("../assets/ranks/silverMain.png");
-const silver3 = require("../assets/ranks/silverMain.png");
-const gold1 = require("../assets/ranks/goldMain.png");
-const gold2 = require("../assets/ranks/goldMain.png");
-const gold3 = require("../assets/ranks/goldMain.png");
-const ruby = require("../assets/ranks/ruby.png");
+const bronseBase1 = require("../assets/ranks/bronze1.png");
+const bronseBase2 = require("../assets/ranks/bronze2.png");
+const bronseBase3 = require("../assets/ranks/bronze3.png");
+const silver1 = require("../assets/ranks/silver1.png");
+const silver2 = require("../assets/ranks/silver2.png");
+const silver3 = require("../assets/ranks/silver3.png");
+const gold1 = require("../assets/ranks/gold1.png");
+const gold2 = require("../assets/ranks/gold2.png");
+const gold3 = require("../assets/ranks/gold3.png");
+const gem1 = require("../assets/ranks/gem1.png");
+const gem2 = require("../assets/ranks/gem2.png");
+const gem3 = require("../assets/ranks/gem3.png");
+const ruby1 = require("../assets/ranks/ruby1.png");
+const ruby2 = require("../assets/ranks/ruby2.png");
+const ruby3 = require("../assets/ranks/ruby3.png");
 const word = require("../assets/ranks/worldMain.png");
 
 interface ProfileBioProps {

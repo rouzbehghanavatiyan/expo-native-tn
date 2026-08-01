@@ -5,17 +5,21 @@ import { Image, Text as RNText, StyleSheet } from "react-native";
 import { Text, View } from "tamagui";
 
 const Started = require("../assets/ranks/starter.png");
-const bronseBase1 = require("../assets/ranks/bronze.png");
-const bronseBase2 = require("../assets/ranks/bronze.png");
-const bronseBase3 = require("../assets/ranks/bronze.png");
-const silver1 = require("../assets/ranks/silverMain.png");
-const silver2 = require("../assets/ranks/silverMain.png");
-const silver3 = require("../assets/ranks/silverMain.png");
-const gold1 = require("../assets/ranks/goldMain.png");
-const gold2 = require("../assets/ranks/goldMain.png");
-const gold3 = require("../assets/ranks/goldMain.png");
-const ruby = require("../assets/ranks/ruby.png");
-// const gem = require("../assets/ranks/gem.png");
+const bronseBase1 = require("../assets/ranks/bronze1.png");
+const bronseBase2 = require("../assets/ranks/bronze2.png");
+const bronseBase3 = require("../assets/ranks/bronze3.png");
+const silver1 = require("../assets/ranks/silver1.png");
+const silver2 = require("../assets/ranks/silver2.png");
+const silver3 = require("../assets/ranks/silver3.png");
+const gold1 = require("../assets/ranks/gold1.png");
+const gold2 = require("../assets/ranks/gold2.png");
+const gold3 = require("../assets/ranks/gold3.png");
+const ruby1 = require("../assets/ranks/ruby1.png");
+const ruby2 = require("../assets/ranks/ruby2.png");
+const ruby3 = require("../assets/ranks/ruby3.png");
+const gem1 = require("../assets/ranks/gem1.png");
+const gem2 = require("../assets/ranks/gem2.png");
+const gem3 = require("../assets/ranks/gem3.png");
 const word = require("../assets/ranks/worldMain.png");
 
 interface ProfileWithRankProps {
@@ -82,17 +86,17 @@ const ImageRank: React.FC<ProfileWithRankProps> = ({
     } else if (score >= 800 && score < 900) {
       return { base: gold3, stars: 3, starType: "gold" as const };
     } else if (score >= 900 && score < 1000) {
-      return { base: ruby, stars: 1, starType: "ruby" as const };
+      return { base: gem1, stars: 1, starType: "ruby" as const };
     } else if (score >= 1000 && score < 1100) {
-      return { base: ruby, stars: 2, starType: "ruby" as const };
+      return { base: gem2, stars: 2, starType: "ruby" as const };
     } else if (score >= 1100 && score < 1200) {
-      return { base: ruby, stars: 3, starType: "ruby" as const };
+      return { base: gem3, stars: 3, starType: "ruby" as const };
     } else if (score >= 1200 && score < 1300) {
-      return { base: ruby, stars: 1, starType: "ruby" as const };
+      return { base: ruby1, stars: 1, starType: "ruby" as const };
     } else if (score >= 1300 && score < 1400) {
-      return { base: ruby, stars: 2, starType: "ruby" as const };
+      return { base: ruby2, stars: 2, starType: "ruby" as const };
     } else if (score >= 1400 && score < 1500) {
-      return { base: ruby, stars: 3, starType: "ruby" as const };
+      return { base: ruby3, stars: 3, starType: "ruby" as const };
     } else if (score >= 1500 && score < 1600) {
       return {
         base: word,
