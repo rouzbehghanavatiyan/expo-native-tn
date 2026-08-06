@@ -2,6 +2,7 @@ import VideoPreviewStep from "@/src/components/VideoPreviewStep";
 import { useEditVideo } from "@/src/hook/useEditVideo";
 import { setVideoSrc, updateMovieData } from "@/src/slices/video";
 import { useAppDispatch } from "@/src/store/reduxHookType";
+import { logger } from "@/src/utils/logger";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect } from "react";
 import { YStack } from "tamagui";
@@ -12,6 +13,7 @@ export default function EditVideoScreen() {
   const params = useLocalSearchParams();
 
   const mode = params.mode ? JSON.parse(params.mode as string) : null;
+  logger.info("paramsparamsparamsparamsparamsparamsparams", params.allFormData);
   const allFormData = params.allFormData
     ? JSON.parse(params.allFormData as string)
     : null;

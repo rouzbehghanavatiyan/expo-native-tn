@@ -72,7 +72,7 @@ export const uploadFullProcessThunk = createAsyncThunk(
       const gearIdStorage = await AsyncStorage.getItem("gearId");
 
       const postData = {
-        userId,
+        userId: Number(userId),
         description: allFormData?.description || movieMeta?.desc || "",
         title: allFormData?.title || movieMeta?.title || "",
         subSubCategoryId:
@@ -82,7 +82,6 @@ export const uploadFullProcessThunk = createAsyncThunk(
 
       const movieRes = await addMovie(postData);
       const movieDataRes = movieRes?.data?.data;
-
       if (movieRes?.data?.status !== 0) {
         throw new Error("Error in recording initial movie information");
       }
@@ -96,17 +95,17 @@ export const uploadFullProcessThunk = createAsyncThunk(
           type: allFormData.video.type || "video/mp4",
         } as any);
       }
-
+      logger.info("allFormData", allFormData);
       if (allFormData?.imageCover) {
-        formData.append("CoverImage", {
+        formData.append("FormFile", {
           uri: allFormData.imageCover.uri,
-          name: allFormData.imageCover.name || "cover.jpg",
-          type: allFormData.imageCover.type || "image/jpeg",
+          name: allFormData.imageCover.name || "cover.png",
+          type: allFormData.imageCover.type || "image/png",
         } as any);
       }
-      formData.append("AttachmentId", String(movieDataRes?.id ?? ""));
-      formData.append("attachmentType", "pf");
-      formData.append("attachmentName", "profile");
+      formData.append("attachmentId", String(movieDataRes?.id));
+      formData.append("attachmentType", "mo");
+      formData.append("attachmentName", "movies");
 
       const attachRes = await addAttachment(formData);
       if (attachRes?.status !== 0) {
@@ -168,19 +167,34 @@ export const uploadFullProcessThunk = createAsyncThunk(
       dispatch(RsetIsLoading(false));
       dispatch(RsetShowTimerButtn(false));
 
-      if (error.isAxiosError && error.response) {
+      // ۱. اگر خطای Axios با پاسخ سرور باشد (مثل کدهای 400, 401, 500 و ...)
+      if (error?.response) {
+        console.log("❌ Server Error Status:", error.response.status);
         console.log(
-          "❌ Axios Error Response Data:",
+          "❌ Server Error Data:",
           JSON.stringify(error.response.data, null, 2),
         );
-      } else {
-        console.log("❌ Generic Upload error:", error);
+      }
+      // ۲. اگر درخواست ارسال شده ولی سروری پاسخ نداده (قطعی اینترنت، تایم اوت، اشتباه بودن IP/URL)
+      else if (error?.request) {
+        console.log(
+          "❌ Network / Timeout Error (No response received):",
+          error.message,
+        );
+      }
+      // ۳. ارورهای دستی (throw new Error) یا باگ‌های جاوااسکریپتی (TypeError و ...)
+      else {
+        console.log("❌ Code/Runtime/Custom Error Message:", error.message);
+        console.log("❌ Error Stack Trace:", error.stack);
       }
 
       const errorMessage =
-        error.response?.data?.message || error?.message || "Upload failed";
-      Alert.alert("Error", errorMessage);
+        error.response?.data?.message ||
+        error?.response?.data?.title ||
+        error?.message ||
+        "Upload failed";
 
+      Alert.alert("Error", errorMessage);
       return rejectWithValue(errorMessage);
     }
   },

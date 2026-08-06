@@ -6,7 +6,6 @@ import { useLoadMore } from "@/src/components/useLoadMore";
 import { userAttachmentList } from "@/src/services/masterServices";
 import { useAppSelector } from "@/src/store/reduxHookType";
 import { getImageUrl } from "@/src/utils/fileHelper";
-import { logger } from "@/src/utils/logger";
 import { socketClient } from "@/src/utils/socketClient";
 import { useRoute } from "@react-navigation/native";
 import React, {
@@ -29,9 +28,8 @@ const Profile: React.FC = () => {
   const followingCountRedux = useAppSelector(
     (state) => state?.main?.allFollowingList?.length ?? 0,
   );
-
   const userIdWhantToShow = route.params?.userData;
-
+  const [refreshing, setRefreshing] = useState(false);
   const [activeVideoId, setActiveVideoId] = useState<string | null>(null);
   const [percentage, setPercentage] = useState<number>(0);
   const [videoLikes, setVideoLikes] = useState<Record<string, number>>({});
@@ -56,6 +54,16 @@ const Profile: React.FC = () => {
     [targetUserId],
   );
   const { items, loading, loadMore } = useLoadMore(fetchVideos);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const itsMatchingWithTimer = useMemo(() => {
     console.log("userLogin", userLogin);
@@ -150,9 +158,12 @@ const Profile: React.FC = () => {
             ).toString()
           }
           ref={flatListRef}
+          refreshing={refreshing}
+          onRefresh={onRefresh}
           ListHeaderComponent={renderHeader}
           renderItem={({ item }) => (
             <VideosProfileItem
+              showLiked={true}
               itsMatchingWithTimer={itsMatchingWithTimer}
               activeVideoId={activeVideoId}
               onPlay={(id: string | null) => setActiveVideoId(id)}

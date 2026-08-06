@@ -39,16 +39,12 @@ const Gear: React.FC<any> = ({
   }, []);
 
   const handleAcceptCategory = async (data: any) => {
-    // گرفتن آی‌دیِ استپ اول مستقیما از State اصلی که مستقل از سوییچ Remember باشد
     const arenaId = currentStep?.arena?.id;
 
     if (arenaId !== 1002) {
       setSelectedGearMode({ show: true, typeMode: data.id });
       setCurrentStep({ ...currentStep, number: 4 });
-
-      // توجه: آیدی رو به عنوان پارامتر اضافه کردیم تا در UpdateStepData ذخیره شود
       updateStepData(3, { name: data.name, icon: data.icon, id: data.id });
-
       triggerVideoUpload();
     } else {
       navigation.navigate("Cup");

@@ -9,15 +9,15 @@ import CustomVideo from "./ui/CustomVideo";
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export default function VideoSection({
-  score,showCountLiked,
+  score,
+  showCountLiked,
   itsMatchingWithTimer,
   videoLikes,
-  isLiked: externalIsLiked,
   isFollowed: externalIsFollowed,
   endTime,
   onVideoPlay,
   video,
-  showLiked = false,
+  showLiked,
   setOpenDropdowns,
   result,
   toggleDropdown,
@@ -76,14 +76,13 @@ export default function VideoSection({
             onVideoPlay={() => onVideoPlay()}
           />
           <OptionBottom
-          showCountLiked={showCountLiked}
-          itsMatchingWithTimer={itsMatchingWithTimer}
+            showCountLiked={showCountLiked}
+            itsMatchingWithTimer={itsMatchingWithTimer}
             userIdLogin={userIdLogin}
             video={video}
             endTime={endTime}
             result={result}
             showLiked={showLiked}
-            externalIsLiked={externalIsLiked}
             positionVideo={positionVideo}
             countLiked={
               positionVideo === 0 ? video?.likeInserted : video?.likeMatched

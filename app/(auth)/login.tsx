@@ -184,9 +184,9 @@ const LoginScreen: React.FC<any> = () => {
                     cursor="pointer"
                   >
                     {showPassword ? (
-                      <Icon name="eye" size={20} color="gray" />
+                      <Icon name="Visibility" size={20} color="gray" />
                     ) : (
-                      <Icon name="eye" size={20} color="gray" />
+                      <Icon name="Visibility" size={20} color="gray" />
                     )}
                   </View>
                 }

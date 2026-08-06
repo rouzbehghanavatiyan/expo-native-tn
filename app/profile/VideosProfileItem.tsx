@@ -1,6 +1,5 @@
 import TimerTornoment from "@/src/components/TimerTornoment";
 import VideoSection from "@/src/components/VideoSection";
-import { logger } from "@/src/utils/logger";
 import React from "react";
 import { Dimensions, StyleSheet, View } from "react-native";
 
@@ -10,9 +9,11 @@ const VIDEO_HEIGHT = VIDEO_WIDTH * (345 / 200);
 const ITEM_HEIGHT = VIDEO_HEIGHT * 2;
 
 export default function VideosProfileItem({
-  video,showCountLiked,
+  video,
+  showCountLiked,
   itsMatchingWithTimer,
   videoLikes,
+  showLiked,
   activeVideoId,
   isActive = true,
   onPlay,
@@ -64,7 +65,7 @@ export default function VideosProfileItem({
     },
   ];
 
-  console.log(endTime,videoLikes);
+  console.log(endTime, videoLikes);
 
   return (
     <View style={styles.container}>
@@ -75,8 +76,8 @@ export default function VideosProfileItem({
         return (
           <View key={index} style={styles.half}>
             <VideoSection
-            showCountLiked={showCountLiked}
-            itsMatchingWithTimer={itsMatchingWithTimer}
+              showCountLiked={showCountLiked}
+              itsMatchingWithTimer={itsMatchingWithTimer}
               activeVideoId={activeVideoId}
               video={video}
               width={VIDEO_WIDTH}

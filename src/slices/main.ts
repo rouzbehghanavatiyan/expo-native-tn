@@ -163,6 +163,9 @@ const mainSlice = createSlice({
     resetWatchState: (state) => {
       state.watchVideo = { ...initialDataState };
     },
+    resetProfileVideo: (state) => {
+      state.profileVideo = { ...initialDataState };
+    },
     resetHomeState: (state) => {
       state.homeMatch = { ...initialDataState };
     },
@@ -208,6 +211,7 @@ export const {
   setPaginationHomeMatch,
   RsetUserId,
   resetWatchState,
+  resetProfileVideo,
   resetHomeState,
   resetShowWatchState,
   resetAllFeeds,

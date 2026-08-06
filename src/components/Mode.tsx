@@ -21,14 +21,7 @@ const Mode: React.FC<ModeProps> = ({
   currentStep,
 }) => {
   const navigation = useNavigation<any>();
-  const {
-    coverImage,
-    showEditMovie,
-    allFormData,
-    setShowEditMovie,
-    triggerVideoUpload,
-    videoError,
-  } = useVideoHandler();
+  const { triggerVideoUpload } = useVideoHandler();
 
   const { mode, allMode, isLoading, setMode, handleCategoryClick } =
     useModeHandler();

@@ -1,5 +1,6 @@
 import React from "react";
 import { Dimensions, StyleSheet, View } from "react-native";
+import { Icon } from "./Icon";
 import VideoSection from "./VideoSection";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -58,15 +59,16 @@ export default function ShowWatchSlide({
     },
   ];
 
+  console.log("video?.icon", video?.icon);
+
   return (
     <>
       {videoSections.map((section, sectionIndex) => (
         <View key={sectionIndex} style={styles.half}>
           <VideoSection
-            externalIsLiked={showLiked ? true : false}
             score={showScore ? section?.score : null}
             result={showResult ? section?.result : null}
-            showLiked={showLiked ? true : false}
+            showLiked={showLiked}
             countLiked={showCountLiked ? section?.likeCount : null}
             endTime={endTime}
             video={video}
@@ -84,6 +86,11 @@ export default function ShowWatchSlide({
           />
         </View>
       ))}
+      <View style={styles.centerIcon}>
+        {video?.icon ? (
+          <Icon name={video?.icon} color="rgba(255,255,255,0.45)" size={20} />
+        ) : null}
+      </View>
     </>
   );
 }
@@ -95,5 +102,20 @@ const styles = StyleSheet.create({
     flex: 1,
     borderBottomWidth: 1,
     borderBottomColor: "#000000",
+  },
+  centerIcon: {
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    zIndex: 999,
+    width: 40,
+    height: 40,
+    borderRadius: 32,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.45)",
+    justifyContent: "center",
+    alignItems: "center",
+    transform: [{ translateX: -20 }, { translateY: -20 }],
+    backgroundColor: "rgba(0,0,0,0.25)",
   },
 });

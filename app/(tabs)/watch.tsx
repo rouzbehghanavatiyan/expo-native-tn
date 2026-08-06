@@ -23,10 +23,12 @@ export default function WatchScreen() {
   const [skills, setSkills] = useState<any[]>([]);
   const [selectFiltered, setSelectFiltered] = useState<number>(0);
   const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const showTimeout = useAppSelector((state) => state?.video?.showTimeout);
   const showDeactivatedModal = useAppSelector(
     (state) => state?.video?.showDeactivatedModal,
   );
+
   const handleGetFiltered = async () => {
     try {
       const res = await subCategoryList(1);
@@ -37,7 +39,6 @@ export default function WatchScreen() {
       console.log(err);
     }
   };
-  console.log("Test rerender from: watch");
 
   const handleGetAllMatch = async (skillId: number, reset = false) => {
     if (loading) return;
@@ -54,7 +55,7 @@ export default function WatchScreen() {
         take,
         subCatId: skillId,
       });
-      console.log("resssssssssssssssssssssssss", res);
+
       const newData = res?.data || [];
 
       if (reset) {
@@ -75,6 +76,22 @@ export default function WatchScreen() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    dispatch(resetWatchState());
+    dispatch(
+      setPaginationWatch({
+        take: 6,
+        skip: 0,
+        hasMore: true,
+      }),
+    );
+
+    await handleGetAllMatch(selectFiltered, true);
+
+    setRefreshing(false);
   };
 
   const handleFilterChange = (skillId: number) => {
@@ -99,8 +116,6 @@ export default function WatchScreen() {
   }, []);
 
   const handleShowMatch = (item: any) => {
-    console.log("Clicked item:", JSON.stringify(item, null, 2));
-
     const inviteId = item?.inviteInserted?.id;
 
     if (!inviteId) {
@@ -138,6 +153,8 @@ export default function WatchScreen() {
           data={data}
           numColumns={2}
           keyExtractor={(item, index) => index.toString()}
+          refreshing={refreshing}
+          onRefresh={onRefresh}
           renderItem={({ item, index }) => (
             <VideoGroup
               group={item}
@@ -148,7 +165,7 @@ export default function WatchScreen() {
           onEndReached={() => handleGetAllMatch(selectFiltered, false)}
           onEndReachedThreshold={0.5}
           ListFooterComponent={
-            loading ? <ActivityIndicator size="large" /> : null
+            loading && !refreshing ? <ActivityIndicator size="large" /> : null
           }
         />
       </View>

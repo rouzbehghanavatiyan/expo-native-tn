@@ -4,6 +4,7 @@ import { Alert, TouchableOpacity } from "react-native";
 import { Text, View, XStack } from "tamagui";
 import { addLike, removeLike } from "../services/masterServices";
 import { useAppDispatch } from "../store/reduxHookType";
+import { logger } from "../utils/logger";
 import { socketClient } from "../utils/socketClient";
 import { Icon } from "./Icon";
 
@@ -28,7 +29,7 @@ const OptionBottom: React.FC<OptionBottomProps> = ({
   itsMatchingWithTimer,
   endTime,
   result,
-  showLiked = true,
+  showLiked,
   positionVideo,
   userIdLogin,
   countLiked,
@@ -82,15 +83,6 @@ const OptionBottom: React.FC<OptionBottomProps> = ({
   }, [externalIsLiked]);
 
   const handleLikeClick = useCallback(async () => {
-    console.log("====== LIKE CLICK START ======");
-    console.log("current isLiked:", isLiked);
-    console.log("newLikeStatus:", !isLiked);
-    console.log("movieId:", movieId);
-    console.log("userIdLogin:", userIdLogin);
-    console.log("addLike function:", addLike);
-    console.log("removeLike function:", removeLike);
-    console.log("socket connected:", socketClient?.connected);
-
     const newLikeStatus = !isLiked;
 
     setIsLiked(newLikeStatus);
@@ -125,7 +117,7 @@ const OptionBottom: React.FC<OptionBottomProps> = ({
         console.log("11111111111111111111111111111111111111111111111111111111");
 
         const addRes = await addLike(postData);
-        console.log("2222222222222222222222222222222222222222222", addRes);
+        logger.info("2222222222222222222222222222222222222222222", addRes);
 
         if (addRes?.data?.status !== 0) {
           throw new Error(addRes?.data?.message || "Add like failed");
@@ -197,31 +189,31 @@ const OptionBottom: React.FC<OptionBottomProps> = ({
             <View flex={1} alignItems="center">
               <View px={2} py={1} borderRadius="$3">
                 <Text
-                  color={resultStyle.color}
+                  color={resultStyle?.color}
                   fontSize="$3"
                   padding="$1"
                   fontWeight="bold"
                 >
-                  {resultStyle.text}
+                  {resultStyle?.text}
                 </Text>
               </View>
             </View>
           )}
           <View flex={1} alignItems="flex-end">
             <XStack gap={2} alignItems="center">
-              {itsMatchingWithTimer && !showCountLiked && (
+              {showLiked && (
                 <TouchableOpacity
                   onPress={handleLikeClick}
                   style={{ padding: 8, zIndex: 999 }}
                 >
-                  {isLiked ? (
+                  {isLiked && itsMatchingWithTimer ? (
                     <Icon name="thumb-up" size={20} color="#ffffff" />
                   ) : (
                     <Icon name="thumb-up-off-alt" size={20} color="white" />
                   )}
                 </TouchableOpacity>
               )}
-              {!itsMatchingWithTimer && !showCountLiked && (
+              {!itsMatchingWithTimer && !showCountLiked && !showLiked && (
                 <XStack gap={1} alignItems="center">
                   <Text margin={2} pt={1} color="gray" fontSize="$5">
                     {localLikeCount}

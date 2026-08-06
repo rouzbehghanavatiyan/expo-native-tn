@@ -1,4 +1,3 @@
-// useLoadMore.ts
 import { useCallback, useEffect, useRef, useState } from "react";
 
 const PAGE_SIZE = 3;
@@ -10,13 +9,11 @@ export function useLoadMore<T = any>(
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
 
-  // این دو تا ref هستند نه state، چون باید همون لحظه (بدون تاخیر رندر) قابل چک شدن باشن
   const loadingRef = useRef(false);
   const hasMoreRef = useRef(true);
   const skipRef = useRef(0);
 
   const loadMore = useCallback(async () => {
-    // اگر همین الان در حال گرفتن دیتا هستیم یا دیگه دیتایی نمونده، هیچ کاری نکن
     if (loadingRef.current || !hasMoreRef.current) return;
 
     loadingRef.current = true;
@@ -47,10 +44,8 @@ export function useLoadMore<T = any>(
     }
   }, [fetchFn]);
 
-  // اولین بار که کامپوننت مانت میشه، ۳ تای اول رو بگیر
   useEffect(() => {
     loadMore();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return { items, loading, hasMore, loadMore };

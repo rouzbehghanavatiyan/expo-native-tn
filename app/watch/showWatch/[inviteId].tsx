@@ -1,4 +1,3 @@
-import { Icon } from "@/src/components/Icon";
 import VideoSkeleton from "@/src/components/VideoSkeleton";
 import ShowWatchSlide from "@/src/components/VideoSlide";
 import { attachmentListByInviteId } from "@/src/services/masterServices";
@@ -34,7 +33,6 @@ export default function ShowWatchScreen() {
   const { inviteId } = useLocalSearchParams<{ inviteId: string }>();
   const dispatch = useAppDispatch();
 
-  // رفرنس برای رهگیری اولین لود موفق
   const hasFetchedOnce = useRef(false);
 
   const { data, pagination } = useAppSelector(
@@ -88,7 +86,6 @@ export default function ShowWatchScreen() {
       } catch (error: any) {
         console.log("error:", error?.message);
       } finally {
-        // تغییر وضعیت اولین لود موفق به محض پایان درخواست اول
         hasFetchedOnce.current = true;
         loadingRef.current = false;
         setLoading(false);
@@ -97,7 +94,6 @@ export default function ShowWatchScreen() {
     [inviteId, dispatch],
   );
 
-  // با تغییر inviteId وضعیت لود اولیه را ریست می‌کنیم
   useEffect(() => {
     hasFetchedOnce.current = false;
     dispatch(resetShowWatchState());
@@ -123,9 +119,8 @@ export default function ShowWatchScreen() {
     [],
   );
 
-  logger.info("datadatadatadatadatadatadata", data?.icon);
+  logger.info("datadatadatadatadatadatadata", data);
 
-  // شرایط نمایش بر اساس الگوی مد نظر شما
   const showInitialLoader =
     !hasFetchedOnce.current && (!data || data.length === 0);
   const showEmptyState =
@@ -135,10 +130,8 @@ export default function ShowWatchScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
       <View style={styles.container}>
         {showInitialLoader ? (
-          // نمایش اسکلتون قبل از اولین دریافت اطلاعات
           <VideoSkeleton count={1} section="itsShowWatch" isSwapper={false} />
         ) : showEmptyState ? (
-          // نمایش وضعیت خالی در صورتی که پاسخی آمد و داده‌ای وجود نداشت
           <View style={styles.emptyWrapper}>
             <View style={styles.emptyCard}>
               <Text style={styles.emptyTitle}>No Content Available</Text>
@@ -148,7 +141,6 @@ export default function ShowWatchScreen() {
             </View>
           </View>
         ) : (
-          // نمایش لیست اصلی ویدیوها پس از لود موفقیت‌آمیز
           <FlatList
             data={data}
             keyExtractor={(item, index) => `${item?.id ?? index}`}
@@ -161,13 +153,6 @@ export default function ShowWatchScreen() {
                   index={index}
                   isActive={currentIndex === index}
                 />
-                <View style={styles.centerIcon}>
-                  <Icon
-                    name={item?.icon}
-                    color="rgba(255,255,255,0.45)"
-                    size={20}
-                  />
-                </View>
               </View>
             )}
             pagingEnabled
