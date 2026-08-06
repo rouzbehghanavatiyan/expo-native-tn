@@ -1,4 +1,5 @@
-import Talent from "@/src/assets/images/white.png";
+import BlackTalent from "@/src/assets/images/black.png";
+import WhiteTalent from "@/src/assets/images/white.png";
 import AppHeader from "@/src/header/AppHeader";
 import { useAppSelector } from "@/src/store/reduxHookType";
 import { getImageUrl } from "@/src/utils/fileHelper";
@@ -63,23 +64,26 @@ export default function TabLayout() {
             name="clashTalent"
             options={{
               tabBarIcon: ({ color, size, focused }) => {
-                const boxSize = (size + 8) / 2;
+                const containerSize = size;
+                const imageSize = focused ? size + 8 : size + 3;
                 return (
                   <YStack
-                    width={boxSize}
-                    height={boxSize}
-                    borderRadius={boxSize / 2}
-                    overflow="hidden"
-                    backgroundColor="$grey900"
+                    width={containerSize}
+                    height={containerSize}
+                    borderRadius={containerSize / 2}
+                    backgroundColor={focused ? "white" : "$grey700"}
                     justifyContent="center"
                     alignItems="center"
-                    
-                    borderWidth={focused ? 0.8 : 0.4}
-                    borderColor={focused ? "black" : "#e5e7eb"}
+                    borderColor={"#e5e7eb"}
+                    overflow="visible"
                   >
                     <Image
-                      source={Talent}
-                      style={{ width: "100%", height: "100%", }}
+                      source={focused ? BlackTalent : WhiteTalent}
+                      style={{
+                        width: imageSize,
+                        height: imageSize,
+                        position: "absolute",
+                      }}
                       resizeMode="contain"
                     />
                   </YStack>
