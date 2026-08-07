@@ -8,6 +8,7 @@ const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 export default function ShowWatchSlide({
   video,
   currentlyPlayingId,
+  inviteWatch,
   openDropdowns,
   onVideoPlay,
   toggleDropdown,
@@ -66,6 +67,7 @@ export default function ShowWatchSlide({
       {videoSections.map((section, sectionIndex) => (
         <View key={sectionIndex} style={styles.half}>
           <VideoSection
+            inviteWatch={inviteWatch}
             score={showScore ? section?.score : null}
             result={showResult ? section?.result : null}
             showLiked={showLiked}

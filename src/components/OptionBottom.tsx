@@ -4,6 +4,7 @@ import { Alert, TouchableOpacity } from "react-native";
 import { Text, View, XStack } from "tamagui";
 import { addLike, removeLike } from "../services/masterServices";
 import { useAppDispatch } from "../store/reduxHookType";
+import { fixNumberCount } from "../utils/fileHelper";
 import { logger } from "../utils/logger";
 import { socketClient } from "../utils/socketClient";
 import { Icon } from "./Icon";
@@ -20,17 +21,21 @@ interface OptionBottomProps {
   externalIsLiked?: boolean;
   itsMatchingWithTimer: any;
   showCountLiked: any;
+  inviteWatch: boolean;
+  profileWatch: boolean;
 }
 
 const OptionBottom: React.FC<OptionBottomProps> = ({
   handleToggleComments,
   video,
+  inviteWatch,
   showCountLiked,
   itsMatchingWithTimer,
   endTime,
   result,
   showLiked,
   positionVideo,
+  profileWatch,
   userIdLogin,
   countLiked,
   externalIsLiked,
@@ -38,7 +43,7 @@ const OptionBottom: React.FC<OptionBottomProps> = ({
   const dispatch = useAppDispatch();
   const [isLiked, setIsLiked] = useState(false);
   const [localLikeCount, setLocalLikeCount] = useState(0);
-  console.log(itsMatchingWithTimer, showCountLiked);
+  console.log(itsMatchingWithTimer, inviteWatch);
 
   const movieId = useMemo(() => {
     if (!video) return null;
@@ -163,8 +168,6 @@ const OptionBottom: React.FC<OptionBottomProps> = ({
 
   const resultStyle: any = getResultStyle();
 
-  console.log("HELLLLLLLLLLLLLLLLLLLLLLO");
-
   return (
     <View position="absolute" bottom={0} left={0} right={0} zIndex={10}>
       <LinearGradient
@@ -185,7 +188,7 @@ const OptionBottom: React.FC<OptionBottomProps> = ({
               <Icon size={20} name="chat-bubble-outline" color="white" />
             </TouchableOpacity>
           </View>
-          {!itsMatchingWithTimer && (
+          {!itsMatchingWithTimer && (inviteWatch || profileWatch) && (
             <View flex={1} alignItems="center">
               <View px={2} py={1} borderRadius="$3">
                 <Text
@@ -201,7 +204,7 @@ const OptionBottom: React.FC<OptionBottomProps> = ({
           )}
           <View flex={1} alignItems="flex-end">
             <XStack gap={2} alignItems="center">
-              {showLiked && (
+              {(inviteWatch || itsMatchingWithTimer) && (
                 <TouchableOpacity
                   onPress={handleLikeClick}
                   style={{ padding: 8, zIndex: 999 }}
@@ -213,12 +216,13 @@ const OptionBottom: React.FC<OptionBottomProps> = ({
                   )}
                 </TouchableOpacity>
               )}
-              {!itsMatchingWithTimer && !showCountLiked && !showLiked && (
+              {!itsMatchingWithTimer && (inviteWatch || profileWatch) && (
                 <XStack gap={1} alignItems="center">
-                  <Text margin={2} pt={1} color="gray" fontSize="$5">
-                    {localLikeCount}
+                  <Text margin={2} pt={1} color="gray" fontSize="$3">
+                    {/* {localLikeCount} */}
+                    {fixNumberCount(212412414141495)}
                   </Text>
-                  <Icon name="thumb-up" color="gray" size={20} />
+                  <Icon name="thumb-up" color="gray" size={15} />
                 </XStack>
               )}
             </XStack>

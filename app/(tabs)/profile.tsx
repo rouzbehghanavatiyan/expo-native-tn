@@ -3,8 +3,12 @@ import ProfileBio from "@/src/components/ProfileBio";
 import ProfileHeader from "@/src/components/ProfileHeader";
 import { stopMatchTimer } from "@/src/components/TimerForFindMatch";
 import { useLoadMore } from "@/src/components/useLoadMore";
-import { userAttachmentList } from "@/src/services/masterServices";
-import { useAppSelector } from "@/src/store/reduxHookType";
+import {
+  profileAttachment,
+  userAttachmentList,
+} from "@/src/services/masterServices";
+import { RsetProfileVideo } from "@/src/slices/main";
+import { useAppDispatch, useAppSelector } from "@/src/store/reduxHookType";
 import { getImageUrl } from "@/src/utils/fileHelper";
 import { socketClient } from "@/src/utils/socketClient";
 import { useRoute } from "@react-navigation/native";
@@ -21,19 +25,27 @@ import VideosProfileItem from "../profile/VideosProfileItem";
 
 const Profile: React.FC = () => {
   const route = useRoute<any>();
+  const myVideosInRedux =
+    useAppSelector((state) => state?.main?.profileVideo) || [];
   const userLogin = useAppSelector((state) => state?.main?.userLogin);
   const followerCountRedux = useAppSelector(
-    (state) => state?.main?.allFollowerList?.length ?? 0,
+    (state) => state?.main?.followerLength,
   );
   const followingCountRedux = useAppSelector(
-    (state) => state?.main?.allFollowingList?.length ?? 0,
+    (state) => state?.main?.followingLength,
   );
   const userIdWhantToShow = route.params?.userData;
   const [refreshing, setRefreshing] = useState(false);
   const [activeVideoId, setActiveVideoId] = useState<string | null>(null);
   const [percentage, setPercentage] = useState<number>(0);
   const [videoLikes, setVideoLikes] = useState<Record<string, number>>({});
+  const [newProfile, setNewProfile] = useState<Record<string, number>>({});
   const flatListRef = useRef<FlatList<any>>(null);
+  const dispatch = useAppDispatch();
+  const isMyProfile =
+    !userIdWhantToShow || userIdWhantToShow?.user?.id === userLogin?.user?.id;
+  const [otherUserVideos, setOtherUserVideos] = useState<any[]>([]);
+  const allVideoData = isMyProfile ? myVideosInRedux : otherUserVideos;
 
   const findImg: any = !!userIdWhantToShow?.user
     ? getImageUrl(userIdWhantToShow?.profile)
@@ -43,21 +55,49 @@ const Profile: React.FC = () => {
 
   const fetchVideos = useCallback(
     async (params: { skip: number; take: number }) => {
-      const response = await userAttachmentList({
-        ...params,
-        id: targetUserId,
-      });
-      console.log("REsponse", response);
-
-      return response?.data ?? [];
+      if (params.skip === 0 && isMyProfile && myVideosInRedux.length > 0) {
+        return null;
+      }
+      return await userAttachmentList({ ...params, id: targetUserId });
     },
-    [targetUserId],
+    [targetUserId, isMyProfile, myVideosInRedux.length],
   );
-  const { items, loading, loadMore } = useLoadMore(fetchVideos);
 
+  const handleDataLoaded = useCallback(
+    (newItems: any[], isFirstPage: boolean) => {
+      if (!newItems) return; // اگر از fetchVideos مقدار null برگشت، کاری نکن
+
+      if (isMyProfile) {
+        // ذخیره در ریداکس فقط برای پروفایل خودمان
+        if (isFirstPage) {
+          dispatch(RsetProfileVideo(newItems));
+        } else {
+          dispatch(RsetProfileVideo([...myVideosInRedux, ...newItems]));
+        }
+      } else {
+        // ذخیره در استیت لوکال برای پروفایل دیگران
+        if (isFirstPage) {
+          setOtherUserVideos(newItems);
+        } else {
+          setOtherUserVideos((prev) => [...prev, ...newItems]);
+        }
+      }
+    },
+    [dispatch, isMyProfile, myVideosInRedux],
+  );
+  const { loading, loadMore, hasMore } = useLoadMore(
+    fetchVideos,
+    handleDataLoaded,
+    allVideoData?.length || 0,
+  );
   const onRefresh = async () => {
     setRefreshing(true);
     try {
+      const profileRes = await profileAttachment(userLogin?.user?.id);
+      const userData = profileRes?.data;
+      if (userData?.status === 0) {
+        setNewProfile(userData?.data);
+      }
     } catch (error) {
       console.log(error);
     } finally {
@@ -66,19 +106,12 @@ const Profile: React.FC = () => {
   };
 
   const itsMatchingWithTimer = useMemo(() => {
-    console.log("userLogin", userLogin);
-
-    return items?.some(
+    return allVideoData?.some(
       (item: any) =>
         item?.inviteInserted?.insertDate !== -1 ||
         item?.inviteMatched?.insertDate !== -1,
     );
-  }, [userLogin]);
-
-  console.log(
-    "itsMatchingWithTimer itsMatchingWithTimer itsMatchingWithTimer",
-    itsMatchingWithTimer,
-  );
+  }, [allVideoData]);
 
   useEffect(() => {
     if (!itsMatchingWithTimer) return;
@@ -125,16 +158,16 @@ const Profile: React.FC = () => {
   const renderHeader = () => (
     <YStack bg="$grey100" gap="$4" p="$2">
       <ProfileHeader
-        userImage={findImg}
+        userImage={getImageUrl(newProfile?.profile) || findImg}
         userName={
           userIdWhantToShow?.user?.userName || userLogin?.user?.userName
         }
         score={userIdWhantToShow?.score || userLogin?.score}
         followersCount={
-          userIdWhantToShow?.followersCount ?? followerCountRedux?.length ?? 0
+          userIdWhantToShow?.followersCount ?? followerCountRedux?.count
         }
         followingCount={
-          userIdWhantToShow?.followingCount ?? followingCountRedux?.length ?? 0
+          userIdWhantToShow?.followingCount ?? followingCountRedux?.count
         }
       />
       <ProfileBio
@@ -145,11 +178,15 @@ const Profile: React.FC = () => {
     </YStack>
   );
 
+  const handlePlayVideo = useCallback((id: string | null) => {
+    setActiveVideoId(id);
+  }, []);
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
       <YStack f={1} bg="$backgroundDefault">
         <FlatList
-          data={items || []}
+          data={allVideoData || []}
           keyExtractor={(item, index) =>
             (
               item?.inviteInserted?.id ??
@@ -163,11 +200,12 @@ const Profile: React.FC = () => {
           ListHeaderComponent={renderHeader}
           renderItem={({ item }) => (
             <VideosProfileItem
-              showLiked={true}
+              profileWatch
               itsMatchingWithTimer={itsMatchingWithTimer}
               activeVideoId={activeVideoId}
-              onPlay={(id: string | null) => setActiveVideoId(id)}
+              onPlay={handlePlayVideo}
               video={item}
+              isActive
               videoLikes={videoLikes}
             />
           )}
@@ -180,7 +218,11 @@ const Profile: React.FC = () => {
               </View>
             ) : null
           }
-          onEndReached={loadMore}
+          onEndReached={() => {
+            if (!loading && allVideoData && allVideoData.length > 0) {
+              loadMore();
+            }
+          }}
           removeClippedSubviews
           maxToRenderPerBatch={6}
           windowSize={5}

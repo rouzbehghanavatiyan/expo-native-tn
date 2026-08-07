@@ -88,8 +88,6 @@ const EditProfile: React.FC<PropTypes> = ({ setShowEditProfile }) => {
           </YStack>
         </YStack>
       </ScrollView>
-
-      {/* دکمه‌های پایین */}
       <XStack gap="$3" w="100%" pt="$4" mt="auto">
         <Button
           f={1}
@@ -97,7 +95,6 @@ const EditProfile: React.FC<PropTypes> = ({ setShowEditProfile }) => {
           backgroundColor="white"
           borderRadius={999}
           onPress={() => {
-            // منطق Accept
             setShowEditProfile(false);
           }}
         >

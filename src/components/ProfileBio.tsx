@@ -1,15 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { Pressable } from "react-native";
-import {
-  Image,
-  Popover,
-  Progress,
-  Separator,
-  Text,
-  View,
-  XStack,
-  YStack,
-} from "tamagui";
+import { FlatList, Image, Modal, Pressable, StyleSheet } from "react-native";
+import { Progress, Text, View, XStack, YStack } from "tamagui";
+import BaseButton from "../components/BaseButtom";
 import { getStatus } from "../services/nestServices";
 import { Icon } from "./Icon";
 
@@ -36,31 +28,41 @@ interface ProfileBioProps {
   rankScore: number;
 }
 
-const rankCategories = [
-  {
-    title: "Starter",
-    ranks: [{ name: "Starter", img: Started }],
-  },
-  {
-    title: "Bronze",
-    ranks: [
-      { name: "Bronze 1", img: bronseBase1 },
-      { name: "Bronze 2", img: bronseBase2 },
-      { name: "Bronze 3", img: bronseBase3 },
-    ],
-  },
+const allRanks = [
+  { name: "Starter", img: Started },
+  { name: "Bronze 1", img: bronseBase1 },
+  { name: "Bronze 2", img: bronseBase2 },
+  { name: "Bronze 3", img: bronseBase3 },
+  { name: "Silver 1", img: silver1 },
+  { name: "Silver 2", img: silver2 },
+  { name: "Silver 3", img: silver3 },
+  { name: "Gold 1", img: gold1 },
+  { name: "Gold 2", img: gold2 },
+  { name: "Gold 3", img: gold3 },
+  { name: "Gem 1", img: gem1 },
+  { name: "Gem 2", img: gem2 },
+  { name: "Gem 3", img: gem3 },
+  { name: "Ruby 1", img: ruby1 },
+  { name: "Ruby 2", img: ruby2 },
+  { name: "Ruby 3", img: ruby3 },
+  { name: "World", img: word },
 ];
+
+// جدا کردن رنک اول از بقیه
+const starterRank = allRanks[0];
+const otherRanks = allRanks.slice(1);
 
 const ProfileBio: React.FC<ProfileBioProps> = ({
   rankScore,
   rankPercentage,
 }) => {
   const [fields, setFields] = useState<any>();
+  const [showRanksModal, setShowRanksModal] = useState(false);
 
   const fetchCurrentStatus = async () => {
     try {
       const response = await getStatus();
-      const { code, message, data } = response?.data;
+      const { code, data } = response?.data;
 
       if (code === 0) {
         setFields(data);
@@ -76,123 +78,157 @@ const ProfileBio: React.FC<ProfileBioProps> = ({
 
   return (
     <YStack px="$4" alignItems="center" w="100%">
-      <Popover size="$5" allowFlip placement="bottom">
-        <Popover.Trigger asChild>
-          <Pressable style={{ width: "100%" }}>
-            <View
-              w="100%"
-              h={16}
-              bg="$backgroundHover"
-              borderRadius="$4"
-              overflow="hidden"
-              position="relative"
-            >
-              <Progress value={rankPercentage} h={16} bg="transparent">
-                <Progress.Indicator bg="$indigoDark" />
-              </Progress>
-              <View
-                position="absolute"
-                top={0}
-                left={0}
-                right={0}
-                bottom={0}
-                border="1"
-                borderRadius="$4"
-                borderColor="$grey400"
-                justifyContent="center"
-                alignItems="center"
-              >
-                <Text
-                  fontWeight="bold"
-                  fontSize={10}
-                  color="$grey900"
-                  zIndex={10}
-                >
-                  {rankPercentage}%
-                </Text>
-              </View>
-            </View>
-          </Pressable>
-        </Popover.Trigger>
-
-        <Popover.Content
-          borderWidth={1}
-          borderColor="$borderColor"
-          w={280}
-          elevate
+      <Pressable
+        style={{ width: "100%" }}
+        onPress={() => setShowRanksModal(true)}
+      >
+        <View
+          w="100%"
+          h={16}
+          bg="$backgroundHover"
+          borderRadius="$4"
+          overflow="hidden"
+          position="relative"
         >
-          <Popover.Arrow borderWidth={1} borderColor="$borderColor" />
-
+          <Progress value={rankPercentage} h={16} bg="transparent">
+            <Progress.Indicator bg="$indigoDark" />
+          </Progress>
           <View
-            onPress={() => console.log("Rank Score clicked")}
-            p="$2"
-            cursor="pointer"
+            position="absolute"
+            top={0}
+            left={0}
+            right={0}
+            bottom={0}
+            borderWidth={1}
+            borderRadius="$4"
+            borderColor="$grey400"
+            justifyContent="center"
+            alignItems="center"
           >
-            <XStack
-              gap="$2"
-              alignItems="center"
-              w="100%"
-              justifyContent="center"
+            <Text fontWeight="bold" fontSize={10} color="$grey900" zIndex={10}>
+              {rankPercentage}%
+            </Text>
+          </View>
+        </View>
+      </Pressable>
+
+      <Modal
+        visible={showRanksModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowRanksModal(false)}
+      >
+        <Pressable
+          style={{
+            flex: 1,
+            backgroundColor: "rgba(0,0,0,0.45)",
+            justifyContent: "center",
+            alignItems: "center",
+            paddingHorizontal: 24,
+          }}
+          onPress={() => setShowRanksModal(false)}
+        >
+          <Pressable
+            onPress={(e) => e.stopPropagation()}
+            style={{ width: "100%", maxWidth: "100%", maxHeight: "70%" }}
+          >
+            <YStack
+              bg="$background"
+              borderRadius="$4"
+              p="$5"
+              gap={14}
+              elevation={6}
+              flex={1}
             >
-              <Text color="$textSecondary">Total Score:</Text>
-              <Text fontSize="$5" fontWeight="bold" color="$primaryMain">
-                {rankScore}
-              </Text>
-            </XStack>
-          </View>
-
-          <Separator my="$2" />
-
-          <View px="$2" py="$1" maxHeight={300} overflow="scroll">
-            {rankCategories.map((category, index) => (
-              <YStack key={index} mb="$3">
-                <Text
-                  fontSize="$2"
-                  fontWeight="bold"
-                  color="$textMuted"
-                  mb="$2"
-                >
-                  {category.title}
+              <YStack gap={8} alignItems="center" pb="$2">
+                <Text fontSize="$5" fontWeight="700" color="$primaryMain">
+                  All Ranks (Score: {rankScore})
                 </Text>
-
-                <XStack gap="$4" alignItems="center">
-                  {category.ranks.map((rank, rankIndex) => (
-                    <View
-                      key={rankIndex}
-                      flex={1}
-                      onPress={() => console.log(`${rank.name} clicked`)}
-                      cursor="pointer"
-                    >
-                      <YStack
-                        alignItems="center"
-                        bg="$backgroundPaper"
-                        p="$2"
-                        borderRadius="$2"
-                      >
-                        <Image
-                          source={rank.img}
-                          alt={rank.name}
-                          w={32}
-                          h={32}
-                          resizeMode="contain"
-                        />
-                        <Text
-                          fontSize={10}
-                          mt="$1"
-                          color="$textPrimary"
-                          textAlign="center"
-                        >
-                          {rank.name}
-                        </Text>
-                      </YStack>
-                    </View>
-                  ))}
-                </XStack>
               </YStack>
-            ))}
-          </View>
-        </Popover.Content>
-      </Popover>
+
+              <FlatList
+                data={otherRanks}
+                keyExtractor={(rank) => rank.name}
+                numColumns={3}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.ranksGrid}
+                columnWrapperStyle={styles.rankRow}
+                ListHeaderComponent={() => (
+                  <YStack
+                    alignItems="center"
+                    justifyContent="center"
+                    bg="$backgroundPaper"
+                    p="$2"
+                    borderRadius="$3"
+                    width={86}
+                    height={116}
+                    alignSelf="center"
+                    mb={12}
+                  >
+                    <Image
+                      // ✅ اصلاح شد
+                      source={starterRank.img}
+                      accessibilityLabel={starterRank.name}
+                      style={styles.rankImage}
+                      resizeMode="contain"
+                    />
+                    <Text
+                      fontSize="$2"
+                      mt="$2"
+                      color="$textPrimary"
+                      textAlign="center"
+                      fontWeight="600"
+                      numberOfLines={1}
+                    >
+                      {starterRank.name}
+                    </Text>
+                  </YStack>
+                )}
+                renderItem={({ item: rank }) => (
+                  <YStack
+                    alignItems="center"
+                    justifyContent="center"
+                    bg="$backgroundPaper"
+                    p="$2"
+                    borderRadius="$3"
+                    width={86}
+                    height={116}
+                  >
+                    <Image
+                      // ✅ اصلاح شد
+                      source={rank.img}
+                      accessibilityLabel={rank.name}
+                      style={styles.rankImage}
+                      resizeMode="contain"
+                    />
+
+                    <Text
+                      fontSize="$2"
+                      mt="$2"
+                      color="$textPrimary"
+                      textAlign="center"
+                      fontWeight="600"
+                      numberOfLines={1}
+                    >
+                      {rank.name}
+                    </Text>
+                  </YStack>
+                )}
+              />
+
+              <XStack justifyContent="flex-end" mt="$2">
+                <BaseButton
+                  flex={1}
+                  bg="$primaryMain"
+                  onPress={() => setShowRanksModal(false)}
+                >
+                  Close
+                </BaseButton>
+              </XStack>
+            </YStack>
+          </Pressable>
+        </Pressable>
+      </Modal>
 
       <YStack w="100%" mt="$5" alignItems="flex-start" gap="$3">
         {fields?.bio && (
@@ -224,3 +260,17 @@ const ProfileBio: React.FC<ProfileBioProps> = ({
 };
 
 export default ProfileBio;
+
+const styles = StyleSheet.create({
+  ranksGrid: {
+    paddingBottom: 8,
+  },
+  rankRow: {
+    justifyContent: "space-between",
+    marginBottom: 12,
+  },
+  rankImage: {
+    width: 64,
+    height: 64,
+  },
+});

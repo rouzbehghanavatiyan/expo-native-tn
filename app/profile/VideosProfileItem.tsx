@@ -1,30 +1,36 @@
 import TimerTornoment from "@/src/components/TimerTornoment";
 import VideoSection from "@/src/components/VideoSection";
-import React from "react";
+import React, { memo, useMemo } from "react";
 import { Dimensions, StyleSheet, View } from "react-native";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const VIDEO_WIDTH = (SCREEN_WIDTH - 30 * 2) * 0.6;
+
+const HORIZONTAL_PADDING = 30;
+const VIDEO_WIDTH = (SCREEN_WIDTH - HORIZONTAL_PADDING * 2) * 0.6;
 const VIDEO_HEIGHT = VIDEO_WIDTH * (345 / 200);
 const ITEM_HEIGHT = VIDEO_HEIGHT * 2;
 
-export default function VideosProfileItem({
+const VideosProfileItem = ({
   video,
   showCountLiked,
   itsMatchingWithTimer,
   videoLikes,
-  showLiked,
+  profileWatch,
   activeVideoId,
   isActive = true,
   onPlay,
-}: any) {
-  const [playingPosition, setPlayingPosition] = React.useState<number>(-1);
+}: any) => {
+  const matchedInsertDate = video?.inviteMatched?.insertDate;
+  const insertedInsertDate = video?.inviteInserted?.insertDate;
 
-  const startTime = video?.inviteMatched?.insertDate;
+  const startTime = matchedInsertDate ?? insertedInsertDate;
 
-  const endTime =
-    video?.inviteMatched?.insertDate !== -1 ||
-    video?.inviteInserted?.insertDate !== -1;
+  const hasValidInsertDate = (value: unknown) =>
+    value !== undefined && value !== null && value !== -1 && value !== "";
+
+  const showTimer =
+    hasValidInsertDate(matchedInsertDate) ||
+    hasValidInsertDate(insertedInsertDate);
 
   const resultInserted =
     video?.likeInserted > video?.likeMatched
@@ -34,48 +40,53 @@ export default function VideosProfileItem({
         : "Draw";
 
   const resultMatched =
-    video?.likeInserted < video?.likeMatched
+    video?.likeMatched > video?.likeInserted
       ? "Win"
-      : video?.likeInserted > video?.likeMatched
+      : video?.likeMatched < video?.likeInserted
         ? "Loss"
         : "Draw";
 
-  const videoSections = [
-    {
-      likeCount: video?.likeInserted,
-      attachment: video?.attachmentInserted,
-      position: 0,
-      score: video?.scoreInserted,
-      user: video?.userInserted,
-      isLiked:
-        video?.likes?.[video?.attachmentInserted?.attachmentId]?.isLiked ||
-        false,
-      result: resultInserted,
-    },
-    {
-      likeCount: video?.likeMatched,
-      attachment: video?.attachmentMatched,
-      position: 1,
-      score: video?.scoreMatched,
-      user: video?.userMatched,
-      isLiked:
-        video?.likes?.[video?.attachmentMatched?.attachmentId]?.isLiked ||
-        false,
-      result: resultMatched,
-    },
-  ];
-
-  console.log(endTime, videoLikes);
+  const videoSections = useMemo(
+    () => [
+      {
+        likeCount: video?.likeInserted ?? 0,
+        attachment: video?.attachmentInserted,
+        position: 0,
+        score: video?.scoreInserted,
+        user: video?.userInserted,
+        isLiked:
+          video?.likes?.[video?.attachmentInserted?.attachmentId]?.isLiked ??
+          false,
+        result: resultInserted,
+      },
+      {
+        likeCount: video?.likeMatched ?? 0,
+        attachment: video?.attachmentMatched,
+        position: 1,
+        score: video?.scoreMatched,
+        user: video?.userMatched,
+        isLiked:
+          video?.likes?.[video?.attachmentMatched?.attachmentId]?.isLiked ??
+          false,
+        result: resultMatched,
+      },
+    ],
+    [video, resultInserted, resultMatched],
+  );
 
   return (
     <View style={styles.container}>
-      {videoSections.map((section, index) => {
-        const videoId = `${video?.inviteInserted?.id ?? video?.inviteMatched?.id}-${section.position}`;
-        const isPlaying = activeVideoId === videoId;
+      {videoSections.map((section) => {
+        console.log("section", section);
+
+        const inviteId = video?.inviteInserted?.id ?? video?.inviteMatched?.id;
+        const videoId = `${inviteId}-${section.position}`;
+        const isPlaying = isActive && activeVideoId === videoId;
 
         return (
-          <View key={index} style={styles.half}>
+          <View key={videoId} style={styles.half}>
             <VideoSection
+              profileWatch={profileWatch}
               showCountLiked={showCountLiked}
               itsMatchingWithTimer={itsMatchingWithTimer}
               activeVideoId={activeVideoId}
@@ -90,26 +101,26 @@ export default function VideosProfileItem({
               countLiked={section.likeCount}
               isLiked={section.isLiked}
               showLiked
-              endTime
-              isPlaying={isActive && playingPosition === section.position}
+              endTime={showTimer}
+              isPlaying={isPlaying}
               onVideoPlay={() => {
-                if (isPlaying) {
-                  onPlay(null);
-                } else {
-                  onPlay(videoId);
-                }
+                onPlay(isPlaying ? null : videoId);
               }}
             />
 
-            {endTime && (
-              <View style={styles.timerOverlay}>
+            {showTimer && startTime && (
+              <View pointerEvents="box-none" style={styles.timerOverlay}>
                 <View style={styles.timerBox}>
                   <TimerTornoment
                     video={video}
                     startTime={startTime}
                     duration={3600}
-                    active={true}
-                    onComplete={() => {}}
+                    active={isActive}
+                    onComplete={() => {
+                      if (isPlaying) {
+                        onPlay(null);
+                      }
+                    }}
                   />
                 </View>
               </View>
@@ -119,29 +130,20 @@ export default function VideosProfileItem({
       })}
     </View>
   );
-}
+};
+
+export default memo(VideosProfileItem);
 
 const styles = StyleSheet.create({
-  container: {
-    height: ITEM_HEIGHT,
-    backgroundColor: "#000",
-  },
-  half: {
-    height: VIDEO_HEIGHT,
-    position: "relative",
-  },
+  container: { height: ITEM_HEIGHT, backgroundColor: "#000", marginTop: 10 },
+  half: { height: VIDEO_HEIGHT, position: "relative" },
   timerOverlay: {
     position: "absolute",
     left: 0,
     right: 0,
-    top: "97%",
+    bottom: 4,
     zIndex: 50,
     alignItems: "center",
   },
-  timerBox: {
-    width: "83%",
-    borderRadius: 999,
-    alignItems: "center",
-    justifyContent: "center",
-  },
+  timerBox: { width: "83%", alignItems: "center", justifyContent: "center" },
 });

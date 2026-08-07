@@ -6,6 +6,16 @@ export const getImageUrl = (attachment: any) => {
   return `${BASE_URL}/${attachment.attachmentType}/${attachment.fileName}${attachment.ext}`;
 };
 
+export const fixNumberCount = (value: number | string | null | undefined) => {
+  if (value === null || value === undefined || value === "") return "0";
+
+  const numberValue = Number(value);
+
+  if (Number.isNaN(numberValue)) return "0";
+
+  return numberValue.toLocaleString("en-US");
+};
+
 export const mergeUniqueMessages = (items: any[]) => {
   const map = new Map<string, any>();
 

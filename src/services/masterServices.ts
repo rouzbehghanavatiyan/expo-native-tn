@@ -45,6 +45,18 @@ export const followingList = async (
   return await api.get(`/followingList?userId=${userId}`);
 };
 
+export const followingLength = async (
+  userId: number | string | null | undefined,
+) => {
+  return await api.get(`/followingLength?userId=${userId}`);
+};
+
+export const followerLength = async (
+  userId: number | string | null | undefined,
+) => {
+  return await api.get(`/followerLength?userId=${userId}`);
+};
+
 export const followerAttachmentList = async (postData: any) => {
   return await api.get(
     `/followerAttachmentList?skip=${postData?.skip}&take=${postData?.take}&userId=${postData?.userIdLogin}`,

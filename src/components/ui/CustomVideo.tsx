@@ -1,5 +1,6 @@
-import { useIsFocused } from "@react-navigation/native";
-import React, { useEffect, useRef, useState } from "react";
+import { useCachedVideo } from "@/src/hook/useCatchedVideo";
+import { useIsFocused, useRoute } from "@react-navigation/native";
+import React, { memo, useEffect, useRef, useState } from "react";
 import {
   Dimensions,
   PanResponder,
@@ -25,119 +26,127 @@ interface CustomVideoProps {
   onVideoPlay?: () => void;
 }
 
-const CustomVideo = ({ uri, isPlaying, onVideoPlay }: CustomVideoProps) => {
-  const videoRef = useRef<VideoRef>(null);
-  const isFocused = useIsFocused();
+const CustomVideo = memo(
+  ({ uri, isPlaying, onVideoPlay }: CustomVideoProps) => {
+    const videoRef = useRef<VideoRef>(null);
+    const isFocused = useIsFocused();
+    const route = useRoute();
+    const [position, setPosition] = useState(0);
+    const [duration, setDuration] = useState(1);
+    const [isDragging, setIsDragging] = useState(false);
+    const [manuallyPaused, setManuallyPaused] = useState(false);
+    const videoSource = useCachedVideo(uri);
 
-  const [position, setPosition] = useState(0);
-  const [duration, setDuration] = useState(1);
-  const [isDragging, setIsDragging] = useState(false);
-  const [manuallyPaused, setManuallyPaused] = useState(false);
+    const positionRef = useRef(0);
+    const wasPlayingRef = useRef(false);
 
-  const positionRef = useRef(0);
-  const wasPlayingRef = useRef(false);
+    const barWidth = SCREEN_WIDTH;
 
-  const barWidth = SCREEN_WIDTH;
+    useEffect(() => {
+      setManuallyPaused(false);
+    }, [uri]);
 
-  // اگه از بیرون آیتم عوض بشه، حالت پاز دستی رو ریست کن
-  useEffect(() => {
-    setManuallyPaused(false);
-  }, [uri]);
+    const handleLoad = (data: OnLoadData) => {
+      setDuration(data.duration || 1);
+    };
 
-  const handleLoad = (data: OnLoadData) => {
-    setDuration(data.duration || 1);
-  };
+    const handleProgress = (data: OnProgressData) => {
+      if (isDragging) return;
+      setPosition(data.currentTime);
+      positionRef.current = data.currentTime;
+    };
 
-  const handleProgress = (data: OnProgressData) => {
-    if (isDragging) return; // حین درگ کاربر، آپدیت خودکار رو نادیده بگیر
-    setPosition(data.currentTime);
-    positionRef.current = data.currentTime;
-  };
+    const togglePlay = () => {
+      if (!isPlaying) {
+        setManuallyPaused(false);
+        onVideoPlay?.();
+      } else {
+        setManuallyPaused((prev) => !prev);
+      }
+    };
 
-  const togglePlay = () => {
-    setManuallyPaused((prev) => !prev);
-    onVideoPlay?.();
-  };
+    const seek = (x: number) => {
+      const percent = Math.max(0, Math.min(1, x / barWidth));
+      const time = percent * duration;
+      setPosition(time);
+      positionRef.current = time;
+      return time;
+    };
 
-  const seek = (x: number) => {
-    const percent = Math.max(0, Math.min(1, x / barWidth));
-    const time = percent * duration;
-    setPosition(time);
-    positionRef.current = time;
-    return time;
-  };
+    console.log(
+      `custom video on route: [${route.name}]                , position:${position} ,          uri:${uri}`,
+    );
 
-  console.log("Test rerender from custom video");
+    const panResponder = useRef(
+      PanResponder.create({
+        onStartShouldSetPanResponder: () => true,
+        onMoveShouldSetPanResponder: () => true,
 
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: () => true,
+        onPanResponderGrant: (e) => {
+          wasPlayingRef.current = isPlaying && !manuallyPaused;
+          setIsDragging(true);
+          seek(e.nativeEvent.locationX);
+        },
 
-      onPanResponderGrant: (e) => {
-        wasPlayingRef.current = isPlaying && !manuallyPaused;
-        setIsDragging(true);
-        seek(e.nativeEvent.locationX);
-      },
+        onPanResponderMove: (e) => {
+          seek(e.nativeEvent.locationX);
+        },
 
-      onPanResponderMove: (e) => {
-        seek(e.nativeEvent.locationX);
-      },
+        onPanResponderRelease: () => {
+          videoRef.current?.seek(positionRef.current);
+          setIsDragging(false);
+        },
 
-      onPanResponderRelease: () => {
-        videoRef.current?.seek(positionRef.current);
-        setIsDragging(false);
-      },
+        onPanResponderTerminate: () => {
+          videoRef.current?.seek(positionRef.current);
+          setIsDragging(false);
+        },
+      }),
+    ).current;
 
-      onPanResponderTerminate: () => {
-        videoRef.current?.seek(positionRef.current);
-        setIsDragging(false);
-      },
-    }),
-  ).current;
+    const progress = duration > 0 ? (position / duration) * 100 : 0;
+    const shouldPlay = isPlaying && isFocused && !manuallyPaused && !isDragging;
 
-  const progress = duration > 0 ? (position / duration) * 100 : 0;
-  const shouldPlay = isPlaying && isFocused && !manuallyPaused && !isDragging;
+    return (
+      <View style={styles.container}>
+        <Pressable style={styles.video} onPress={togglePlay}>
+          <Video
+            ref={videoRef}
+            source={{ uri: videoSource || uri }}
+            style={styles.video}
+            resizeMode="stretch"
+            repeat
+            paused={!shouldPlay}
+            onLoad={handleLoad}
+            onProgress={handleProgress}
+            progressUpdateInterval={250}
+            playInBackground={false}
+            playWhenInactive={false}
+          />
+        </Pressable>
 
-  return (
-    <View style={styles.container}>
-      <Pressable style={styles.video} onPress={togglePlay}>
-        <Video
-          ref={videoRef}
-          source={{ uri }}
-          style={styles.video}
-          resizeMode="stretch"
-          repeat
-          paused={!shouldPlay}
-          onLoad={handleLoad}
-          onProgress={handleProgress}
-          progressUpdateInterval={250}
-          playInBackground={false}
-          playWhenInactive={false}
-        />
-      </Pressable>
-
-      <View
-        style={styles.touchArea}
-        hitSlop={{ top: 15, bottom: 15 }}
-        {...panResponder.panHandlers}
-      >
         <View
-          style={[
-            styles.progressContainer,
-            isDragging && styles.progressContainerActive,
-          ]}
+          style={styles.touchArea}
+          hitSlop={{ top: 15, bottom: 15 }}
+          {...panResponder.panHandlers}
         >
-          <View style={[styles.progress, { width: `${progress}%` }]} />
+          <View
+            style={[
+              styles.progressContainer,
+              isDragging && styles.progressContainerActive,
+            ]}
+          >
+            <View style={[styles.progress, { width: `${progress}%` }]} />
 
-          {isDragging && (
-            <View style={[styles.thumb, { left: `${progress}%` }]} />
-          )}
+            {isDragging && (
+              <View style={[styles.thumb, { left: `${progress}%` }]} />
+            )}
+          </View>
         </View>
       </View>
-    </View>
-  );
-};
+    );
+  },
+);
 
 export default CustomVideo;
 

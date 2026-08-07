@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 import { Dimensions, StyleSheet, View } from "react-native";
 import { useAppSelector } from "../store/reduxHookType";
 import { getImageUrl } from "../utils/fileHelper";
@@ -8,8 +8,9 @@ import CustomVideo from "./ui/CustomVideo";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
-export default function VideoSection({
+const VideoSection = ({
   score,
+  profileWatch,
   showCountLiked,
   itsMatchingWithTimer,
   videoLikes,
@@ -17,6 +18,7 @@ export default function VideoSection({
   endTime,
   onVideoPlay,
   video,
+  inviteWatch,
   showLiked,
   setOpenDropdowns,
   result,
@@ -27,29 +29,15 @@ export default function VideoSection({
   positionVideo,
   countLiked,
   handleToggleComments,
-}: any) {
+}: any) => {
   const main = useAppSelector((state) => state.main);
   const userIdLogin = main?.userLogin?.user?.id;
   const socket = main?.socketConfig;
+
   const videoUrl =
     positionVideo === 0
       ? getImageUrl(video?.attachmentInserted)
       : getImageUrl(video?.attachmentMatched);
-
-  // const player = useVideoPlayer(videoUrl ?? "", (p) => {
-  //   p.loop = true;
-  //   p.muted = false;
-  // });
-
-  // useEffect(() => {
-  //   if (!player) return;
-
-  //   if (isPlaying) {
-  //     player.play();
-  //   } else {
-  //     player.pause();
-  //   }
-  // }, [player, isPlaying]);
 
   if (!videoUrl) {
     return <View style={styles.placeholder} />;
@@ -73,9 +61,11 @@ export default function VideoSection({
           <CustomVideo
             uri={videoUrl}
             isPlaying={isPlaying}
-            onVideoPlay={() => onVideoPlay()}
+            onVideoPlay={onVideoPlay}
           />
           <OptionBottom
+            profileWatch={profileWatch}
+            inviteWatch={inviteWatch}
             showCountLiked={showCountLiked}
             itsMatchingWithTimer={itsMatchingWithTimer}
             userIdLogin={userIdLogin}
@@ -95,7 +85,9 @@ export default function VideoSection({
       </View>
     </View>
   );
-}
+};
+
+export default memo(VideoSection); // ✅ اینجا memo اضافه شد
 
 const styles = StyleSheet.create({
   container: {
@@ -104,14 +96,12 @@ const styles = StyleSheet.create({
     position: "relative",
     flexDirection: "column",
   },
-
   videoContainer: {
     flex: 1,
     position: "relative",
     justifyContent: "center",
     alignItems: "center",
   },
-
   videoCenter: {
     position: "relative",
     width: "100%",
@@ -121,11 +111,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#1900ff",
     overflow: "hidden",
   },
-  video: {
-    width: SCREEN_WIDTH,
-    height: "100%",
-  },
-
+  video: { width: SCREEN_WIDTH, height: "100%" },
   placeholder: {
     width: SCREEN_WIDTH,
     height: "100%",

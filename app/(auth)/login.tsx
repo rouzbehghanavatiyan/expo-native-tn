@@ -5,15 +5,15 @@ import { Icon } from "@/src/components/Icon";
 import { login } from "@/src/services/authService";
 import {
   categoryList,
-  followerList,
-  followingList,
+  followerLength,
+  followingLength,
   profileAttachment,
 } from "@/src/services/masterServices";
 import { saveToken } from "@/src/services/tokenServices";
 import {
-  RsetAllFollowerList,
-  RsetAllFollowingList,
   RsetCategory,
+  RsetFollowerLength,
+  RsetFollowingLength,
   RsetUserId,
   RsetUserLogin,
 } from "@/src/slices/main";
@@ -79,11 +79,11 @@ const LoginScreen: React.FC<any> = () => {
           categoryList().then((res) =>
             dispatch(RsetCategory(res?.data?.data || [])),
           ),
-          followingList(userId).then((res) =>
-            dispatch(RsetAllFollowingList(res?.data?.data || [])),
+          followingLength(userId).then((res) =>
+            dispatch(RsetFollowingLength(res?.data?.data?.count)),
           ),
-          followerList(userId).then((res) =>
-            dispatch(RsetAllFollowerList(res?.data?.data || [])),
+          followerLength(userId).then((res) =>
+            dispatch(RsetFollowerLength(res?.data?.data?.count)),
           ),
           profileAttachment(userId).then((res) => {
             if (res?.data?.data) {

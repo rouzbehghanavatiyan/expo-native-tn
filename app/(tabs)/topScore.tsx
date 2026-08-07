@@ -19,7 +19,6 @@ interface Category {
 }
 
 export default function TopScoreScreen() {
-  // مدیریت تب فعال - پیش‌فرض روی topscore
   const [activeTab, setActiveTab] = useState<"topScore" | "notification">(
     "topScore",
   );

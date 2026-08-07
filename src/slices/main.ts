@@ -52,6 +52,9 @@ const initialState: any = {
     },
     data: [],
   },
+  profileVideo: [],
+  followingLength: 0,
+  followerLength: 0,
   allFollowerList: [],
   allFollowingList: [],
   category: [],
@@ -65,12 +68,14 @@ const mainSlice = createSlice({
   name: "main",
   initialState,
   reducers: {
-    // ---------------- WATCH ----------------
     setPaginationWatch: (state, action: PayloadAction<Pagination>) => {
       state.watchVideo.pagination = action.payload;
     },
     setWatchData: (state, action: PayloadAction<any[]>) => {
       state.watchVideo.data = action.payload;
+    },
+    RsetProfileVideo: (state, action: PayloadAction<any[]>) => {
+      state.profileVideo = action.payload;
     },
     appendWatchData: (state, action: PayloadAction<any[]>) => {
       state.watchVideo.data = [...state.watchVideo.data, ...action.payload];
@@ -80,6 +85,12 @@ const mainSlice = createSlice({
     },
     RsetAllFollowingList: (state, action: PayloadAction<any[]>) => {
       state.allFollowingList = action.payload;
+    },
+    RsetFollowingLength: (state, action: PayloadAction<any[]>) => {
+      state.followingLength = action.payload;
+    },
+    RsetFollowerLength: (state, action: PayloadAction<any[]>) => {
+      state.followerLength = action.payload;
     },
     RsetLastMatch: (state, action: PayloadAction<any[]>) => {
       state.lastMatch = action.payload;
@@ -164,7 +175,7 @@ const mainSlice = createSlice({
       state.watchVideo = { ...initialDataState };
     },
     resetProfileVideo: (state) => {
-      state.profileVideo = { ...initialDataState };
+      state.profileVideo = [];
     },
     resetHomeState: (state) => {
       state.homeMatch = { ...initialDataState };
@@ -202,6 +213,7 @@ export const {
   setPaginationShowWatch,
   setShowWatchData,
   appendShowWatch,
+  RsetProfileVideo,
 
   // other
   setUnreadMessagesCount,
@@ -213,6 +225,8 @@ export const {
   resetWatchState,
   resetProfileVideo,
   resetHomeState,
+  RsetFollowerLength,
+  RsetFollowingLength,
   resetShowWatchState,
   resetAllFeeds,
   RsetAllFollowerList,

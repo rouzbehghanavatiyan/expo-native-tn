@@ -147,7 +147,7 @@ export default function ShowWatchScreen() {
             renderItem={({ item, index }) => (
               <View style={styles.page}>
                 <ShowWatchSlide
-                  showLiked={true}
+                  inviteWatch={true}
                   video={item}
                   endTime
                   index={index}

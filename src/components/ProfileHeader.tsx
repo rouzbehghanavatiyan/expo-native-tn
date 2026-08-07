@@ -5,6 +5,7 @@ import { Text, View, XStack, YStack } from "tamagui";
 import { addAttachment, profileAttachment } from "../services/masterServices";
 import { RsetUserLogin } from "../slices/main";
 import { useAppDispatch, useAppSelector } from "../store/reduxHookType";
+import { logger } from "../utils/logger";
 import ImageRank from "./ImageRank";
 
 interface ProfileHeaderProps {
@@ -34,9 +35,9 @@ const ProfileHeader = forwardRef(
     const router = useRouter();
 
     const handleImageProfileUpload = useCallback(async () => {
+      logger.info("Hellllllllllllo per");
       const permissionResult =
         await ImagePicker.requestMediaLibraryPermissionsAsync();
-
       if (!permissionResult.granted) {
         alert("You've refused to allow this app to access your photos!");
         return;
@@ -58,8 +59,8 @@ const ProfileHeader = forwardRef(
       try {
         const fileToUpload = {
           uri: imageUri,
-          name: "profile.jpg",
-          type: "image/jpeg",
+          name: "profile.png",
+          type: "image/png",
         } as any;
 
         const formData = new FormData();
@@ -67,8 +68,8 @@ const ProfileHeader = forwardRef(
         formData.append("attachmentId", String(userId));
         formData.append("attachmentType", "pf");
         formData.append("attachmentName", "profile");
-
         const resAttachment = await addAttachment(formData);
+        logger.info("resAttachment", resAttachment);
         const { status: attachmentStatus } = resAttachment?.data || {};
 
         if (attachmentStatus === 0) {
@@ -87,13 +88,28 @@ const ProfileHeader = forwardRef(
     return (
       <View px="$2" ref={ref} position="relative" w="100%">
         <XStack h={128}>
-          <View onPress={handleImageProfileUpload} cursor="pointer">
-            <ImageRank
-              iconClass="text-gray-200"
-              score={score}
-              imgSrc={userImage}
-              imgSize={100}
-            />
+          <View
+            onPress={handleImageProfileUpload}
+            cursor="pointer"
+            pressStyle={{ opacity: 0.8 }}
+            pointerEvents="box-only"
+            zIndex={100}
+          >
+            <YStack
+              border=".5px solid"
+              borderColor={"$grey300"}
+              borderRadius={"$round"}
+              ml="$2"
+              gap="$2"
+              justifyContent="center"
+            >
+              <ImageRank
+                iconClass="text-gray-200"
+                score={score}
+                imgSrc={userImage}
+                imgSize={100}
+              />
+            </YStack>
           </View>
 
           <YStack ml="$2" gap="$2" justifyContent="center">

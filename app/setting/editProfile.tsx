@@ -1,21 +1,13 @@
 import BaseButton from "@/src/components/BaseButtom";
 import { Icon } from "@/src/components/Icon";
+import MainTitle from "@/src/components/MainTitle";
 import { getStatus } from "@/src/services/masterServices";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { Modal, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import {
-  Button,
-  Input,
-  Spinner,
-  Text,
-  TextArea,
-  View,
-  XStack,
-  YStack,
-} from "tamagui";
+import { Input, Spinner, Text, TextArea, XStack, YStack } from "tamagui";
 
 const BASE_URL =
   process.env.EXPO_PUBLIC_BASE_URL || "http://192.168.160.157:4005";
@@ -129,20 +121,7 @@ export default function EditProfile() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
-      <XStack
-        px="$4"
-        py="$3"
-        alignItems="center"
-        justifyContent="space-between"
-        borderBottomWidth={1}
-        borderColor="$borderColor"
-      >
-        <Pressable onPress={() => router.back()} hitSlop={15}>
-          <Icon name="arrow-back" size={24} color="$textPrimary" />
-        </Pressable>
-        {/* <MainTitle title="Edit Profile Status" /> */}
-        <View w={24} />
-      </XStack>
+      <MainTitle handleBack={() => router.back()} title="Edit Profile" />
 
       {isLoading ? (
         <YStack flex={1} jc="center" ai="center" bg="$background">
@@ -169,8 +148,6 @@ export default function EditProfile() {
               h={45}
             />
           </YStack>
-
-          {/* فیلد لوکیشن */}
           <YStack gap="$2">
             <XStack alignItems="center" gap="$1.5">
               <Icon name="location-on" size={16} color="#777777" />
@@ -188,8 +165,6 @@ export default function EditProfile() {
               h={45}
             />
           </YStack>
-
-          {/* فیلد بیوگرافی */}
           <YStack gap="$2">
             <XStack alignItems="center" gap="$1.5">
               <Icon name="chat-bubble-outline" size={16} color="#777777" />
@@ -210,19 +185,15 @@ export default function EditProfile() {
               p="$3"
             />
           </YStack>
-
-          {/* دکمه‌های کنترلی پایینی */}
           <XStack gap="$3" mt="auto" mb="$4">
-            <Button
+            <BaseButton
               flex={1}
-              borderRadius="$3"
-              disabled={isSubmitting}
+              appearance="ghost"
+              colorType="primary"
               onPress={() => router.back()}
-              bg="$backgroundHover"
-              borderColor="$borderColor"
             >
               Cancel
-            </Button>
+            </BaseButton>
             <BaseButton
               disabled={isSubmitting}
               onPress={handleSubmit}
@@ -241,8 +212,6 @@ export default function EditProfile() {
           </XStack>
         </YStack>
       )}
-
-      {/* مودال فیدبک با استفاده از Modal نیتیو و استایل هماهنگ */}
       <Modal
         visible={feedbackOpen}
         transparent

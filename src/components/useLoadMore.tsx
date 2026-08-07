@@ -4,14 +4,15 @@ const PAGE_SIZE = 3;
 
 export function useLoadMore<T = any>(
   fetchFn: (params: { skip: number; take: number }) => Promise<any>,
+  onSuccess: (newItems: T[], isFirstPage: boolean) => void,
+  cachedDataLength: number = 0,
 ) {
-  const [items, setItems] = useState<T[]>([]);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
 
   const loadingRef = useRef(false);
   const hasMoreRef = useRef(true);
-  const skipRef = useRef(0);
+  const skipRef = useRef(cachedDataLength);
 
   const loadMore = useCallback(async () => {
     if (loadingRef.current || !hasMoreRef.current) return;
@@ -22,31 +23,38 @@ export function useLoadMore<T = any>(
     try {
       const res = await fetchFn({ skip: skipRef.current, take: PAGE_SIZE });
 
-      const list: T[] = Array.isArray(res?.data)
-        ? res.data
-        : Array.isArray(res)
-          ? res
-          : [];
+      console.log("Raw Response Data:", res?.data?.data);
 
-      setItems((prev) => [...prev, ...list]);
+      const list: T[] = Array.isArray(res?.data?.data)
+        ? res.data.data
+        : Array.isArray(res?.data)
+          ? res.data
+          : Array.isArray(res)
+            ? res
+            : [];
+
+      onSuccess(list, skipRef.current === 0);
+      
       skipRef.current += list.length;
-
       const more = list.length === PAGE_SIZE;
+
       hasMoreRef.current = more;
       setHasMore(more);
     } catch (err) {
-      console.error("خطا در دریافت ویدیوها:", err);
+      console.error("Error to get profile videos:", err);
       hasMoreRef.current = false;
       setHasMore(false);
     } finally {
       loadingRef.current = false;
       setLoading(false);
     }
-  }, [fetchFn]);
+  }, [fetchFn, onSuccess]);
 
   useEffect(() => {
-    loadMore();
+    if (cachedDataLength === 0) {
+      loadMore();
+    }
   }, []);
 
-  return { items, loading, hasMore, loadMore };
+  return { loading, hasMore, loadMore };
 }
