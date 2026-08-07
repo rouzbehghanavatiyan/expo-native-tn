@@ -21,15 +21,16 @@ import {
   ActivityIndicator,
   Dimensions,
   FlatList,
+  Platform,
   StyleSheet,
   Text,
   View,
 } from "react-native";
+const BOTTOM_PADDING = Platform.OS === "ios" ? 0 : 50;
 
 export default function ShowWatchScreen() {
   const { inviteId } = useLocalSearchParams<{ inviteId: string }>();
   const dispatch = useAppDispatch();
-
   const hasFetchedOnce = useRef(false);
 
   const { data, pagination } = useAppSelector(
@@ -133,7 +134,7 @@ export default function ShowWatchScreen() {
     <View
       style={styles.container}
       onLayout={(event) =>
-        setContainerHeight(event.nativeEvent.layout.height - 15)
+        setContainerHeight(event.nativeEvent.layout.height - BOTTOM_PADDING)
       }
     >
       {showInitialLoader ? (
@@ -192,7 +193,7 @@ const styles = StyleSheet.create({
   },
   page: {
     backgroundColor: "#000",
-    paddingBottom: 50,
+    paddingBottom: BOTTOM_PADDING,
   },
   centerIcon: {
     position: "absolute",
