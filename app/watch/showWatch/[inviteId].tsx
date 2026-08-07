@@ -25,9 +25,6 @@ import {
   Text,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-
-const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 export default function ShowWatchScreen() {
   const { inviteId } = useLocalSearchParams<{ inviteId: string }>();
@@ -40,6 +37,12 @@ export default function ShowWatchScreen() {
   );
   const [loading, setLoading] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
+
+  // 👈 استیت جدید برای محاسبه دقیق ارتفاع در دسترس
+  const [containerHeight, setContainerHeight] = useState(
+    Dimensions.get("window").height,
+  );
+
   const loadingRef = useRef(false);
   const paginationRef = useRef(pagination);
 
@@ -127,54 +130,58 @@ export default function ShowWatchScreen() {
     hasFetchedOnce.current && !loading && (!data || data.length === 0);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
-      <View style={styles.container}>
-        {showInitialLoader ? (
-          <VideoSkeleton count={1} section="itsShowWatch" isSwapper={false} />
-        ) : showEmptyState ? (
-          <View style={styles.emptyWrapper}>
-            <View style={styles.emptyCard}>
-              <Text style={styles.emptyTitle}>No Content Available</Text>
-              <Text style={styles.emptyText}>
-                There are no videos available to view at the moment.
-              </Text>
-            </View>
+    <View
+      style={styles.container}
+      onLayout={(event) =>
+        setContainerHeight(event.nativeEvent.layout.height - 15)
+      }
+    >
+      {showInitialLoader ? (
+        <VideoSkeleton count={1} section="itsShowWatch" isSwapper={false} />
+      ) : showEmptyState ? (
+        <View style={styles.emptyWrapper}>
+          <View style={styles.emptyCard}>
+            <Text style={styles.emptyTitle}>No Content Available</Text>
+            <Text style={styles.emptyText}>
+              There are no videos available to view at the moment.
+            </Text>
           </View>
-        ) : (
-          <FlatList
-            data={data}
-            keyExtractor={(item, index) => `${item?.id ?? index}`}
-            renderItem={({ item, index }) => (
-              <View style={styles.page}>
-                <ShowWatchSlide
-                  inviteWatch={true}
-                  video={item}
-                  endTime
-                  index={index}
-                  isActive={currentIndex === index}
-                />
-              </View>
-            )}
-            pagingEnabled
-            showsVerticalScrollIndicator={false}
-            decelerationRate="fast"
-            snapToAlignment="start"
-            getItemLayout={(_, index) => ({
-              length: SCREEN_HEIGHT,
-              offset: SCREEN_HEIGHT * index,
-              index,
-            })}
-            onViewableItemsChanged={onViewableItemsChanged}
-            viewabilityConfig={viewabilityConfig}
-            onEndReached={() => fetchVideos(false)}
-            onEndReachedThreshold={0.5}
-            ListFooterComponent={
-              loading ? <ActivityIndicator size="small" color="#fff" /> : null
-            }
-          />
-        )}
-      </View>
-    </SafeAreaView>
+        </View>
+      ) : (
+        <FlatList
+          data={data}
+          keyExtractor={(item, index) => `${item?.id ?? index}`}
+          renderItem={({ item, index }) => (
+            // 👈 استفاده از ارتفاع محاسبه شده برای هر آیتم
+            <View style={[styles.page, { height: containerHeight }]}>
+              <ShowWatchSlide
+                inviteWatch={true}
+                video={item}
+                endTime
+                index={index}
+                isActive={currentIndex === index}
+              />
+            </View>
+          )}
+          pagingEnabled
+          showsVerticalScrollIndicator={false}
+          decelerationRate="fast"
+          snapToAlignment="start"
+          getItemLayout={(_, index) => ({
+            length: containerHeight, // 👈 تنظیم ارتفاع در getItemLayout
+            offset: containerHeight * index,
+            index,
+          })}
+          onViewableItemsChanged={onViewableItemsChanged}
+          viewabilityConfig={viewabilityConfig}
+          onEndReached={() => fetchVideos(false)}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={
+            loading ? <ActivityIndicator size="small" color="#fff" /> : null
+          }
+        />
+      )}
+    </View>
   );
 }
 
@@ -184,8 +191,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#000",
   },
   page: {
-    height: SCREEN_HEIGHT,
     backgroundColor: "#000",
+    paddingBottom: 50,
   },
   centerIcon: {
     position: "absolute",
