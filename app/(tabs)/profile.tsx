@@ -10,6 +10,7 @@ import {
 import { RsetProfileVideo } from "@/src/slices/main";
 import { useAppDispatch, useAppSelector } from "@/src/store/reduxHookType";
 import { getImageUrl } from "@/src/utils/fileHelper";
+import { logger } from "@/src/utils/logger";
 import { socketClient } from "@/src/utils/socketClient";
 import { useRoute } from "@react-navigation/native";
 import React, {
@@ -123,6 +124,7 @@ const Profile: React.FC = () => {
 
   useEffect(() => {
     const handleGetAddLike = (data: { userId: number; movieId: number }) => {
+      logger.info("handleGetAddLike:", data);
       setVideoLikes((prev) => ({
         ...prev,
         [data.movieId]: (prev[data.movieId] || 0) + 1,
@@ -147,7 +149,7 @@ const Profile: React.FC = () => {
         socketClient.off("remove_liked_response", handleGetRemoveLike);
       }
     };
-  }, []);
+  }, [socketClient]);
 
   useEffect(() => {
     const score = userIdWhantToShow?.score || userLogin?.score || 0;

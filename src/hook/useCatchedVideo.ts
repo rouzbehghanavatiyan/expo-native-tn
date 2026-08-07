@@ -9,13 +9,9 @@ export const useCachedVideo = (videoUrl: string | null | undefined) => {
 
     const checkAndCacheVideo = async () => {
       if (!videoUrl) {
-        console.log("CACHE_TEST: no video url");
         return;
       }
-
       try {
-        console.log("CACHE_TEST: input url:", videoUrl);
-
         const urlWithoutQuery = videoUrl.split("?")[0];
 
         let filename = urlWithoutQuery.substring(
@@ -29,14 +25,9 @@ export const useCachedVideo = (videoUrl: string | null | undefined) => {
         const cacheDir = `${FileSystem.cacheDirectory}video_cache/`;
         const fileUri = `${cacheDir}${filename}`;
 
-        console.log("CACHE_TEST: cacheDir:", cacheDir);
-        console.log("CACHE_TEST: fileUri:", fileUri);
-
         const dirInfo = await FileSystem.getInfoAsync(cacheDir);
-        console.log("CACHE_TEST: dir exists:", dirInfo.exists);
 
         if (!dirInfo.exists) {
-          console.log("CACHE_TEST: creating cache directory...");
           await FileSystem.makeDirectoryAsync(cacheDir, {
             intermediates: true,
           });
@@ -44,41 +35,16 @@ export const useCachedVideo = (videoUrl: string | null | undefined) => {
 
         const fileInfo = await FileSystem.getInfoAsync(fileUri);
 
-        console.log("CACHE_TEST: file exists:", fileInfo.exists);
-
         if (fileInfo.exists) {
-          console.log("CACHE_TEST: ✅ using cached local file");
-          console.log("CACHE_TEST: cached uri:", fileUri);
-
           if (isMounted) setCachedSource(fileUri);
         } else {
-          console.log("CACHE_TEST: ❌ file not cached yet");
-          console.log("CACHE_TEST: using remote url now:", videoUrl);
-
           if (isMounted) setCachedSource(videoUrl);
-
-          console.log("CACHE_TEST: downloading video in background...");
-
           const downloadResult = await FileSystem.downloadAsync(
             videoUrl,
             fileUri,
           );
-
-          console.log("CACHE_TEST: ✅ download finished");
-          console.log("CACHE_TEST: downloaded uri:", downloadResult.uri);
-          console.log("CACHE_TEST: status:", downloadResult.status);
-
           const downloadedFileInfo = await FileSystem.getInfoAsync(fileUri);
-          console.log(
-            "CACHE_TEST: downloaded file exists:",
-            downloadedFileInfo.exists,
-          );
-
           if (downloadedFileInfo.exists && "size" in downloadedFileInfo) {
-            console.log(
-              "CACHE_TEST: downloaded file size:",
-              downloadedFileInfo.size,
-            );
           }
         }
       } catch (error) {

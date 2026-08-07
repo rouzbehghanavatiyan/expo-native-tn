@@ -167,7 +167,6 @@ export const uploadFullProcessThunk = createAsyncThunk(
       dispatch(RsetIsLoading(false));
       dispatch(RsetShowTimerButtn(false));
 
-      // ۱. اگر خطای Axios با پاسخ سرور باشد (مثل کدهای 400, 401, 500 و ...)
       if (error?.response) {
         console.log("❌ Server Error Status:", error.response.status);
         console.log(
@@ -175,14 +174,12 @@ export const uploadFullProcessThunk = createAsyncThunk(
           JSON.stringify(error.response.data, null, 2),
         );
       }
-      // ۲. اگر درخواست ارسال شده ولی سروری پاسخ نداده (قطعی اینترنت، تایم اوت، اشتباه بودن IP/URL)
       else if (error?.request) {
         console.log(
           "❌ Network / Timeout Error (No response received):",
           error.message,
         );
       }
-      // ۳. ارورهای دستی (throw new Error) یا باگ‌های جاوااسکریپتی (TypeError و ...)
       else {
         console.log("❌ Code/Runtime/Custom Error Message:", error.message);
         console.log("❌ Error Stack Trace:", error.stack);

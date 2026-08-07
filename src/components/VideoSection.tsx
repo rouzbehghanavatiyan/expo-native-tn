@@ -64,6 +64,7 @@ const VideoSection = ({
             onVideoPlay={onVideoPlay}
           />
           <OptionBottom
+            videoLikes={videoLikes}
             profileWatch={profileWatch}
             inviteWatch={inviteWatch}
             showCountLiked={showCountLiked}

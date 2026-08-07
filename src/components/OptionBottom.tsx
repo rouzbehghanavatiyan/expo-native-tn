@@ -5,7 +5,6 @@ import { Text, View, XStack } from "tamagui";
 import { addLike, removeLike } from "../services/masterServices";
 import { useAppDispatch } from "../store/reduxHookType";
 import { fixNumberCount } from "../utils/fileHelper";
-import { logger } from "../utils/logger";
 import { socketClient } from "../utils/socketClient";
 import { Icon } from "./Icon";
 
@@ -23,6 +22,7 @@ interface OptionBottomProps {
   showCountLiked: any;
   inviteWatch: boolean;
   profileWatch: boolean;
+  videoLikes: any;
 }
 
 const OptionBottom: React.FC<OptionBottomProps> = ({
@@ -34,6 +34,7 @@ const OptionBottom: React.FC<OptionBottomProps> = ({
   endTime,
   result,
   showLiked,
+  videoLikes,
   positionVideo,
   profileWatch,
   userIdLogin,
@@ -43,7 +44,26 @@ const OptionBottom: React.FC<OptionBottomProps> = ({
   const dispatch = useAppDispatch();
   const [isLiked, setIsLiked] = useState(false);
   const [localLikeCount, setLocalLikeCount] = useState(0);
-  console.log(itsMatchingWithTimer, inviteWatch);
+  // console.log(
+  //   "Top Video:",
+  //   video?.inviteInserted?.id,
+  //   "Botton Video:",
+  //   video?.inviteMatched?.id,
+  // );
+  // console.log(
+  //   "itsMatchingWithTimer:",
+  //   itsMatchingWithTimer,
+  //   "inviteWatch:",
+  //   inviteWatch,
+  //   "endTime:",
+  //   endTime,
+  //   "showLiked:",
+  //   showLiked,
+  //   "profileWatch",
+  //   profileWatch,
+  //   "inviteWatch",
+  //   inviteWatch,
+  // );
 
   const movieId = useMemo(() => {
     if (!video) return null;
@@ -51,6 +71,29 @@ const OptionBottom: React.FC<OptionBottomProps> = ({
       ? video?.attachmentInserted?.attachmentId
       : video?.attachmentMatched?.attachmentId;
   }, [video, positionVideo]);
+
+  useEffect(() => {
+    let baseCount = 0;
+
+    if (countLiked !== undefined) {
+      baseCount = countLiked;
+    } else if (video && movieId) {
+      if (video?.likes?.[movieId]) {
+        const likeInfo = video.likes[movieId];
+        baseCount = likeInfo.count || 0;
+      } else {
+        baseCount =
+          positionVideo === 0
+            ? video?.likeInserted || 0
+            : video?.likeMatched || 0;
+      }
+    }
+
+    const socketDelta =
+      videoLikes && movieId && videoLikes[movieId] ? videoLikes[movieId] : 0;
+
+    setLocalLikeCount(baseCount + socketDelta);
+  }, [countLiked, video, positionVideo, movieId, videoLikes]);
 
   useEffect(() => {
     if (!movieId || !video) return;
@@ -64,22 +107,22 @@ const OptionBottom: React.FC<OptionBottomProps> = ({
     }
   }, [video, positionVideo, movieId]);
 
-  useEffect(() => {
-    if (countLiked !== undefined) {
-      setLocalLikeCount(countLiked);
-    } else if (video && movieId) {
-      if (video?.likes?.[movieId]) {
-        const likeInfo = video.likes[movieId];
-        setLocalLikeCount(likeInfo.count || 0);
-      } else {
-        const baseCount =
-          positionVideo === 0
-            ? video?.likeInserted || 0
-            : video?.likeMatched || 0;
-        setLocalLikeCount(baseCount);
-      }
-    }
-  }, [countLiked, video, positionVideo, movieId]);
+  // useEffect(() => {
+  //   if (countLiked !== undefined) {
+  //     setLocalLikeCount(countLiked);
+  //   } else if (video && movieId) {
+  //     if (video?.likes?.[movieId]) {
+  //       const likeInfo = video.likes[movieId];
+  //       setLocalLikeCount(likeInfo.count || 0);
+  //     } else {
+  //       const baseCount =
+  //         positionVideo === 0
+  //           ? video?.likeInserted || 0
+  //           : video?.likeMatched || 0;
+  //       setLocalLikeCount(baseCount);
+  //     }
+  //   }
+  // }, [countLiked, video, positionVideo, movieId]);
 
   useEffect(() => {
     if (externalIsLiked !== undefined) {
@@ -109,8 +152,6 @@ const OptionBottom: React.FC<OptionBottomProps> = ({
       movieId: movieId,
     };
 
-    console.log("like postData:", postData);
-
     try {
       if (isLiked) {
         const removeRes = await removeLike(postData);
@@ -119,20 +160,13 @@ const OptionBottom: React.FC<OptionBottomProps> = ({
         }
         socketClient?.emit("remove_liked", postData);
       } else {
-        console.log("11111111111111111111111111111111111111111111111111111111");
-
         const addRes = await addLike(postData);
-        logger.info("2222222222222222222222222222222222222222222", addRes);
-
         if (addRes?.data?.status !== 0) {
           throw new Error(addRes?.data?.message || "Add like failed");
         }
         socketClient?.emit("add_liked", postData);
       }
-
-      console.log("====== LIKE CLICK SUCCESS ======");
     } catch (error: any) {
-      console.log("====== LIKE CLICK ERROR ======");
       console.log("error:", error);
       console.log("error message:", error?.message);
       console.log("error status:", error?.response?.status);
@@ -209,20 +243,19 @@ const OptionBottom: React.FC<OptionBottomProps> = ({
                   onPress={handleLikeClick}
                   style={{ padding: 8, zIndex: 999 }}
                 >
-                  {isLiked && itsMatchingWithTimer ? (
+                  {isLiked ? (
                     <Icon name="thumb-up" size={20} color="#ffffff" />
                   ) : (
                     <Icon name="thumb-up-off-alt" size={20} color="white" />
                   )}
                 </TouchableOpacity>
               )}
-              {!itsMatchingWithTimer && (inviteWatch || profileWatch) && (
+              {true && (
                 <XStack gap={1} alignItems="center">
-                  <Text margin={2} pt={1} color="gray" fontSize="$3">
-                    {/* {localLikeCount} */}
-                    {fixNumberCount(212412414141495)}
+                  <Text margin={2} pt={1} color="$grey800" fontSize="$3">
+                    {fixNumberCount(localLikeCount)}
                   </Text>
-                  <Icon name="thumb-up" color="gray" size={15} />
+                  <Icon name="thumb-up" color="#757575" size={15} />
                 </XStack>
               )}
             </XStack>
