@@ -26,7 +26,8 @@ import {
   Text,
   View,
 } from "react-native";
-const BOTTOM_PADDING = Platform.OS === "ios" ? 0 : 50;
+import { SafeAreaView } from "react-native-safe-area-context";
+const BOTTOM_PADDING = Platform.OS === "ios" ? 0 : 2;
 
 export default function ShowWatchScreen() {
   const { inviteId } = useLocalSearchParams<{ inviteId: string }>();
@@ -39,7 +40,6 @@ export default function ShowWatchScreen() {
   const [loading, setLoading] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  // 👈 استیت جدید برای محاسبه دقیق ارتفاع در دسترس
   const [containerHeight, setContainerHeight] = useState(
     Dimensions.get("window").height,
   );
@@ -131,58 +131,60 @@ export default function ShowWatchScreen() {
     hasFetchedOnce.current && !loading && (!data || data.length === 0);
 
   return (
-    <View
-      style={styles.container}
-      onLayout={(event) =>
-        setContainerHeight(event.nativeEvent.layout.height - BOTTOM_PADDING)
-      }
-    >
-      {showInitialLoader ? (
-        <VideoSkeleton count={1} section="itsShowWatch" isSwapper={false} />
-      ) : showEmptyState ? (
-        <View style={styles.emptyWrapper}>
-          <View style={styles.emptyCard}>
-            <Text style={styles.emptyTitle}>No Content Available</Text>
-            <Text style={styles.emptyText}>
-              There are no videos available to view at the moment.
-            </Text>
-          </View>
-        </View>
-      ) : (
-        <FlatList
-          data={data}
-          keyExtractor={(item, index) => `${item?.id ?? index}`}
-          renderItem={({ item, index }) => (
-            // 👈 استفاده از ارتفاع محاسبه شده برای هر آیتم
-            <View style={[styles.page, { height: containerHeight }]}>
-              <ShowWatchSlide
-                inviteWatch={true}
-                video={item}
-                endTime
-                index={index}
-                isActive={currentIndex === index}
-              />
+    <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
+      <View
+        style={styles.container}
+        onLayout={(event) =>
+          setContainerHeight(event.nativeEvent.layout.height - BOTTOM_PADDING)
+        }
+      >
+        {showInitialLoader ? (
+          <VideoSkeleton count={1} section="itsShowWatch" isSwapper={false} />
+        ) : showEmptyState ? (
+          <View style={styles.emptyWrapper}>
+            <View style={styles.emptyCard}>
+              <Text style={styles.emptyTitle}>No Content Available</Text>
+              <Text style={styles.emptyText}>
+                There are no videos available to view at the moment.
+              </Text>
             </View>
-          )}
-          pagingEnabled
-          showsVerticalScrollIndicator={false}
-          decelerationRate="fast"
-          snapToAlignment="start"
-          getItemLayout={(_, index) => ({
-            length: containerHeight, // 👈 تنظیم ارتفاع در getItemLayout
-            offset: containerHeight * index,
-            index,
-          })}
-          onViewableItemsChanged={onViewableItemsChanged}
-          viewabilityConfig={viewabilityConfig}
-          onEndReached={() => fetchVideos(false)}
-          onEndReachedThreshold={0.5}
-          ListFooterComponent={
-            loading ? <ActivityIndicator size="small" color="#fff" /> : null
-          }
-        />
-      )}
-    </View>
+          </View>
+        ) : (
+          <FlatList
+            data={data}
+            keyExtractor={(item, index) => `${item?.id ?? index}`}
+            renderItem={({ item, index }) => (
+              // 👈 استفاده از ارتفاع محاسبه شده برای هر آیتم
+              <View style={[styles.page, { height: containerHeight }]}>
+                <ShowWatchSlide
+                  inviteWatch={true}
+                  video={item}
+                  endTime
+                  index={index}
+                  isActive={currentIndex === index}
+                />
+              </View>
+            )}
+            pagingEnabled
+            showsVerticalScrollIndicator={false}
+            decelerationRate="fast"
+            snapToAlignment="start"
+            getItemLayout={(_, index) => ({
+              length: containerHeight, // 👈 تنظیم ارتفاع در getItemLayout
+              offset: containerHeight * index,
+              index,
+            })}
+            onViewableItemsChanged={onViewableItemsChanged}
+            viewabilityConfig={viewabilityConfig}
+            onEndReached={() => fetchVideos(false)}
+            onEndReachedThreshold={0.5}
+            ListFooterComponent={
+              loading ? <ActivityIndicator size="small" color="#fff" /> : null
+            }
+          />
+        )}
+      </View>
+    </SafeAreaView>
   );
 }
 
@@ -193,7 +195,7 @@ const styles = StyleSheet.create({
   },
   page: {
     backgroundColor: "#000",
-    paddingBottom: BOTTOM_PADDING,
+    // paddingBottom: BOTTOM_PADDING,
   },
   centerIcon: {
     position: "absolute",

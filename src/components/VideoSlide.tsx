@@ -90,7 +90,11 @@ export default function ShowWatchSlide({
       ))}
       <View style={styles.centerIcon}>
         {video?.icon ? (
-          <Icon name={video?.icon} color="rgba(255,255,255,0.45)" size={20} />
+          <Icon
+            name={video?.icon}
+            color="rgba(255, 255, 255, 0.14)"
+            size={20}
+          />
         ) : null}
       </View>
     </>
@@ -113,8 +117,8 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 32,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.45)",
+    // borderWidth: 1,
+    // borderColor: "rgba(110, 110, 110, 0.09)",
     justifyContent: "center",
     alignItems: "center",
     transform: [{ translateX: -20 }, { translateY: -20 }],

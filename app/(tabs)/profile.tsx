@@ -151,6 +151,8 @@ const Profile: React.FC = () => {
     };
   }, [socketClient]);
 
+  console.log("userLogin", userLogin);
+
   useEffect(() => {
     const score = userIdWhantToShow?.score || userLogin?.score || 0;
     let calc = score <= 100 ? score : score % 100 || 100;
