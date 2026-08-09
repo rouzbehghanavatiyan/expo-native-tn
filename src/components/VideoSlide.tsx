@@ -1,6 +1,5 @@
 import React from "react";
 import { Dimensions, StyleSheet, View } from "react-native";
-import { Icon } from "./Icon";
 import VideoSection from "./VideoSection";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -62,7 +61,15 @@ export default function ShowWatchSlide({
           }
         />
       </View>
-
+      {/* <View style={styles.centerIcon}>
+        {video?.icon ? (
+          <Icon
+            name={video?.icon}
+            color="rgba(255, 255, 255, 0.14)"
+            size={20}
+          />
+        ) : null}
+      </View> */}
       <View style={styles.half}>
         <VideoSection
           inviteWatch={inviteWatch}
@@ -87,16 +94,6 @@ export default function ShowWatchSlide({
             false
           }
         />
-      </View>
-
-      <View style={styles.centerIcon}>
-        {video?.icon ? (
-          <Icon
-            name={video?.icon}
-            color="rgba(255, 255, 255, 0.14)"
-            size={20}
-          />
-        ) : null}
       </View>
     </>
   );

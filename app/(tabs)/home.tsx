@@ -7,7 +7,7 @@ import {
   resetHomeMatch,
   setPaginationHomeMatch,
 } from "@/src/slices/main";
-import { useAppSelector } from "@/src/store/reduxHookType";
+import { useAppDispatch, useAppSelector } from "@/src/store/reduxHookType";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { FlashList } from "@shopify/flash-list";
@@ -25,11 +25,11 @@ const HomeScreen: React.FC = () => {
   const headerHeight = useHeaderHeight();
   const tabBarHeight = useBottomTabBarHeight();
   const usableHeight: any = height - headerHeight - tabBarHeight;
-
+  const [refreshing, setRefreshing] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [commentPosition, setCommentPosition] = useState(0);
   const [selectedVideo, setSelectedVideo] = useState<any>(null);
-
+  const dispatch = useAppDispatch();
   const handleOpenComments = useCallback((video: any, position: number) => {
     setSelectedVideo(video);
     setCommentPosition(position ?? 0);
@@ -41,6 +41,35 @@ const HomeScreen: React.FC = () => {
     setSelectedVideo(null);
     setCommentPosition(0);
   }, []);
+
+  const onRefresh = async () => {
+    if (!userIdLogin) return;
+    setRefreshing(true);
+    try {
+      const freshData = await customFetchNextPage({
+        skip: 0,
+        take: 6,
+        inviteId: userIdLogin,
+      });
+
+      dispatch(resetHomeMatch());
+
+      if (freshData && freshData.length > 0) {
+        dispatch(appendHomeMatch(freshData));
+        dispatch(
+          setPaginationHomeMatch({
+            skip: freshData.length,
+            take: 6,
+            hasMore: freshData.length === 6,
+          }),
+        );
+      }
+    } catch (error) {
+      console.error("Refresh error:", error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const customFetchNextPage = useCallback(
     async (params: {
@@ -133,6 +162,8 @@ const HomeScreen: React.FC = () => {
               item?.id?.toString() || index.toString()
             }
             pagingEnabled
+            refreshing={refreshing}
+            onRefresh={onRefresh}
             showsVerticalScrollIndicator={false}
             viewabilityConfig={viewabilityConfig}
             onViewableItemsChanged={onViewableItemsChanged}
@@ -142,7 +173,7 @@ const HomeScreen: React.FC = () => {
                   itemHeight={usableHeight}
                   showLiked={false}
                   showScore
-                  showResult
+                  showResult={true}
                   showCountLiked
                   video={item}
                   index={index}

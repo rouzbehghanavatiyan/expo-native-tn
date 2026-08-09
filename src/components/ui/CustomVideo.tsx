@@ -1,5 +1,5 @@
 import { useCachedVideo } from "@/src/hook/useCatchedVideo";
-import { useIsFocused } from "@react-navigation/native";
+import { useIsFocused, useRoute } from "@react-navigation/native";
 import React, { memo, useRef, useState } from "react";
 import {
   PanResponder,
@@ -40,8 +40,13 @@ const CustomVideo = memo(
     const [duration, setDuration] = useState(1);
     const [position, setPosition] = useState(0);
     const [isDragging, setIsDragging] = useState(false);
+    const route = useRoute();
 
     const videoSource = useCachedVideo(uri);
+
+    console.log(
+      `custom video on route: [${route.name}]                , position:${position} ,          uri:${uri}`,
+    );
 
     const isDraggingRef = useRef(false);
     const durationRef = useRef(1);
@@ -177,7 +182,7 @@ const styles = StyleSheet.create({
     bottom: TOUCH_AREA_HEIGHT,
     zIndex: 5,
     elevation: 5,
-    backgroundColor: "transparent", // 👈 حتما اضافه شود تا فضای خالی لمس شود
+    backgroundColor: "transparent",
   },
   progressArea: {
     position: "absolute",
@@ -187,8 +192,8 @@ const styles = StyleSheet.create({
     height: TOUCH_AREA_HEIGHT,
     justifyContent: "flex-end",
     zIndex: 10,
-    elevation: 10, // 👈 اضافه شود تا بالاتر از بقیه لایه‌ها قرار بگیرد
-    backgroundColor: "transparent", // 👈 کلید حل مشکل: باعث می‌شود فضای خالی ۸۵ پیکسلی لمس را جذب کند
+    elevation: 10,
+    backgroundColor: "transparent",
   },
   progressContainer: {
     height: BAR_HEIGHT,
@@ -201,7 +206,7 @@ const styles = StyleSheet.create({
   },
   progress: {
     height: "100%",
-    backgroundColor: "#ffffff57",
+    backgroundColor: "#ffffff",
   },
   thumb: {
     position: "absolute",

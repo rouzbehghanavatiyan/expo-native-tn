@@ -202,6 +202,11 @@ const OptionBottom: React.FC<OptionBottomProps> = ({
 
   const resultStyle: any = getResultStyle();
 
+  console.log(
+    " result result result result result result result result result",
+    result,
+  );
+
   return (
     <View position="absolute" bottom={0} left={0} right={0} zIndex={10}>
       <LinearGradient
@@ -222,7 +227,7 @@ const OptionBottom: React.FC<OptionBottomProps> = ({
               <Icon size={20} name="chat-bubble-outline" color="white" />
             </TouchableOpacity>
           </View>
-          {!itsMatchingWithTimer && (inviteWatch || profileWatch) && (
+          {result && (
             <View flex={1} alignItems="center">
               <View px={2} py={1} borderRadius="$3">
                 <Text
