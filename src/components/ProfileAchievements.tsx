@@ -1,5 +1,5 @@
 import React from "react";
-import { Image, Text, XStack, YStack } from "tamagui";
+import { XStack } from "tamagui";
 
 const cupLevel = require("../assets/cups/cup1.png");
 const cup3 = require("../assets/cups/cup1.png");
@@ -19,7 +19,7 @@ const ProfileAchievements: React.FC = () => {
       justifyContent="space-around"
       w="100%"
     >
-      {achievements.map((cup, index) => (
+      {/* {achievements.map((cup, index) => (
         <YStack key={index} alignItems="center" justifyContent="flex-end">
           <Image
             source={cup.img}
@@ -32,7 +32,7 @@ const ProfileAchievements: React.FC = () => {
             {cup.label}
           </Text>
         </YStack>
-      ))}
+      ))} */}
     </XStack>
   );
 };

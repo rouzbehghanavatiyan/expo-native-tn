@@ -8,7 +8,6 @@ import {
   setPaginationHomeMatch,
 } from "@/src/slices/main";
 import { useAppSelector } from "@/src/store/reduxHookType";
-import { logger } from "@/src/utils/logger";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { FlashList } from "@shopify/flash-list";
@@ -96,8 +95,6 @@ const HomeScreen: React.FC = () => {
 
   const onViewableItemsChanged = useRef(
     ({ viewableItems }: { viewableItems: any }) => {
-      logger.info("viewableItems", viewableItems);
-
       if (viewableItems && viewableItems.length > 0) {
         const visibleItem = viewableItems[0];
         if (visibleItem.index !== null) {
@@ -142,7 +139,7 @@ const HomeScreen: React.FC = () => {
             renderItem={({ item, index }) => (
               <View style={{ width, height: usableHeight }}>
                 <ShowWatchSlide
-                  itemHeight={usableHeight} // ✅ ارتفاع دقیق مستقیم پاس داده می‌شود
+                  itemHeight={usableHeight}
                   showLiked={false}
                   showScore
                   showResult
@@ -151,7 +148,7 @@ const HomeScreen: React.FC = () => {
                   index={index}
                   currentlyPlayingId={currentlyPlayingId}
                   openDropdowns={openDropdowns}
-                  onVideoPlay={handleVideoPlay}
+                  handleVideoPlay={handleVideoPlay}
                   toggleDropdown={toggleDropdown}
                   dropdownItems={dropdownItems}
                   setOpenDropdowns={setOpenDropdowns}

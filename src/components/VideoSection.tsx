@@ -11,12 +11,12 @@ const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const VideoSection = ({
   score,
   profileWatch,
+  handleVideoPlay,
   showCountLiked,
   itsMatchingWithTimer,
   videoLikes,
   isFollowed: externalIsFollowed,
   endTime,
-  onVideoPlay,
   video,
   inviteWatch,
   showLiked,
@@ -27,12 +27,16 @@ const VideoSection = ({
   openDropdowns,
   isPlaying,
   positionVideo,
-  countLiked,
   handleToggleComments,
 }: any) => {
   const main = useAppSelector((state) => state.main);
   const userIdLogin = main?.userLogin?.user?.id;
   const socket = main?.socketConfig;
+
+  const videoId =
+    positionVideo === 0
+      ? video?.attachmentInserted?.attachmentId
+      : video?.attachmentMatched?.attachmentId;
 
   const videoUrl =
     positionVideo === 0
@@ -42,7 +46,6 @@ const VideoSection = ({
   if (!videoUrl) {
     return <View style={styles.placeholder} />;
   }
-
   return (
     <View style={styles.container}>
       <OptionTop
@@ -59,9 +62,11 @@ const VideoSection = ({
       <View style={styles.videoContainer}>
         <View style={styles.videoCenter}>
           <CustomVideo
+            videoId={videoId}
+            positionVideo={positionVideo}
+            onVideoPlay={() => handleVideoPlay(videoId)}
             uri={videoUrl}
             isPlaying={isPlaying}
-            onVideoPlay={onVideoPlay}
           />
           <OptionBottom
             videoLikes={videoLikes}

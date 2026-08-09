@@ -1,7 +1,6 @@
 import { AnyAction } from "@reduxjs/toolkit";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAppDispatch } from "../store/reduxHookType";
-import { logger } from "../utils/logger";
 
 interface UseShowWatchProps {
   inviteId?: string;
@@ -121,7 +120,6 @@ export const useShowWatch = ({
   ]);
 
   const handleVideoPlay = useCallback((videoId: string) => {
-    logger.info("videoId videoId videoId", videoId);
     setOpenDropdowns({});
     setCurrentlyPlayingId((prev) => (prev === videoId ? null : videoId));
   }, []);
@@ -184,8 +182,6 @@ export const useShowWatch = ({
 
       const currentItem = dataRef.current[index];
 
-      // index زیرو-بیس: 0,2,4 => اسلاید نمایشی 1,3,5 (فرد) => ویدیوی بالا
-      // index زیرو-بیس: 1,3,5 => اسلاید نمایشی 2,4,6 (زوج) => ویدیوی پایین
       const currentVideoId =
         index % 2 === 0
           ? currentItem?.attachmentInserted?.attachmentId

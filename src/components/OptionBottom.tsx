@@ -252,10 +252,10 @@ const OptionBottom: React.FC<OptionBottomProps> = ({
               )}
               {true && (
                 <XStack gap={1} alignItems="center">
-                  <Text margin={2} pt={1} color="$grey800" fontSize="$3">
+                  <Text margin={2} pt={1} color="$grey300" fontSize="$3">
                     {fixNumberCount(localLikeCount)}
                   </Text>
-                  <Icon name="thumb-up" color="#757575" size={15} />
+                  <Icon name="thumb-up" color="#b4b4b485" size={15} />
                 </XStack>
               )}
             </XStack>

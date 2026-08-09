@@ -1,12 +1,12 @@
 import { useCachedVideo } from "@/src/hook/useCatchedVideo";
-import { useIsFocused, useRoute } from "@react-navigation/native";
-import React, { memo, useEffect, useRef, useState } from "react";
+import { useIsFocused } from "@react-navigation/native";
+import React, { memo, useRef, useState } from "react";
 import {
-  Dimensions,
   PanResponder,
   Pressable,
   StyleSheet,
   View,
+  ViewStyle,
 } from "react-native";
 import Video, {
   OnLoadData,
@@ -14,130 +14,143 @@ import Video, {
   VideoRef,
 } from "react-native-video";
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
-
-const TOUCH_AREA_HEIGHT = 28;
+const TOUCH_AREA_HEIGHT = 85;
 const BAR_HEIGHT = 3;
 const BAR_HEIGHT_ACTIVE = 5;
 
 interface CustomVideoProps {
+  videoId: string;
   uri: string;
   isPlaying: boolean;
   onVideoPlay?: () => void;
+  positionVideo: any;
 }
 
 const CustomVideo = memo(
-  ({ uri, isPlaying, onVideoPlay }: CustomVideoProps) => {
+  ({
+    videoId,
+    uri,
+    isPlaying,
+    onVideoPlay,
+    positionVideo,
+  }: CustomVideoProps) => {
     const videoRef = useRef<VideoRef>(null);
     const isFocused = useIsFocused();
-    const route = useRoute();
-    const [position, setPosition] = useState(0);
+
     const [duration, setDuration] = useState(1);
+    const [position, setPosition] = useState(0);
     const [isDragging, setIsDragging] = useState(false);
-    const [manuallyPaused, setManuallyPaused] = useState(false);
+
     const videoSource = useCachedVideo(uri);
 
+    const isDraggingRef = useRef(false);
+    const durationRef = useRef(1);
     const positionRef = useRef(0);
-    const wasPlayingRef = useRef(false);
+    const timelineWidthRef = useRef(1); // فقط عرض نوار پیشرفت را نیاز داریم
 
-    const barWidth = SCREEN_WIDTH;
-
-    useEffect(() => {
-      setManuallyPaused(false);
-    }, [uri]);
+    const updatePosition = (newPos: number) => {
+      setPosition(newPos);
+      positionRef.current = newPos;
+    };
 
     const handleLoad = (data: OnLoadData) => {
       setDuration(data.duration || 1);
+      durationRef.current = data.duration || 1;
     };
 
     const handleProgress = (data: OnProgressData) => {
-      if (isDragging) return;
-      setPosition(data.currentTime);
-      positionRef.current = data.currentTime;
-    };
-
-    const togglePlay = () => {
-      if (!isPlaying) {
-        setManuallyPaused(false);
-        onVideoPlay?.();
-      } else {
-        setManuallyPaused((prev) => !prev);
+      if (!isDraggingRef.current) {
+        updatePosition(data.currentTime);
       }
     };
 
-    const seek = (x: number) => {
-      const percent = Math.max(0, Math.min(1, x / barWidth));
-      const time = percent * duration;
-      setPosition(time);
-      positionRef.current = time;
-      return time;
+    const togglePlay = () => {
+      console.log(
+        `[Video ${positionVideo}] 🎬 Tap on Video Body -> Toggle Play`,
+      );
+      onVideoPlay?.();
     };
 
-    console.log(
-      `custom video on route: [${route.name}]                , position:${position} ,          uri:${uri}`,
-    );
+    const seek = (locationX: number) => {
+      // محاسبه درصد بر اساس عرض نوار پایینی (نه کل صفحه)
+      const width = timelineWidthRef.current;
+      const percent = Math.max(0, Math.min(1, locationX / width));
+      const newTime = percent * durationRef.current;
+      updatePosition(newTime);
+      return newTime;
+    };
 
-    const panResponder = useRef(
+    // PanResponder فقط و فقط برای نوار پیشرفت پایین صفحه
+    const timelineResponder = useRef(
       PanResponder.create({
+        // هرگونه تاچ روی این لایه، توسط همین لایه جذب شود (و به Pressable زیرین نرسد)
         onStartShouldSetPanResponder: () => true,
         onMoveShouldSetPanResponder: () => true,
 
-        onPanResponderGrant: (e) => {
-          wasPlayingRef.current = isPlaying && !manuallyPaused;
+        onPanResponderGrant: (evt) => {
+          isDraggingRef.current = true;
           setIsDragging(true);
-          seek(e.nativeEvent.locationX);
+          const targetTime = seek(evt.nativeEvent.locationX);
+          console.log(
+            `[Video ${positionVideo}] 📍 Timeline Touched! Target: ${targetTime.toFixed(2)}s`,
+          );
         },
 
-        onPanResponderMove: (e) => {
-          seek(e.nativeEvent.locationX);
+        onPanResponderMove: (evt) => {
+          if (isDraggingRef.current) {
+            seek(evt.nativeEvent.locationX);
+          }
         },
 
         onPanResponderRelease: () => {
+          console.log(
+            `[Video ${positionVideo}] ✅ Drag Released, seeking to: ${positionRef.current.toFixed(2)}s`,
+          );
           videoRef.current?.seek(positionRef.current);
+          isDraggingRef.current = false;
           setIsDragging(false);
         },
 
         onPanResponderTerminate: () => {
           videoRef.current?.seek(positionRef.current);
+          isDraggingRef.current = false;
           setIsDragging(false);
         },
       }),
     ).current;
 
     const progress = duration > 0 ? (position / duration) * 100 : 0;
-    const shouldPlay = isPlaying && isFocused && !manuallyPaused && !isDragging;
+    const shouldPlay = isPlaying && isFocused && !isDragging;
 
     return (
       <View style={styles.container}>
-        <Pressable style={styles.video} onPress={togglePlay}>
-          <Video
-            ref={videoRef}
-            source={{ uri: videoSource || uri }}
-            style={styles.video}
-            resizeMode="stretch"
-            repeat
-            paused={!shouldPlay}
-            onLoad={handleLoad}
-            onProgress={handleProgress}
-            progressUpdateInterval={250}
-            playInBackground={false}
-            playWhenInactive={false}
-          />
-        </Pressable>
-
+        <Video
+          ref={videoRef}
+          source={{ uri: videoSource || uri }}
+          style={StyleSheet.absoluteFill as ViewStyle}
+          resizeMode="stretch"
+          repeat
+          paused={!shouldPlay}
+          onLoad={handleLoad}
+          onProgress={handleProgress}
+          progressUpdateInterval={250}
+        />
+        <Pressable style={styles.playPauseOverlay} onPress={togglePlay} />
         <View
-          style={styles.touchArea}
-          hitSlop={{ top: 15, bottom: 15 }}
-          {...panResponder.panHandlers}
+          style={styles.progressArea}
+          onLayout={(e) => {
+            timelineWidthRef.current = e.nativeEvent.layout.width;
+          }}
+          {...timelineResponder.panHandlers}
         >
           <View
+            pointerEvents="none"
             style={[
               styles.progressContainer,
               isDragging && styles.progressContainerActive,
             ]}
           >
             <View style={[styles.progress, { width: `${progress}%` }]} />
-
             {isDragging && (
               <View style={[styles.thumb, { left: `${progress}%` }]} />
             )}
@@ -153,46 +166,49 @@ export default CustomVideo;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    width: "100%",
     backgroundColor: "black",
   },
-  video: {
-    width: SCREEN_WIDTH,
-    height: "100%",
+  playPauseOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: TOUCH_AREA_HEIGHT,
+    zIndex: 5,
+    elevation: 5,
+    backgroundColor: "transparent", // 👈 حتما اضافه شود تا فضای خالی لمس شود
   },
-  touchArea: {
+  progressArea: {
     position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
     height: TOUCH_AREA_HEIGHT,
     justifyContent: "flex-end",
-    elevation: 999,
+    zIndex: 10,
+    elevation: 10, // 👈 اضافه شود تا بالاتر از بقیه لایه‌ها قرار بگیرد
+    backgroundColor: "transparent", // 👈 کلید حل مشکل: باعث می‌شود فضای خالی ۸۵ پیکسلی لمس را جذب کند
   },
   progressContainer: {
     height: BAR_HEIGHT,
     width: "100%",
-    backgroundColor: "rgba(255,255,255,0.3)",
+    backgroundColor: "rgba(255, 255, 255, 0.12)",
+    justifyContent: "center",
   },
   progressContainerActive: {
     height: BAR_HEIGHT_ACTIVE,
   },
   progress: {
     height: "100%",
-    backgroundColor: "#fff",
+    backgroundColor: "#ffffff57",
   },
   thumb: {
     position: "absolute",
-    top: "50%",
-    width: 12,
-    height: 12,
-    borderRadius: 6,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
     backgroundColor: "#fff",
-    marginLeft: -6,
-    marginTop: -6,
-    shadowColor: "#000",
-    shadowOpacity: 0.3,
-    shadowRadius: 2,
-    shadowOffset: { width: 0, height: 1 },
-    elevation: 2,
+    marginLeft: -7,
   },
 });
