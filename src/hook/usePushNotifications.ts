@@ -13,13 +13,13 @@ export function usePushNotifications() {
 
     notificationListener.current =
       Notifications.addNotificationReceivedListener((notification) => {
-        console.log("notification دریافت شد:", notification);
+        console.log("notification get it:", notification);
       });
 
     responseListener.current =
       Notifications.addNotificationResponseReceivedListener((response) => {
         const data = response.notification.request.content.data;
-        console.log("کاربر کلیک کرد:", data);
+        console.log("User clicked:", data);
       });
 
     return () => {

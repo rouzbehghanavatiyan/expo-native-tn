@@ -1,19 +1,16 @@
 // const BASE_URL = process.env.EXPO_PUBLIC_VITE_SERVERPROFILE;
-const BASE_URL = process.env.EXPO_PUBLIC_BASE_URL;
+const BASE_URL = process.env.EXPO_PUBLIC_STREAM;
 
 export const getImageUrl = (attachment: any) => {
   if (!attachment) return null;
-
-  return `${BASE_URL}/${attachment.attachmentType}/${attachment.fileName}${attachment.ext}`;
+  const res = `${BASE_URL}/${attachment.attachmentType}/${attachment.fileName}${attachment.ext}`;
+  return res;
 };
 
 export const fixNumberCount = (value: number | string | null | undefined) => {
   if (value === null || value === undefined || value === "") return "0";
-
   const numberValue = Number(value);
-
   if (Number.isNaN(numberValue)) return "0";
-
   return numberValue.toLocaleString("en-US");
 };
 
