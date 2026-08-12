@@ -1,6 +1,5 @@
 import TimerTornoment from "@/src/components/TimerTornoment";
 import VideoSection from "@/src/components/VideoSection";
-import { logger } from "@/src/utils/logger";
 import React, { memo, useMemo } from "react";
 import { Dimensions, StyleSheet, View } from "react-native";
 
@@ -23,7 +22,6 @@ const VideosProfileItem = ({
 }: any) => {
   const matchedInsertDate = video?.inviteMatched?.insertDate;
   const insertedInsertDate = video?.inviteInserted?.insertDate;
-  logger.info("matchedInsertDate", video);
 
   const startTime = matchedInsertDate ?? insertedInsertDate;
 
@@ -96,6 +94,7 @@ const VideosProfileItem = ({
               itsMatchingWithTimer={itsMatchingWithTimer}
               activeVideoId={activeVideoId}
               video={video}
+              handleVideoPlay={onPlay}
               width={VIDEO_WIDTH}
               height={VIDEO_HEIGHT}
               videoLikes={videoLikes}

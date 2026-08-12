@@ -10,6 +10,7 @@ const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 const VideoSection = ({
   score,
+  onVideoPlay,
   profileWatch,
   handleVideoPlay,
   showCountLiked,
@@ -65,7 +66,13 @@ const VideoSection = ({
           <CustomVideo
             videoId={videoId}
             positionVideo={positionVideo}
-            onVideoPlay={() => handleVideoPlay(videoId)}
+            onVideoPlay={() => {
+              if (onVideoPlay) {
+                onVideoPlay();
+              } else if (handleVideoPlay) {
+                handleVideoPlay(videoId);
+              }
+            }}
             uri={videoUrl}
             isPlaying={isPlaying}
           />

@@ -1,5 +1,6 @@
 import VideoSkeleton from "@/src/components/VideoSkeleton";
 import ShowWatchSlide from "@/src/components/VideoSlide";
+import { useShowWatch } from "@/src/hook/useShowWatch";
 import { attachmentListByInviteId } from "@/src/services/masterServices";
 import {
   RsetShowWatch,
@@ -10,13 +11,7 @@ import {
 import { useAppDispatch, useAppSelector } from "@/src/store/reduxHookType";
 import { logger } from "@/src/utils/logger";
 import { useLocalSearchParams } from "expo-router";
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Dimensions,
@@ -27,6 +22,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+
 const BOTTOM_PADDING = Platform.OS === "ios" ? 0 : 2;
 
 export default function ShowWatchScreen() {
@@ -34,11 +30,11 @@ export default function ShowWatchScreen() {
   const dispatch = useAppDispatch();
   const hasFetchedOnce = useRef(false);
 
-  const { data, pagination } = useAppSelector(
+  // تغییر نام data به reduxData برای جلوگیری از تداخل با خروجی هوک useShowWatch
+  const { data: reduxData, pagination } = useAppSelector(
     (state) => state.main.showWatchMatch,
   );
   const [loading, setLoading] = useState(false);
-  const [currentIndex, setCurrentIndex] = useState(0);
 
   const [containerHeight, setContainerHeight] = useState(
     Dimensions.get("window").height,
@@ -109,19 +105,36 @@ export default function ShowWatchScreen() {
     paginationRef.current = pagination;
   }, [pagination]);
 
+  const {
+    data,
+    isLoading,
+    currentlyPlayingId,
+    handleVideoPlay,
+    handleSlideChange,
+    openDropdowns,
+    setOpenDropdowns,
+    toggleDropdown,
+    dropdownItems,
+  } = useShowWatch({
+    inviteId: inviteId ? Number(inviteId) : 0,
+    data: reduxData,
+    pagination,
+    customFetchNextPage: () => fetchVideos(false),
+    paginationAction: setPaginationShowWatch,
+    resetAction: resetShowWatchState,
+    appendAction: appendShowWatch,
+  });
+
   const onViewableItemsChanged = useRef(({ viewableItems }: any) => {
-    if (viewableItems?.length > 0) {
+    if (viewableItems && viewableItems.length > 0) {
       const visibleIndex = viewableItems[0]?.index ?? 0;
-      setCurrentIndex(visibleIndex);
+      handleSlideChange(visibleIndex);
     }
   }).current;
 
-  const viewabilityConfig = useMemo(
-    () => ({
-      itemVisiblePercentThreshold: 80,
-    }),
-    [],
-  );
+  const viewabilityConfig = useRef({
+    itemVisiblePercentThreshold: 50,
+  }).current;
 
   logger.info("datadatadatadatadatadatadata", data);
 
@@ -157,10 +170,15 @@ export default function ShowWatchScreen() {
               <View style={[styles.page, { height: containerHeight }]}>
                 <ShowWatchSlide
                   inviteWatch={true}
-                  showResult
+                  showResult={true}
                   video={item}
                   index={index}
-                  isActive={currentIndex === index}
+                  currentlyPlayingId={currentlyPlayingId}
+                  handleVideoPlay={handleVideoPlay}
+                  openDropdowns={openDropdowns}
+                  setOpenDropdowns={setOpenDropdowns}
+                  toggleDropdown={toggleDropdown}
+                  dropdownItems={dropdownItems}
                 />
               </View>
             )}
@@ -194,7 +212,6 @@ const styles = StyleSheet.create({
   },
   page: {
     backgroundColor: "#000",
-    // paddingBottom: BOTTOM_PADDING,
   },
   centerIcon: {
     position: "absolute",

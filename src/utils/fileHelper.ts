@@ -1,5 +1,5 @@
 // const BASE_URL = process.env.EXPO_PUBLIC_VITE_SERVERPROFILE;
-const BASE_URL = process.env.EXPO_PUBLIC_STREAM;
+const BASE_URL = process.env.EXPO_PUBLIC_BASE_URL;
 
 export const getImageUrl = (attachment: any) => {
   if (!attachment) return null;

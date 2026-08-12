@@ -195,8 +195,8 @@ const Profile: React.FC = () => {
     </YStack>
   );
 
-  const handlePlayVideo = useCallback((id: string | null) => {
-    setActiveVideoId(id);
+  const handlePlayVideo = useCallback((videoId: string) => {
+    setActiveVideoId((prev) => (prev === videoId ? null : videoId));
   }, []);
 
   return (

@@ -3,14 +3,14 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useAppDispatch } from "../store/reduxHookType";
 
 interface UseShowWatchProps {
-  inviteId?: string;
+  inviteId?: string | number; // رفع خطای Type 'number' is not assignable to type 'string'
   data: any[];
   pagination: {
     skip: number;
     take: number;
     hasMore: boolean;
   };
-  customFetchNextPage?: (params: any) => Promise<any[]>;
+  customFetchNextPage?: (params: any) => Promise<any[] | void>; // رفع خطای Promise<void>
   paginationAction: (payload: any) => AnyAction;
   resetAction: () => AnyAction;
   appendAction?: (payload: any[]) => AnyAction;
@@ -28,6 +28,7 @@ export const useShowWatch = ({
   customCleanup,
 }: UseShowWatchProps) => {
   const dispatch = useAppDispatch();
+  const initialPlaySetRef = useRef(false);
 
   const [isLoading, setIsLoading] = useState(false);
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
@@ -85,23 +86,30 @@ export const useShowWatch = ({
       const dynamicTake = isFirstFetch ? 6 : 3;
       const exactSkip = currentDataLength;
 
-      const newData = await fetcher({
+      const result = await fetcher({
         skip: exactSkip,
         take: dynamicTake,
         inviteId,
       });
 
+      // اگر fetcher والد void برگرداند، newData آرایه خالی در نظر گرفته می‌شود
+      const newData = result || [];
+
       if (newData.length > 0 && appendAction) {
         dispatch(appendAction(newData));
       }
 
-      dispatch(
-        paginationAction({
-          take: 3,
-          skip: exactSkip + newData.length,
-          hasMore: newData.length > 0,
-        }),
-      );
+      // در صورتی که آپدیت‌های ریداکس در خود والد هندل شوند (مثل کدهای شما)،
+      // newData در اینجا خالی خواهد بود و شرط پایین مانع تداخل در pagination می‌شود.
+      if (newData.length > 0) {
+        dispatch(
+          paginationAction({
+            take: 3,
+            skip: exactSkip + newData.length,
+            hasMore: newData.length > 0,
+          }),
+        );
+      }
 
       return newData;
     } catch (error) {
@@ -118,6 +126,31 @@ export const useShowWatch = ({
     defaultFetchNextPage,
     paginationAction,
   ]);
+
+  // const handleSlideChange = useCallback(
+  //   (index: number) => {
+  //     setActiveSlideIndex(index);
+  //     setOpenDropdowns({});
+
+  //     const currentVideoId =
+  //       dataRef.current[index]?.attachmentInserted?.attachmentId;
+
+  //     if (currentVideoId) {
+  //       setCurrentlyPlayingId(currentVideoId);
+  //     }
+
+  //     const threshold = dataRef.current.length - 3;
+
+  //     if (
+  //       index >= threshold &&
+  //       paginationRef.current.hasMore &&
+  //       !isLoadingRef.current
+  //     ) {
+  //       fetchNextPage();
+  //     }
+  //   },
+  //   [fetchNextPage],
+  // );
 
   const handleVideoPlay = useCallback((videoId: string) => {
     setOpenDropdowns({});
@@ -150,31 +183,6 @@ export const useShowWatch = ({
     [],
   );
 
-  // const handleSlideChange = useCallback(
-  //   (index: number) => {
-  //     setActiveSlideIndex(index);
-  //     setOpenDropdowns({});
-
-  //     const currentVideoId =
-  //       dataRef.current[index]?.attachmentInserted?.attachmentId;
-
-  //     if (currentVideoId) {
-  //       setCurrentlyPlayingId(currentVideoId);
-  //     }
-
-  //     const threshold = dataRef.current.length - 3;
-
-  //     if (
-  //       index >= threshold &&
-  //       paginationRef.current.hasMore &&
-  //       !isLoadingRef.current
-  //     ) {
-  //       fetchNextPage();
-  //     }
-  //   },
-  //   [fetchNextPage],
-  // );
-
   const handleSlideChange = useCallback(
     (index: number) => {
       setActiveSlideIndex(index);
@@ -205,10 +213,13 @@ export const useShowWatch = ({
   );
 
   useEffect(() => {
-    if (data.length > 0 && !currentlyPlayingId) {
+    if (data.length === 0) {
+      initialPlaySetRef.current = false;
+    } else if (data.length > 0 && !initialPlaySetRef.current) {
       setCurrentlyPlayingId(data[0]?.attachmentInserted?.attachmentId);
+      initialPlaySetRef.current = true;
     }
-  }, [data, currentlyPlayingId]);
+  }, [data]);
 
   useEffect(() => {
     if (inviteId && data.length === 0 && !isLoadingRef.current) {
