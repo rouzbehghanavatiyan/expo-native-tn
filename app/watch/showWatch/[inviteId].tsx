@@ -154,12 +154,11 @@ export default function ShowWatchScreen() {
             data={data}
             keyExtractor={(item, index) => `${item?.id ?? index}`}
             renderItem={({ item, index }) => (
-              // 👈 استفاده از ارتفاع محاسبه شده برای هر آیتم
               <View style={[styles.page, { height: containerHeight }]}>
                 <ShowWatchSlide
                   inviteWatch={true}
+                  showResult
                   video={item}
-                  endTime
                   index={index}
                   isActive={currentIndex === index}
                 />
@@ -170,7 +169,7 @@ export default function ShowWatchScreen() {
             decelerationRate="fast"
             snapToAlignment="start"
             getItemLayout={(_, index) => ({
-              length: containerHeight, // 👈 تنظیم ارتفاع در getItemLayout
+              length: containerHeight,
               offset: containerHeight * index,
               index,
             })}

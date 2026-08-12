@@ -156,7 +156,6 @@ const LoginScreen: React.FC<any> = () => {
               label="Username"
               value={formState.username}
               onChangeText={(text) => handleInputChange("username", text)}
-              placeholder="username"
               colorType="primary"
               hasError={!!errors.username}
               variant="outline"
@@ -176,7 +175,6 @@ const LoginScreen: React.FC<any> = () => {
                 secureTextEntry={!showPassword}
                 value={formState.password}
                 onChangeText={(text) => handleInputChange("password", text)}
-                placeholder="password"
                 errorMessage={errors.password}
                 rightIcon={
                   <View

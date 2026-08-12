@@ -1,14 +1,17 @@
 import React from "react";
 import { StyleSheet, View } from "react-native";
-import { useAppSelector } from "../store/reduxHookType";
+import { setSelectedStep } from "../slices/main";
+import { useAppDispatch, useAppSelector } from "../store/reduxHookType";
 import { Icon } from "./Icon";
 import MainTitle from "./MainTitle";
 import SoftLink from "./SoftLink";
 
 const Arena: React.FC<any> = ({ updateStepData }) => {
   const main = useAppSelector((state) => state?.main);
+  const dispatch = useAppDispatch();
 
   const handleAcceptCategory = async (data: any) => {
+    dispatch(setSelectedStep({ step: "arenaId", id: data.id }));
     updateStepData(1, {
       name: data.name,
       id: data.id,

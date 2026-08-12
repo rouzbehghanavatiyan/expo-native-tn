@@ -28,6 +28,7 @@ const VideoSection = ({
   isPlaying,
   positionVideo,
   handleToggleComments,
+  itsHome,
 }: any) => {
   const main = useAppSelector((state) => state.main);
   const userIdLogin = main?.userLogin?.user?.id;
@@ -69,6 +70,7 @@ const VideoSection = ({
             isPlaying={isPlaying}
           />
           <OptionBottom
+            itsHome={itsHome}
             videoLikes={videoLikes}
             profileWatch={profileWatch}
             inviteWatch={inviteWatch}

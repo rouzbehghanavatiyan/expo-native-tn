@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { View } from "tamagui";
 import { subCategoryList } from "../services/masterServices";
+import { RsetCategory, setSelectedStep } from "../slices/main";
+import { useAppDispatch, useAppSelector } from "../store/reduxHookType";
 import asyncWrapper from "../utils/asyncWrapper";
 import { Icon } from "./Icon";
 import MainTitle from "./MainTitle";
@@ -13,19 +15,32 @@ const Skill: React.FC<any> = ({
   updateStepData,
 }) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const dispatch = useAppDispatch();
+  const main = useAppSelector((state) => state.main);
+  const arenaId = currentStep?.arena?.id;
 
   const handleGetCategory = asyncWrapper(async () => {
+    if (!arenaId) return;
+
+    if (main.categoryCache?.[arenaId]) {
+      setAllSubCategory(main.categoryCache[arenaId]);
+      return;
+    }
+
     setIsLoading(true);
-    const res = await subCategoryList(currentStep?.arena?.id);
+    const res = await subCategoryList(arenaId);
     setIsLoading(false);
 
-    const { data, status } = res?.data || {};
-    if (status === 0) {
-      setAllSubCategory(data || []);
+    if (res?.data?.status === 0) {
+      const fetchedData = res.data.data || [];
+      setAllSubCategory(fetchedData);
+      dispatch(RsetCategory({ parentId: arenaId, data: fetchedData }));
     }
   });
 
   const handleAcceptCategory = async (data: any) => {
+    dispatch(setSelectedStep({ step: "skillId", id: data.id }));
+
     updateStepData(2, {
       name: data.name,
       id: data.id,

@@ -66,17 +66,15 @@ const Profile: React.FC = () => {
 
   const handleDataLoaded = useCallback(
     (newItems: any[], isFirstPage: boolean) => {
-      if (!newItems) return; // اگر از fetchVideos مقدار null برگشت، کاری نکن
+      if (!newItems) return;
 
       if (isMyProfile) {
-        // ذخیره در ریداکس فقط برای پروفایل خودمان
         if (isFirstPage) {
           dispatch(RsetProfileVideo(newItems));
         } else {
           dispatch(RsetProfileVideo([...myVideosInRedux, ...newItems]));
         }
       } else {
-        // ذخیره در استیت لوکال برای پروفایل دیگران
         if (isFirstPage) {
           setOtherUserVideos(newItems);
         } else {
@@ -91,6 +89,7 @@ const Profile: React.FC = () => {
     handleDataLoaded,
     allVideoData?.length || 0,
   );
+
   const onRefresh = async () => {
     setRefreshing(true);
     try {
@@ -98,6 +97,22 @@ const Profile: React.FC = () => {
       const userData = profileRes?.data;
       if (userData?.status === 0) {
         setNewProfile(userData?.data);
+      }
+
+      const videosRes = await userAttachmentList({
+        skip: 0,
+        take: 10,
+        id: targetUserId,
+      });
+
+      const freshVideos = videosRes?.data?.data || videosRes?.data || videosRes;
+
+      if (freshVideos && Array.isArray(freshVideos)) {
+        if (isMyProfile) {
+          dispatch(RsetProfileVideo(freshVideos));
+        } else {
+          setOtherUserVideos(freshVideos);
+        }
       }
     } catch (error) {
       console.log(error);
@@ -150,8 +165,6 @@ const Profile: React.FC = () => {
       }
     };
   }, [socketClient]);
-
-  console.log("userLogin", userLogin);
 
   useEffect(() => {
     const score = userIdWhantToShow?.score || userLogin?.score || 0;

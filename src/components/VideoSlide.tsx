@@ -1,5 +1,7 @@
 import React from "react";
 import { Dimensions, StyleSheet, View } from "react-native";
+import { logger } from "../utils/logger";
+import { Icon } from "./Icon";
 import VideoSection from "./VideoSection";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -7,6 +9,7 @@ const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 export default function ShowWatchSlide({
   video,
   currentlyPlayingId,
+  itsHome,
   inviteWatch,
   openDropdowns,
   handleVideoPlay,
@@ -20,6 +23,15 @@ export default function ShowWatchSlide({
   showLiked,
   showCountLiked,
 }: any) {
+  const findeVideoInTournomentTop = video?.inviteMatched?.insertDate;
+  const findeVideoInTournomentBott = video?.inviteInserted?.insertDate;
+  const hasValidInsertDate = (value: unknown) =>
+    value !== undefined && value !== null && value !== -1 && value !== "";
+
+  const showTimer =
+    hasValidInsertDate(findeVideoInTournomentTop) ||
+    hasValidInsertDate(findeVideoInTournomentBott);
+
   const resultInserted =
     video?.likeInserted > video?.likeMatched
       ? "Win"
@@ -34,16 +46,19 @@ export default function ShowWatchSlide({
         ? "Loss"
         : "Draw";
 
+  logger.info("video", video);
+
   return (
     <>
       <View style={styles.half}>
         <VideoSection
+          itsHome={true}
           inviteWatch={inviteWatch}
           score={showScore ? video?.scoreInserted : null}
           result={showResult ? resultInserted : null}
           showLiked={showLiked}
           countLiked={showCountLiked ? video?.likeInserted : null}
-          endTime={endTime}
+          endTime={showTimer}
           video={video}
           isPlaying={
             currentlyPlayingId === video?.attachmentInserted?.attachmentId
@@ -61,23 +76,24 @@ export default function ShowWatchSlide({
           }
         />
       </View>
-      {/* <View style={styles.centerIcon}>
-        {video?.icon ? (
+      {video?.icon ? (
+        <View style={styles.centerIcon}>
           <Icon
             name={video?.icon}
             color="rgba(255, 255, 255, 0.14)"
             size={20}
           />
-        ) : null}
-      </View> */}
+        </View>
+      ) : null}
       <View style={styles.half}>
         <VideoSection
+          itsHome={true}
           inviteWatch={inviteWatch}
           score={showScore ? video?.scoreMatched : null}
           result={showResult ? resultMatched : null}
           showLiked={showLiked}
           countLiked={showCountLiked ? video?.likeMatched : null}
-          endTime={endTime}
+          endTime={showTimer}
           video={video}
           isPlaying={
             currentlyPlayingId === video?.attachmentMatched?.attachmentId

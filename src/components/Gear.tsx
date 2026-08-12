@@ -3,6 +3,8 @@ import React, { useEffect, useState } from "react";
 import { View } from "tamagui";
 import { useVideoHandler } from "../hook/useVideoHandler";
 import { subSubCategoryList } from "../services/masterServices";
+import { RsetCategory, setSelectedStep } from "../slices/main";
+import { useAppDispatch, useAppSelector } from "../store/reduxHookType";
 import asyncWrapper from "../utils/asyncWrapper";
 import { Icon } from "./Icon";
 import MainTitle from "./MainTitle";
@@ -20,17 +22,25 @@ const Gear: React.FC<any> = ({
     show: false,
     typeMode: null,
   });
-
   const { triggerVideoUpload } = useVideoHandler();
 
-  const handleGetCategory = asyncWrapper(async () => {
-    setIsLoading(true);
-    const res = await subSubCategoryList(currentStep?.skill?.id);
-    setIsLoading(false);
+  const dispatch = useAppDispatch();
+  const main = useAppSelector((state) => state.main);
+  const skillId = currentStep?.skill?.id;
 
-    const { data, status } = res?.data || {};
-    if (status === 0) {
-      setAllSubSubCategory(data || []);
+  const handleGetCategory = asyncWrapper(async () => {
+    if (!skillId) return;
+    if (main.categoryCache?.[skillId]) {
+      setAllSubSubCategory(main.categoryCache[skillId]);
+      return;
+    }
+    setIsLoading(true);
+    const res = await subSubCategoryList(skillId);
+    setIsLoading(false);
+    if (res?.data?.status === 0) {
+      const fetchedData = res.data.data || [];
+      setAllSubSubCategory(fetchedData);
+      dispatch(RsetCategory({ parentId: skillId, data: fetchedData }));
     }
   });
 
@@ -40,6 +50,7 @@ const Gear: React.FC<any> = ({
 
   const handleAcceptCategory = async (data: any) => {
     const arenaId = currentStep?.arena?.id;
+    dispatch(setSelectedStep({ step: "gearId", id: data.id }));
 
     if (arenaId !== 1002) {
       setSelectedGearMode({ show: true, typeMode: data.id });

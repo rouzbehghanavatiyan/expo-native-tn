@@ -58,6 +58,12 @@ const initialState: any = {
   allFollowerList: [],
   allFollowingList: [],
   category: [],
+  categoryCache: {},
+  selectedSteps: {
+    arenaId: null,
+    skillId: null,
+    gearId: null,
+  },
   userLogin: {},
   userId: 0,
   socketConfig: null,
@@ -95,8 +101,36 @@ const mainSlice = createSlice({
     RsetLastMatch: (state, action: PayloadAction<any[]>) => {
       state.lastMatch = action.payload;
     },
-    RsetCategory: (state, action: PayloadAction<any[]>) => {
-      state.category = action.payload;
+    RsetCategory: (
+      state,
+      action: PayloadAction<any[] | { parentId: number | string; data: any[] }>,
+    ) => {
+      if (Array.isArray(action.payload)) {
+        state.category = action.payload;
+      } else {
+        const { parentId, data } = action.payload;
+        if (!state.categoryCache) {
+          state.categoryCache = {};
+        }
+        state.categoryCache[parentId] = data;
+      }
+    },
+    setSelectedStep: (
+      state,
+      action: PayloadAction<{
+        step: "arenaId" | "skillId" | "gearId";
+        id: number | null;
+      }>,
+    ) => {
+      const { step, id } = action.payload;
+      if (!state.selectedSteps) {
+        state.selectedSteps = { arenaId: null, skillId: null, gearId: null };
+      }
+      state.selectedSteps[step] = id;
+    },
+
+    resetSelectedSteps: (state) => {
+      state.selectedSteps = { arenaId: null, skillId: null, gearId: null };
     },
     RsetUserLogin: (state, action: PayloadAction<any>) => {
       state.userLogin = action.payload;
@@ -217,6 +251,8 @@ export const {
 
   // other
   setUnreadMessagesCount,
+  setSelectedStep,
+  resetSelectedSteps,
   setLastMatch,
   setShowTimerButton,
   RsetHomeMatch,

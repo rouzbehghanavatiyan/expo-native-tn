@@ -174,6 +174,7 @@ const HomeScreen: React.FC = () => {
                   showLiked={false}
                   showScore
                   showResult={true}
+                  itsHome
                   showCountLiked
                   video={item}
                   index={index}

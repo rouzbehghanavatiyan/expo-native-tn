@@ -2,6 +2,7 @@ import { useCachedVideo } from "@/src/hook/useCatchedVideo";
 import { useIsFocused, useRoute } from "@react-navigation/native";
 import React, { memo, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   PanResponder,
   Pressable,
   StyleSheet,
@@ -36,17 +37,21 @@ const CustomVideo = memo(
   }: CustomVideoProps) => {
     const videoRef = useRef<VideoRef>(null);
     const isFocused = useIsFocused();
-
     const [duration, setDuration] = useState(1);
     const [position, setPosition] = useState(0);
     const [isDragging, setIsDragging] = useState(false);
     const route = useRoute();
+    const { url: cachedUri, isLoading: isCacheLoading } = useCachedVideo(uri);
+    const [isPlayerReady, setIsPlayerReady] = useState(false);
 
-    const videoSource = useCachedVideo(uri);
-
-    console.log(
-      `custom video on route: [${route.name}]                , position:${position} ,          uri:${uri}`,
-    );
+    // logger.debug(
+    //   `custom video on route: [${route.name}]     , position:${position} ,     uri:${uri}`,
+    // );
+    const handleLoad = (data: OnLoadData) => {
+      setDuration(data.duration || 1);
+      durationRef.current = data.duration || 1;
+      setIsPlayerReady(true);
+    };
 
     const isDraggingRef = useRef(false);
     const durationRef = useRef(1);
@@ -58,11 +63,6 @@ const CustomVideo = memo(
       positionRef.current = newPos;
     };
 
-    const handleLoad = (data: OnLoadData) => {
-      setDuration(data.duration || 1);
-      durationRef.current = data.duration || 1;
-    };
-
     const handleProgress = (data: OnProgressData) => {
       if (!isDraggingRef.current) {
         updatePosition(data.currentTime);
@@ -70,14 +70,10 @@ const CustomVideo = memo(
     };
 
     const togglePlay = () => {
-      console.log(
-        `[Video ${positionVideo}] 🎬 Tap on Video Body -> Toggle Play`,
-      );
       onVideoPlay?.();
     };
 
     const seek = (locationX: number) => {
-      // محاسبه درصد بر اساس عرض نوار پایینی (نه کل صفحه)
       const width = timelineWidthRef.current;
       const percent = Math.max(0, Math.min(1, locationX / width));
       const newTime = percent * durationRef.current;
@@ -85,7 +81,6 @@ const CustomVideo = memo(
       return newTime;
     };
 
-    // PanResponder فقط و فقط برای نوار پیشرفت پایین صفحه
     const timelineResponder = useRef(
       PanResponder.create({
         // هرگونه تاچ روی این لایه، توسط همین لایه جذب شود (و به Pressable زیرین نرسد)
@@ -124,48 +119,65 @@ const CustomVideo = memo(
       }),
     ).current;
 
+    const isVideoLoading =
+      !uri || isCacheLoading || !cachedUri || !isPlayerReady;
     const progress = duration > 0 ? (position / duration) * 100 : 0;
     const shouldPlay = isPlaying && isFocused && !isDragging;
 
     return (
       <View style={styles.container}>
-        <Video
-          ref={videoRef}
-          source={{ uri: videoSource || uri }}
-          style={StyleSheet.absoluteFill as ViewStyle}
-          resizeMode="stretch"
-          repeat
-          paused={!shouldPlay}
-          onLoad={handleLoad}
-          onProgress={handleProgress}
-          progressUpdateInterval={250}
-        />
-        <Pressable style={styles.playPauseOverlay} onPress={togglePlay} />
-        <View
-          style={styles.progressArea}
-          onLayout={(e) => {
-            timelineWidthRef.current = e.nativeEvent.layout.width;
-          }}
-          {...timelineResponder.panHandlers}
-        >
+        {isVideoLoading && (
           <View
-            pointerEvents="none"
             style={[
-              styles.progressContainer,
-              isDragging && styles.progressContainerActive,
+              StyleSheet.absoluteFill,
+              styles.centerContent,
+              { zIndex: 20, backgroundColor: "black" },
             ]}
           >
-            <View style={[styles.progress, { width: `${progress}%` }]} />
-            {isDragging && (
-              <View style={[styles.thumb, { left: `${progress}%` }]} />
-            )}
+            <ActivityIndicator size="large" color="#ffffff" />
           </View>
-        </View>
+        )}
+        {!!cachedUri && !isCacheLoading && (
+          <>
+            <Video
+              ref={videoRef}
+              source={{ uri: cachedUri }}
+              style={StyleSheet.absoluteFill as ViewStyle}
+              resizeMode="stretch"
+              repeat
+              paused={!shouldPlay}
+              onLoad={handleLoad}
+              onReadyForDisplay={() => setIsPlayerReady(true)}
+              onProgress={handleProgress}
+              progressUpdateInterval={250}
+            />
+            <Pressable style={styles.playPauseOverlay} onPress={togglePlay} />
+            <View
+              style={styles.progressArea}
+              onLayout={(e) => {
+                timelineWidthRef.current = e.nativeEvent.layout.width;
+              }}
+              {...timelineResponder.panHandlers}
+            >
+              <View
+                pointerEvents="none"
+                style={[
+                  styles.progressContainer,
+                  isDragging && styles.progressContainerActive,
+                ]}
+              >
+                <View style={[styles.progress, { width: `${progress}%` }]} />
+                {isDragging && (
+                  <View style={[styles.thumb, { left: `${progress}%` }]} />
+                )}
+              </View>
+            </View>
+          </>
+        )}
       </View>
     );
   },
 );
-
 export default CustomVideo;
 
 const styles = StyleSheet.create({
@@ -173,6 +185,10 @@ const styles = StyleSheet.create({
     flex: 1,
     width: "100%",
     backgroundColor: "black",
+  },
+  centerContent: {
+    justifyContent: "center",
+    alignItems: "center",
   },
   playPauseOverlay: {
     position: "absolute",

@@ -70,13 +70,18 @@ export const uploadFullProcessThunk = createAsyncThunk(
   ) => {
     try {
       const gearIdStorage = await AsyncStorage.getItem("gearId");
+      console.log(
+        "gearIdgearIdgearIdgearIdgearIdgearIdgearIdgearIdgearId",
+        gearId,
+      );
 
       const postData = {
         userId: Number(userId),
         description: allFormData?.description || movieMeta?.desc || "",
         title: allFormData?.title || movieMeta?.title || "",
-        subSubCategoryId:
+        subSubCategoryId: Number(
           allFormData?.subSubCategoryId || gearId || gearIdStorage,
+        ),
         modeId: 3,
       };
 
@@ -173,14 +178,12 @@ export const uploadFullProcessThunk = createAsyncThunk(
           "❌ Server Error Data:",
           JSON.stringify(error.response.data, null, 2),
         );
-      }
-      else if (error?.request) {
+      } else if (error?.request) {
         console.log(
           "❌ Network / Timeout Error (No response received):",
           error.message,
         );
-      }
-      else {
+      } else {
         console.log("❌ Code/Runtime/Custom Error Message:", error.message);
         console.log("❌ Error Stack Trace:", error.stack);
       }
@@ -208,7 +211,7 @@ const videoSlice = createSlice({
       state.videoSrc = action.payload;
     },
     setMovieData(state, action: PayloadAction<VideoState["movieData"]>) {
-      state.movieData = action.payload;
+      state.movieData = action?.payload;
     },
     updateMovieData(
       state,
@@ -251,7 +254,9 @@ const videoSlice = createSlice({
       .addCase(uploadFullProcessThunk.fulfilled, (state, action) => {
         state.uploadStatus = "success";
         state.isLoading = false;
-        const { movieData, inviteData } = action.payload;
+        const movieData = action.payload?.movieData;
+        const inviteData = action.payload?.inviteData;
+
         state.resMovieData = movieData;
         state.movieData.movieId = movieData?.id;
         if (inviteData) {

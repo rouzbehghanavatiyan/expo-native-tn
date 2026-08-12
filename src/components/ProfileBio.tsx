@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { FlatList, Image, Modal, Pressable, StyleSheet } from "react-native";
-import { Progress, Text, View, XStack, YStack } from "tamagui";
-import BaseButton from "../components/BaseButtom";
+import { Image, Modal, Pressable, StyleSheet } from "react-native";
+import { Progress, ScrollView, Text, View, XStack, YStack } from "tamagui";
 import { getStatus } from "../services/nestServices";
 import { Icon } from "./Icon";
 
@@ -118,90 +117,115 @@ const ProfileBio: React.FC<ProfileBioProps> = ({
         animationType="fade"
         onRequestClose={() => setShowRanksModal(false)}
       >
-        <Pressable
+        <View
           style={{
             flex: 1,
-            backgroundColor: "rgba(0,0,0,0.45)",
             justifyContent: "center",
             alignItems: "center",
             paddingHorizontal: 24,
+            paddingVertical: 40,
           }}
-          onPress={() => setShowRanksModal(false)}
         >
+          {/* پس‌زمینه تاریک */}
           <Pressable
-            onPress={(e) => e.stopPropagation()}
-            style={{ width: "100%", maxWidth: "100%", maxHeight: "70%" }}
+            style={[
+              StyleSheet.absoluteFill,
+              { backgroundColor: "rgba(0,0,0,0.45)" },
+            ]}
+            onPress={() => setShowRanksModal(false)}
+          />
+
+          {/* محتوای مودال */}
+          <YStack
+            width="100%"
+            maxHeight="90%"
+            bg="$background"
+            borderRadius="$4"
+            p="$5"
+            pt="$7" /* پدینگ بالا را بیشتر کردیم تا با ضربدر تداخل نکند */
+            elevation={6}
+            position="relative"
           >
-            <YStack
-              bg="$background"
-              borderRadius="$4"
-              p="$5"
-              gap={14}
-              elevation={6}
-              flex={1}
+            {/* دکمه ضربدر گوشه بالا سمت راست */}
+            <Pressable
+              onPress={() => setShowRanksModal(false)}
+              style={{
+                position: "absolute",
+                top: 12,
+                right: 12,
+                zIndex: 10,
+                padding: 8 /* برای بزرگ‌تر شدن فضای تاچ (Hitbox) */,
+              }}
+              hitSlop={8}
             >
-              <YStack gap={8} alignItems="center" pb="$2">
+              {/* اگر از lucide-icons استفاده می‌کنید می‌توانید <X size={24} color="gray" /> بگذارید */}
+              <Text fontSize="$5" color="$color" fontWeight="bold">
+                ✕
+              </Text>
+            </Pressable>
+
+            {/* بخش اسکرول‌شونده */}
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ paddingBottom: 8 }}
+            >
+              {/* عنوان */}
+              <YStack gap={8} alignItems="center" pb="$4">
                 <Text fontSize="$5" fontWeight="700" color="$primaryMain">
                   All Ranks (Score: {rankScore})
                 </Text>
               </YStack>
 
-              <FlatList
-                data={otherRanks}
-                keyExtractor={(rank) => rank.name}
-                numColumns={3}
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={styles.ranksGrid}
-                columnWrapperStyle={styles.rankRow}
-                ListHeaderComponent={() => (
+              {/* رنک استارتر */}
+              <YStack
+                alignItems="center"
+                justifyContent="center"
+                bg="$backgroundPaper"
+                p="$2"
+                borderRadius="$3"
+                width={86}
+                height={116}
+                alignSelf="center"
+                mb={16}
+              >
+                <Image
+                  source={starterRank.img}
+                  accessibilityLabel={starterRank.name}
+                  style={styles.rankImage}
+                  resizeMode="contain"
+                />
+                <Text
+                  fontSize="$2"
+                  mt="$2"
+                  color="$textPrimary"
+                  textAlign="center"
+                  fontWeight="600"
+                  numberOfLines={1}
+                >
+                  {starterRank.name}
+                </Text>
+              </YStack>
+
+              {/* بقیه رنک‌ها (Grid) */}
+              <XStack flexWrap="wrap" justifyContent="space-between" gap={8}>
+                {otherRanks.map((rank) => (
                   <YStack
+                    key={rank.name}
                     alignItems="center"
                     justifyContent="center"
                     bg="$backgroundPaper"
                     p="$2"
                     borderRadius="$3"
-                    width={86}
+                    width="31%"
                     height={116}
-                    alignSelf="center"
-                    mb={12}
+                    mb={8}
                   >
                     <Image
-                      // ✅ اصلاح شد
-                      source={starterRank.img}
-                      accessibilityLabel={starterRank.name}
-                      style={styles.rankImage}
-                      resizeMode="contain"
-                    />
-                    <Text
-                      fontSize="$2"
-                      mt="$2"
-                      color="$textPrimary"
-                      textAlign="center"
-                      fontWeight="600"
-                      numberOfLines={1}
-                    >
-                      {starterRank.name}
-                    </Text>
-                  </YStack>
-                )}
-                renderItem={({ item: rank }) => (
-                  <YStack
-                    alignItems="center"
-                    justifyContent="center"
-                    bg="$backgroundPaper"
-                    p="$2"
-                    borderRadius="$3"
-                    width={86}
-                    height={116}
-                  >
-                    <Image
-                      // ✅ اصلاح شد
                       source={rank.img}
                       accessibilityLabel={rank.name}
                       style={styles.rankImage}
                       resizeMode="contain"
                     />
-
                     <Text
                       fontSize="$2"
                       mt="$2"
@@ -213,21 +237,11 @@ const ProfileBio: React.FC<ProfileBioProps> = ({
                       {rank.name}
                     </Text>
                   </YStack>
-                )}
-              />
-
-              <XStack justifyContent="flex-end" mt="$2">
-                <BaseButton
-                  flex={1}
-                  bg="$primaryMain"
-                  onPress={() => setShowRanksModal(false)}
-                >
-                  Close
-                </BaseButton>
+                ))}
               </XStack>
-            </YStack>
-          </Pressable>
-        </Pressable>
+            </ScrollView>
+          </YStack>
+        </View>
       </Modal>
 
       <YStack w="100%" mt="$5" alignItems="flex-start" gap="$3">
@@ -262,13 +276,6 @@ const ProfileBio: React.FC<ProfileBioProps> = ({
 export default ProfileBio;
 
 const styles = StyleSheet.create({
-  ranksGrid: {
-    paddingBottom: 8,
-  },
-  rankRow: {
-    justifyContent: "space-between",
-    marginBottom: 12,
-  },
   rankImage: {
     width: 64,
     height: 64,

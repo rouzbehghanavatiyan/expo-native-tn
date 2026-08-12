@@ -1,11 +1,39 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 import { Text, XStack, YStack } from "tamagui";
+import { sendUserNotif } from "../services/notificationService";
+import { logger } from "../utils/logger";
 import { Icon } from "./Icon";
 import ImageRank from "./ImageRank";
 
 const Notification = () => {
   const [notifications, setNotifications] = useState([1, 2, 3, 4]);
+
+  const notifyAll = async () => {
+    try {
+      const postData = {
+        userId: 1,
+        message: "SSSSSSSSSSSSSSSSSSSS",
+      };
+      await sendUserNotif(postData);
+      logger.info("نوتیفیکیشن به همه ارسال شد");
+    } catch (error: any) {
+      if (error.response) {
+        logger.error("خطای سرور:", error.response.status, error.response.data);
+      } else if (error.request) {
+        logger.error(
+          "سرور در دسترس نیست یا مشکل شبکه وجود دارد:",
+          error.message,
+        );
+      } else {
+        logger.error("خطا در تنظیم درخواست:", error.message);
+      }
+    }
+  };
+
+  useEffect(() => {
+    notifyAll();
+  }, []);
 
   const handleDelete = (index: number) => {
     setNotifications((prev) => prev.filter((_, i) => i !== index));

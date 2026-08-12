@@ -12,6 +12,7 @@ import { useNavigation } from "@react-navigation/native";
 import { useRouter, useSegments } from "expo-router";
 import { useCallback, useEffect, useRef } from "react";
 import { useAppDispatch, useAppSelector } from "../store/reduxHookType";
+import { logger } from "../utils/logger";
 import { socketClient } from "../utils/socketClient";
 
 export const useEditVideo = ({
@@ -38,6 +39,8 @@ export const useEditVideo = ({
   const main = useAppSelector((state) => state.main);
   const userIdLogin = main?.userLogin?.user?.id;
   const gearId = main?.createTalent?.gear?.id;
+  const allChoseTalentId = main?.selectedSteps;
+  logger.info("allChoseTalentId", allChoseTalentId);
 
   useEffect(() => {
     if (showEditMovie && allFormData?.video && !hasPrepared.current) {
@@ -53,7 +56,7 @@ export const useEditVideo = ({
     dispatch(
       uploadFullProcessThunk({
         userId: userIdLogin,
-        gearId,
+        gearId: allChoseTalentId?.gearId,
         mode,
         allFormData,
         router,

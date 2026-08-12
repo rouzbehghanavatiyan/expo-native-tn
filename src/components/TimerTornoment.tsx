@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { memo, useEffect, useRef, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { addScoure } from "../services/masterServices";
 import { socketClient } from "../utils/socketClient";
-import { Icon } from "./Icon";
 
 interface TimerTornomentProps {
   startTime: number;
@@ -24,6 +23,13 @@ const TimerTornoment: React.FC<TimerTornomentProps> = ({
   const [remainingSeconds, setRemainingSeconds] = useState<number>(
     Math.max(duration - (startTime || 0), 0),
   );
+  const videoRef = useRef(video);
+  const onCompleteRef = useRef(onComplete);
+
+  useEffect(() => {
+    videoRef.current = video;
+    onCompleteRef.current = onComplete;
+  }, [video, onComplete]);
 
   const formatTime = (seconds: number) => {
     const safe = Math.max(seconds, 0);
@@ -42,17 +48,20 @@ const TimerTornoment: React.FC<TimerTornomentProps> = ({
   };
 
   const handleGetWinner = () => {
-    if (video?.likeInserted > video?.likeMatched) {
+    // استفاده از آخرین دیتای ویدیو از طریق رفرنس (بدون وابستگی به رندر)
+    const currentVideo = videoRef.current;
+
+    if (currentVideo?.likeInserted > currentVideo?.likeMatched) {
       const payload = {
-        userId: video?.userInserted?.id ?? null,
-        movieId: video?.attachmentInserted?.attachmentId ?? null,
+        userId: currentVideo?.userInserted?.id ?? null,
+        movieId: currentVideo?.attachmentInserted?.attachmentId ?? null,
       };
       setWinnerInfo(payload);
       handleAddScoure(payload);
-    } else if (video?.likeInserted < video?.likeMatched) {
+    } else if (currentVideo?.likeInserted < currentVideo?.likeMatched) {
       const payload = {
-        userId: video?.userMatched?.id ?? null,
-        movieId: video?.attachmentMatched?.attachmentId ?? null,
+        userId: currentVideo?.userMatched?.id ?? null,
+        movieId: currentVideo?.attachmentMatched?.attachmentId ?? null,
       };
       setWinnerInfo(payload);
       handleAddScoure(payload);
@@ -78,7 +87,7 @@ const TimerTornoment: React.FC<TimerTornomentProps> = ({
 
         if (next <= 0) {
           clearInterval(interval);
-          onComplete?.();
+          onCompleteRef.current?.();
           return 0;
         }
 
@@ -87,13 +96,12 @@ const TimerTornoment: React.FC<TimerTornomentProps> = ({
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [active, startTime, duration, onComplete]);
+  }, [active, startTime, duration]);
 
   useEffect(() => {
     if (startTime === -1) {
       handleGetWinner();
     }
-
     return () => {
       socketClient.off("add_invite_offline_response");
     };
@@ -107,25 +115,21 @@ const TimerTornoment: React.FC<TimerTornomentProps> = ({
   return (
     <View style={styles.wrapper}>
       <View style={styles.left}>
-        {/* <Icon name="hour-glass-top" size={16} color="#ffffff" /> */}
         <Text style={styles.timeText}>{formatTime(remainingSeconds)}</Text>
       </View>
-
       <View style={styles.progressTrack}>
-        <View
-          style={[
-            styles.progressFill,
-            {
-              width: `${progressPercent}%`,
-            },
-          ]}
-        />
+        <View style={[styles.progressFill, { width: `${progressPercent}%` }]} />
       </View>
     </View>
   );
 };
 
-export default TimerTornoment;
+export default memo(TimerTornoment, (prevProps, nextProps) => {
+  return (
+    prevProps.active === nextProps.active &&
+    prevProps.startTime === nextProps.startTime
+  );
+});
 
 const styles = StyleSheet.create({
   wrapper: {

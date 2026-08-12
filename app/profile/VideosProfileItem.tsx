@@ -1,5 +1,6 @@
 import TimerTornoment from "@/src/components/TimerTornoment";
 import VideoSection from "@/src/components/VideoSection";
+import { logger } from "@/src/utils/logger";
 import React, { memo, useMemo } from "react";
 import { Dimensions, StyleSheet, View } from "react-native";
 
@@ -22,6 +23,7 @@ const VideosProfileItem = ({
 }: any) => {
   const matchedInsertDate = video?.inviteMatched?.insertDate;
   const insertedInsertDate = video?.inviteInserted?.insertDate;
+  logger.info("matchedInsertDate", video);
 
   const startTime = matchedInsertDate ?? insertedInsertDate;
 
@@ -74,12 +76,15 @@ const VideosProfileItem = ({
     [video, resultInserted, resultMatched],
   );
 
+  const inviteId = video?.inviteInserted?.id ?? video?.inviteMatched?.id;
+
+  const isAnyPlaying =
+    isActive &&
+    (activeVideoId === `${inviteId}-0` || activeVideoId === `${inviteId}-1`);
+
   return (
     <View style={styles.container}>
       {videoSections.map((section) => {
-        console.log("section", section);
-
-        const inviteId = video?.inviteInserted?.id ?? video?.inviteMatched?.id;
         const videoId = `${inviteId}-${section.position}`;
         const isPlaying = isActive && activeVideoId === videoId;
 
@@ -107,27 +112,26 @@ const VideosProfileItem = ({
                 onPlay(isPlaying ? null : videoId);
               }}
             />
-
-            {showTimer && startTime && (
-              <View pointerEvents="box-none" style={styles.timerOverlay}>
-                <View style={styles.timerBox}>
-                  <TimerTornoment
-                    video={video}
-                    startTime={startTime}
-                    duration={3600}
-                    active={isActive}
-                    onComplete={() => {
-                      if (isPlaying) {
-                        onPlay(null);
-                      }
-                    }}
-                  />
-                </View>
-              </View>
-            )}
           </View>
         );
       })}
+      {showTimer && (
+        <View pointerEvents="box-none" style={styles.timerOverlay}>
+          <View style={styles.timerBox}>
+            <TimerTornoment
+              video={video}
+              startTime={video?.inviteMatched?.insertDate}
+              duration={3600}
+              active={isActive}
+              onComplete={() => {
+                if (isAnyPlaying) {
+                  onPlay(null);
+                }
+              }}
+            />
+          </View>
+        </View>
+      )}
     </View>
   );
 };
@@ -141,8 +145,8 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: 0,
     right: 0,
-    bottom: 4,
-    zIndex: 50,
+    bottom: 0,
+    zIndex: 1,
     alignItems: "center",
   },
   timerBox: { width: "83%", alignItems: "center", justifyContent: "center" },
