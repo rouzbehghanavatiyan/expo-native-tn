@@ -102,11 +102,13 @@ const VideoSection = ({
   );
 };
 
-export default memo(VideoSection); // ✅ اینجا memo اضافه شد
+export default memo(VideoSection);
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    borderRadius: 50,
+
     width: "100%",
     position: "relative",
     flexDirection: "column",

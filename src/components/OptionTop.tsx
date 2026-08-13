@@ -132,7 +132,7 @@ const OptionTop: React.FC<OptionTopProps> = ({
               positionVideo={positionVideo}
               userNameStyle={{ color: "#f3f4f6" }}
               userName={userInfo?.userName || ""}
-              imgSize={55}
+              imgSize={40}
               imgSrc={profile}
               score={score}
             />
@@ -154,7 +154,7 @@ const OptionTop: React.FC<OptionTopProps> = ({
                   style={{ padding: 4 }}
                   onPress={() => setMenuOpen(true)}
                 >
-                  <MaterialIcons name="more-vert" size={28} color="white" />
+                  <MaterialIcons name="more-vert" size={22} color="white" />
                 </Pressable>
 
                 <Modal
@@ -167,7 +167,6 @@ const OptionTop: React.FC<OptionTopProps> = ({
                     style={[
                       styles.backdrop,
                       !isTopPosition && styles.backdropCenter,
-                      // اگر 0 نیست، استایل وسط را اضافه کن
                     ]}
                     onPress={() => setMenuOpen(false)}
                   >
@@ -205,7 +204,7 @@ const OptionTop: React.FC<OptionTopProps> = ({
                                 {item.icon && (
                                   <MaterialIcons
                                     name={item.icon}
-                                    size={20}
+                                    size={22}
                                     color="#4b5563"
                                   />
                                 )}

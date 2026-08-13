@@ -17,6 +17,7 @@ const VideosProfileItem = ({
   videoLikes,
   profileWatch,
   activeVideoId,
+  handleToggleComments,
   isActive = true,
   onPlay,
 }: any) => {
@@ -89,6 +90,7 @@ const VideosProfileItem = ({
         return (
           <View key={videoId} style={styles.half}>
             <VideoSection
+              handleToggleComments={handleToggleComments}
               profileWatch={profileWatch}
               showCountLiked={showCountLiked}
               itsMatchingWithTimer={itsMatchingWithTimer}
@@ -138,8 +140,15 @@ const VideosProfileItem = ({
 export default memo(VideosProfileItem);
 
 const styles = StyleSheet.create({
-  container: { height: ITEM_HEIGHT, backgroundColor: "#000", marginTop: 10 },
-  half: { height: VIDEO_HEIGHT, position: "relative" },
+  container: {
+    height: ITEM_HEIGHT,
+    backgroundColor: "#000",
+    marginTop: 10,
+  },
+  half: {
+    height: VIDEO_HEIGHT,
+    position: "relative",
+  },
   timerOverlay: {
     position: "absolute",
     left: 0,

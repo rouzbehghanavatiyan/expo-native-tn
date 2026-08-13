@@ -25,7 +25,7 @@ const Follows: React.FC<PropTypes> = ({
         pressStyle={{ opacity: 0.7 }} // افکت ساده هنگام کلیک
         cursor="pointer"
       >
-        <Text fontWeight="bold" fontSize={12} color={textColor as any}>
+        <Text fontWeight="bold" fontSize={11} color={textColor as any}>
           {title}
         </Text>
       </View>

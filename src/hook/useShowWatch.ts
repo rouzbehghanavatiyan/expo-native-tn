@@ -3,14 +3,14 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useAppDispatch } from "../store/reduxHookType";
 
 interface UseShowWatchProps {
-  inviteId?: string | number; // رفع خطای Type 'number' is not assignable to type 'string'
+  inviteId?: string | number;
   data: any[];
   pagination: {
     skip: number;
     take: number;
     hasMore: boolean;
   };
-  customFetchNextPage?: (params: any) => Promise<any[] | void>; // رفع خطای Promise<void>
+  customFetchNextPage?: (params: any) => Promise<any[] | void>;
   paginationAction: (payload: any) => AnyAction;
   resetAction: () => AnyAction;
   appendAction?: (payload: any[]) => AnyAction;
@@ -26,7 +26,7 @@ export const useShowWatch = ({
   resetAction,
   appendAction,
   customCleanup,
-}: UseShowWatchProps) => {
+}: any) => {
   const dispatch = useAppDispatch();
   const initialPlaySetRef = useRef(false);
 

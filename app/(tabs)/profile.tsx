@@ -3,6 +3,7 @@ import ProfileBio from "@/src/components/ProfileBio";
 import ProfileHeader from "@/src/components/ProfileHeader";
 import { stopMatchTimer } from "@/src/components/TimerForFindMatch";
 import { useLoadMore } from "@/src/components/useLoadMore";
+import { useShowWatch } from "@/src/hook/useShowWatch";
 import {
   profileAttachment,
   userAttachmentList,
@@ -20,8 +21,14 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { ActivityIndicator, FlatList, SafeAreaView } from "react-native";
+import {
+  ActivityIndicator,
+  FlatList,
+  SafeAreaView,
+  StyleSheet,
+} from "react-native";
 import { View, YStack } from "tamagui";
+import Comments from "../comments";
 import VideosProfileItem from "../profile/VideosProfileItem";
 
 const Profile: React.FC = () => {
@@ -35,12 +42,16 @@ const Profile: React.FC = () => {
   const followingCountRedux = useAppSelector(
     (state) => state?.main?.followingLength,
   );
+  const [showComments, setShowComments] = useState(false);
+
   const userIdWhantToShow = route.params?.userData;
   const [refreshing, setRefreshing] = useState(false);
-  const [activeVideoId, setActiveVideoId] = useState<string | null>(null);
   const [percentage, setPercentage] = useState<number>(0);
   const [videoLikes, setVideoLikes] = useState<Record<string, number>>({});
   const [newProfile, setNewProfile] = useState<Record<string, number>>({});
+  const [selectedVideo, setSelectedVideo] = useState<any>(null);
+  const [commentPosition, setCommentPosition] = useState(0);
+
   const flatListRef = useRef<FlatList<any>>(null);
   const dispatch = useAppDispatch();
   const isMyProfile =
@@ -48,11 +59,22 @@ const Profile: React.FC = () => {
   const [otherUserVideos, setOtherUserVideos] = useState<any[]>([]);
   const allVideoData = isMyProfile ? myVideosInRedux : otherUserVideos;
 
+  const targetUserId = userIdWhantToShow?.user?.id ?? userLogin?.user?.id;
   const findImg: any = !!userIdWhantToShow?.user
     ? getImageUrl(userIdWhantToShow?.profile)
     : getImageUrl(userLogin?.profile);
 
-  const targetUserId = userIdWhantToShow?.user?.id ?? userLogin?.user?.id;
+  const handleOpenComments = useCallback((video: any, position: number) => {
+    setSelectedVideo(video);
+    setCommentPosition(position ?? 0);
+    setShowComments(true);
+  }, []);
+
+  const handleCloseComments = useCallback(() => {
+    setShowComments(false);
+    setSelectedVideo(null);
+    setCommentPosition(0);
+  }, []);
 
   const fetchVideos = useCallback(
     async (params: { skip: number; take: number }) => {
@@ -84,11 +106,30 @@ const Profile: React.FC = () => {
     },
     [dispatch, isMyProfile, myVideosInRedux],
   );
+
   const { loading, loadMore, hasMore } = useLoadMore(
     fetchVideos,
     handleDataLoaded,
     allVideoData?.length || 0,
   );
+
+  const {
+    openDropdowns,
+    setOpenDropdowns,
+    currentlyPlayingId,
+    handleVideoPlay,
+    toggleDropdown,
+    dropdownItems,
+  } = useShowWatch({
+    inviteId: targetUserId,
+    data: allVideoData,
+    pagination: { skip: allVideoData.length, take: 10, hasMore },
+    customFetchNextPage: async () => {
+      if (!loading && hasMore) {
+        await loadMore();
+      }
+    },
+  });
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -195,13 +236,9 @@ const Profile: React.FC = () => {
     </YStack>
   );
 
-  const handlePlayVideo = useCallback((videoId: string) => {
-    setActiveVideoId((prev) => (prev === videoId ? null : videoId));
-  }, []);
-
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
-      <YStack f={1} bg="$backgroundDefault">
+      <YStack f={1} bg="$black">
         <FlatList
           data={allVideoData || []}
           keyExtractor={(item, index) =>
@@ -219,11 +256,16 @@ const Profile: React.FC = () => {
             <VideosProfileItem
               profileWatch
               itsMatchingWithTimer={itsMatchingWithTimer}
-              activeVideoId={activeVideoId}
-              onPlay={handlePlayVideo}
+              activeVideoId={currentlyPlayingId}
+              onPlay={handleVideoPlay}
               video={item}
-              isActive
+              isActive={true}
               videoLikes={videoLikes}
+              openDropdowns={openDropdowns}
+              setOpenDropdowns={setOpenDropdowns}
+              toggleDropdown={toggleDropdown}
+              dropdownItems={dropdownItems}
+              handleToggleComments={handleOpenComments}
             />
           )}
           onEndReachedThreshold={0.5}
@@ -245,6 +287,20 @@ const Profile: React.FC = () => {
           windowSize={5}
         />
       </YStack>
+      {showComments && (
+        <View
+          style={[StyleSheet.absoluteFillObject, { zIndex: 9999 }]}
+          pointerEvents="auto"
+        >
+          <Comments
+            visible={showComments}
+            onClose={handleCloseComments}
+            video={selectedVideo}
+            positionVideo={commentPosition}
+            userIdLogin={userLogin?.user?.id}
+          />
+        </View>
+      )}
     </SafeAreaView>
   );
 };

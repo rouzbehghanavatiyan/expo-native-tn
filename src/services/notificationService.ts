@@ -25,6 +25,7 @@ export async function registerForPushNotifications(
       logger.warn("Push notifications فقط روی دستگاه واقعی کار می‌کند");
       return null;
     }
+    console.log("VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVv");
 
     const perm = await Notifications.getPermissionsAsync();
     logger.info("Permissions:", perm);
@@ -43,6 +44,8 @@ export async function registerForPushNotifications(
     }
 
     if (Platform.OS === "android") {
+      console.log("Helllllllllllllllllllllllllllllllllllllllllll");
+
       await Notifications.setNotificationChannelAsync("default", {
         name: "default",
         importance: Notifications.AndroidImportance.MAX,

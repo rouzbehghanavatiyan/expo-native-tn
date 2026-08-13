@@ -1,4 +1,3 @@
-import { LinearGradient } from "expo-linear-gradient";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Alert, TouchableOpacity } from "react-native";
 import { Text, View, XStack } from "tamagui";
@@ -192,9 +191,9 @@ const OptionBottom: React.FC<OptionBottomProps> = ({
   const getResultStyle = () => {
     switch (result) {
       case "Win":
-        return { color: "#10b981", text: "Win", borderColor: "#10b981" };
+        return { color: "#1ec75f", text: "Win", borderColor: "#ffffff" };
       case "Loss":
-        return { color: "#ef4444", text: "Loss", borderColor: "#ef4444" };
+        return { color: "#f12d2d", text: "Loss", borderColor: "#ef4444" };
       case "Draw":
         return { color: "#eab308", text: "Draw", borderColor: "#eab308" };
       default:
@@ -205,73 +204,65 @@ const OptionBottom: React.FC<OptionBottomProps> = ({
   const resultStyle: any = getResultStyle();
 
   return (
-    <View position="absolute" bottom={0} left={0} right={0} zIndex={10}>
-      <LinearGradient
-        colors={["rgba(0, 0, 0, 0.5)", "rgba(255,255,255,0)"]}
-        start={{ x: 0, y: 1 }}
-        end={{ x: 0, y: 0 }}
-        style={{ width: "100%" }}
+    <View position="absolute" bottom={10} left={0} right={0} zIndex={10}>
+      <XStack
+        gap={2}
+        justifyContent="space-between"
+        alignItems="center"
+        px={12}
       >
-        <XStack
-          gap={2}
-          justifyContent="space-between"
-          alignItems="center"
-          px={10}
-          pb={8}
-        >
-          <View flex={1} alignItems="flex-start">
-            <TouchableOpacity onPress={handleToggleComments}>
-              <Icon size={20} name="chat-bubble-outline" color="white" />
-            </TouchableOpacity>
-          </View>
-          {((inviteWatch && result) || (itsHome && result) || !endTime) && (
-            <View flex={1} alignItems="center">
-              <View px={2} py={1} borderRadius="$3">
-                <Text
-                  color={resultStyle?.color}
-                  fontSize="$3"
-                  padding="$1"
-                  fontWeight="bold"
-                >
-                  {resultStyle?.text}
-                </Text>
-              </View>
+        <View flex={1} alignItems="flex-start">
+          <TouchableOpacity onPress={handleToggleComments}>
+            <Icon size={20} name="chat-bubble-outline" color="white" />
+          </TouchableOpacity>
+        </View>
+        {((inviteWatch && result) || (itsHome && result) || !endTime) && (
+          <View flex={1} alignItems="center">
+            <View px={2} marginTop={50} py={1} borderRadius="$3">
+              <Text
+                color={resultStyle?.color}
+                fontSize="$3"
+                padding="$1"
+                fontWeight="bold"
+              >
+                {resultStyle?.text}
+              </Text>
             </View>
-          )}
-          <View flex={1} alignItems="flex-end">
-            <XStack gap={2} alignItems="center">
-              {endTime && (
-                <TouchableOpacity
-                  onPress={handleLikeClick}
-                  style={{ padding: 8, zIndex: 999 }}
-                >
-                  {isLiked ? (
-                    <Icon name="thumb-up" size={20} color="#ffffff" />
-                  ) : (
-                    <Icon name="thumb-up-off-alt" size={20} color="white" />
-                  )}
-                </TouchableOpacity>
-              )}
-              {endTime && (
-                <XStack gap={1} alignItems="center">
-                  <Text margin={2} pt={1} color="$grey300" fontSize="$3">
-                    {fixNumberCount(localLikeCount)}
-                  </Text>
-                </XStack>
-              )}
-
-              {!endTime && (
-                <XStack gap={1} alignItems="center">
-                  <Text margin={2} pt={1} color="$grey300" fontSize="$3">
-                    {fixNumberCount(localLikeCount)}
-                  </Text>
-                  <Icon name="thumb-up" color="#b4b4b485" size={15} />
-                </XStack>
-              )}
-            </XStack>
           </View>
-        </XStack>
-      </LinearGradient>
+        )}
+        <View flex={1} alignItems="flex-end">
+          <XStack gap={2} alignItems="center">
+            {endTime && (
+              <TouchableOpacity
+                onPress={handleLikeClick}
+                style={{ padding: 8, zIndex: 999 }}
+              >
+                {isLiked ? (
+                  <Icon name="thumb-up" size={20} color="#ffffff" />
+                ) : (
+                  <Icon name="thumb-up-off-alt" size={20} color="white" />
+                )}
+              </TouchableOpacity>
+            )}
+            {endTime && (
+              <XStack gap={1} alignItems="center">
+                <Text margin={2} pt={1} color="$grey300" fontSize="$3">
+                  {fixNumberCount(localLikeCount)}
+                </Text>
+              </XStack>
+            )}
+
+            {!endTime && (
+              <XStack gap={5} alignItems="center">
+                <Text marginTop={3} color="$grey300" fontSize="$3">
+                  {fixNumberCount(localLikeCount)}
+                </Text>
+                <Icon name="thumb-up" color="#b4b4b485" size={20} />
+              </XStack>
+            )}
+          </XStack>
+        </View>
+      </XStack>
     </View>
   );
 };

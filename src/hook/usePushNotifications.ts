@@ -1,13 +1,15 @@
 import { registerForPushNotifications } from "@/src/services/notificationService";
 import * as Notifications from "expo-notifications";
 import { useEffect, useRef } from "react";
+import { useAppSelector } from "../store/reduxHookType";
 
 export function usePushNotifications() {
   const notificationListener = useRef<Notifications.Subscription | null>(null);
   const responseListener = useRef<Notifications.Subscription | null>(null);
+  const main = useAppSelector((state) => state?.main);
 
   useEffect(() => {
-    const userId = 123;
+    const userId = main?.userLogin?.user?.id;
 
     registerForPushNotifications(userId);
 
