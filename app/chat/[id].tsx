@@ -1,7 +1,7 @@
 import AppLoading from "@/src/components/AppLoading";
 import ImageRank from "@/src/components/ImageRank";
 import MessageInput from "@/src/components/MessageInput";
-import { userMessages } from "@/src/services/masterServices";
+import { userMessages } from "@/src/services/nestServices";
 import { useAppSelector } from "@/src/store/reduxHookType";
 import { getImageUrl, mergeUniqueMessages } from "@/src/utils/fileHelper";
 import { socketClient } from "@/src/utils/socketClient";
@@ -14,12 +14,13 @@ import { Text, XStack, YStack } from "tamagui";
 import ChatHeader from "./ChatHeader";
 
 interface MessageType {
-  id?: number;
+  id?: string; // تغییر به string برای پشتیبانی از GUID
   tempId: any;
   userProfile: string;
-  sender: number;
-  recieveId: number;
-  title: string;
+  sender: string; // تغییر به string
+  recieveId: string; // تغییر به string
+  title?: string;
+  content?: any; // اضافه شدن content (چون در بک‌اند از simple-json استفاده کردید)
   time: string;
   userNameSender?: string;
 }
@@ -33,8 +34,8 @@ export default function PrivateChat() {
   }>();
   const userScore = Number(score);
   const main = useAppSelector((state) => state?.main);
-  const userIdLogin = main?.userLogin?.user?.id;
-  const reciveUserId = Number(id);
+  const userIdLogin = main?.userLogin?.user?.id; // این مقدار حالا باید string (GUID) باشد
+  const reciveUserId = id; // حذف Number() برای حفظ فرمت GUID
   const [messages, setMessages] = useState<MessageType[]>([]);
   const [title, setTitle] = useState("");
   const [showStickers, setShowStickers] = useState(false);
@@ -42,7 +43,7 @@ export default function PrivateChat() {
   const userInfo = useAppSelector((state) => state.main?.userLogin);
   const userProfile = getImageUrl(userInfo?.profile);
   const isInitialLoadRef = useRef(true);
-  const isLoadingMoreRef = useRef(false); // اضافه کن
+  const isLoadingMoreRef = useRef(false);
   const lastLoadMoreTimeRef = useRef(0);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
 
@@ -70,6 +71,7 @@ export default function PrivateChat() {
       sender: userIdLogin,
       recieveId: reciveUserId,
       title: title.trim(),
+      content: title.trim(), // ست کردن content برای ارسال به بک‌اند
       time: timeString,
       userProfile: "",
     };
@@ -105,6 +107,26 @@ export default function PrivateChat() {
     },
     [userIdLogin, reciveUserId],
   );
+
+  useEffect(() => {
+    // اصلاح نام متغیرها برای جلوگیری از خطای ReferenceError
+    socketClient.emit("mark_messages_as_read", {
+      sender: reciveUserId, // کسی که پیام‌ها را فرستاده بود
+      receiver: userIdLogin, // شما که پیام‌ها را دریافت کردید
+    });
+
+    socketClient.on("receive_message", (newMessage) => {
+      // اگر فرستنده همان شخصی است که در چت با او هستیم
+      if (newMessage.sender === reciveUserId) {
+        socketClient.emit("mark_messages_as_read", {
+          sender: reciveUserId,
+          receiver: userIdLogin,
+        });
+      }
+    });
+
+    return () => socketClient.off("receive_message");
+  }, [reciveUserId, userIdLogin]);
 
   const getMessages = async (isLoadMore = false) => {
     if (!userIdLogin || !reciveUserId) return;
@@ -209,7 +231,6 @@ export default function PrivateChat() {
     highestMeasuredFrameIndex: number;
     averageItemLength: number;
   }) => {
-    // fallback اگر scrollToIndex فیل شد
     setTimeout(() => {
       flatListRef.current?.scrollToIndex({
         index: Math.min(info.index, info.highestMeasuredFrameIndex),
@@ -217,6 +238,7 @@ export default function PrivateChat() {
       });
     }, 100);
   };
+
   const otherUserProfile = profile || "";
 
   const renderMessage = ({ item }: { item: MessageType }) => {
@@ -234,20 +256,32 @@ export default function PrivateChat() {
         alignItems="flex-end"
         px="$3"
         py="$2"
+        width="100%"
       >
         {!isOwn && <ImageRank imgSrc={messageAvatar} imgSize={35} />}
 
         <YStack
-          maxWidth="70%"
+          maxWidth="75%"
           bg={isOwn ? "white" : "$grey100"}
           borderRadius="$4"
           px="$3"
           py="$2"
           mx="$2"
         >
-          <Text>{item.title}</Text>
+          <Text
+            style={{ writingDirection: "rtl", textAlign: "right" }}
+            flexWrap="wrap"
+          >
+            {/* در صورت وجود آبجکت json برای content، مقدار صحیح آن را نمایش بدهید. در غیر اینصورت مستقیما رندر کنید */}
+            {typeof item?.content === "string" ? item?.content : item?.title}
+          </Text>
 
-          <Text fontSize={8} color="$grey400">
+          <Text
+            fontSize={8}
+            color="$grey400"
+            alignSelf={isOwn ? "flex-end" : "flex-start"}
+            mt="$1"
+          >
             {item?.time?.slice(0, 5)}
           </Text>
         </YStack>
@@ -268,15 +302,13 @@ export default function PrivateChat() {
 
     lastLoadMoreTimeRef.current = now;
 
-    console.log("Loading older messages...");
-
     getMessages(true);
   }, [hasMore, userIdLogin, reciveUserId]);
 
   return (
     <>
-      <Stack.Screen options={{ headerShown: false }} />
       <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
+        <Stack.Screen options={{ headerShown: false }} />
         <KeyboardAvoidingView
           style={{ flex: 1 }}
           behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -347,7 +379,7 @@ export default function PrivateChat() {
             )}
           </YStack>
         </KeyboardAvoidingView>
-      </SafeAreaView>
+        </SafeAreaView>
     </>
   );
 }

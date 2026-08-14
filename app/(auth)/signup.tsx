@@ -2,13 +2,21 @@ import Logo from "@/src/assets/images/logocircle.png";
 import BaseButton from "@/src/components/BaseButtom";
 import BaseInput from "@/src/components/BaseInput";
 import { Icon } from "@/src/components/Icon";
-import { useMessageModal } from "@/src/hook/useMessageModal";
 import { registerUser } from "@/src/services/masterServices";
 import { validateForm } from "@/src/utils/errorValidation";
 import { FormErrors, FormValues } from "@/src/utils/GlobalType";
 import { Link, useRouter } from "expo-router";
 import React, { useState } from "react";
+import { Modal } from "react-native";
 import { Image, Text, View, XStack, YStack } from "tamagui";
+
+interface ModalState {
+  visible: boolean;
+  type: "success" | "error";
+  title: string;
+  description: string;
+  onConfirm?: () => void;
+}
 
 export default function SignUpScreen() {
   const router = useRouter();
@@ -18,7 +26,13 @@ export default function SignUpScreen() {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [showConfirmPassword, setShowConfirmPassword] =
     useState<boolean>(false);
-  const message = useMessageModal();
+
+  const [modalState, setModalState] = useState<ModalState>({
+    visible: false,
+    type: "success",
+    title: "",
+    description: "",
+  });
 
   const handleInputChange = (name: keyof FormValues, value: string) => {
     setInputs((prev) => ({
@@ -30,6 +44,14 @@ export default function SignUpScreen() {
       [name]: undefined,
       general: undefined,
     }));
+  };
+
+  // بستن مودال و اجرای تابع تایید در صورت وجود
+  const handleCloseModal = () => {
+    setModalState((prev) => ({ ...prev, visible: false }));
+    if (modalState.onConfirm) {
+      modalState.onConfirm();
+    }
   };
 
   const handleSignUp = async () => {
@@ -47,23 +69,33 @@ export default function SignUpScreen() {
       };
 
       const res: any = await registerUser(postData);
-      const { status, message } = res?.data || {};
+      const { status, message: apiMessage } = res?.data || {};
+
       if (status === 0 || status === 2) {
-        alert("Dear user, please check your email to verify your account.");
-        router.replace("/");
+        setModalState({
+          visible: true,
+          type: "success",
+          title: "Registration Successful",
+          description:
+            "Dear user, please check your email to verify your account.",
+          onConfirm: () => {
+            router.replace("/");
+          },
+        });
       } else {
         setErrors((prev) => ({
           ...prev,
-          general: message || "Registration failed. Please try again.",
+          general: apiMessage || "Registration failed. Please try again.",
         }));
       }
     } catch (error) {
       console.error("Sign Up Error:", error);
-      setErrors((prev) => ({
-        ...prev,
-        general: "An error occurred. Please try again later.",
-      }));
-      alert("An error occurred. Please try again later.");
+      setModalState({
+        visible: true,
+        type: "error",
+        title: "Error",
+        description: "An error occurred. Please try again later.",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -103,78 +135,132 @@ export default function SignUpScreen() {
           </Text>
         </YStack>
 
-        <YStack gap="$4">
-          <BaseInput
-            label="Username"
-            value={inputs.username}
-            onChangeText={(text) => handleInputChange("username", text)}
-            placeholder="username"
-            colorType="primary"
-            variant="outline"
-            errorMessage={errors.username}
-          />
+        <YStack gap="$3">
+          {/* -- Username Input -- */}
+          <YStack gap="$2">
+            <BaseInput
+              label="Username"
+              value={inputs.username}
+              onChangeText={(text) => handleInputChange("username", text)}
+              placeholder="username"
+              colorType="primary"
+              variant="outline"
+              borderColor={errors.username ? "$errorMain" : undefined}
+            />
+            {errors.username && (
+              <XStack gap="$1.5" alignItems="center">
+                <Text color="$errorMain" fontSize="$2">
+                  *
+                </Text>
+                <Text color="$errorMain" fontSize="$2">
+                  {errors.username}
+                </Text>
+              </XStack>
+            )}
+          </YStack>
 
-          <BaseInput
-            label="Email"
-            value={inputs.email}
-            onChangeText={(text) => handleInputChange("email", text)}
-            placeholder="email"
-            colorType="primary"
-            variant="outline"
-            errorMessage={errors.email}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
+          {/* -- Email Input -- */}
+          <YStack gap="$2">
+            <BaseInput
+              label="Email"
+              value={inputs.email}
+              onChangeText={(text) => handleInputChange("email", text)}
+              placeholder="email"
+              colorType="primary"
+              variant="outline"
+              borderColor={errors.email ? "$errorMain" : undefined}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+            {errors.email && (
+              <XStack gap="$1.5" alignItems="center">
+                <Text color="$errorMain" fontSize="$2">
+                  *
+                </Text>
+                <Text color="$errorMain" fontSize="$2">
+                  {errors.email}
+                </Text>
+              </XStack>
+            )}
+          </YStack>
 
-          <BaseInput
-            label="Password"
-            secureTextEntry={!showPassword}
-            value={inputs.password}
-            onChangeText={(text) => handleInputChange("password", text)}
-            placeholder="password"
-            colorType="primary"
-            variant="outline"
-            errorMessage={errors.password}
-            rightIcon={
-              <View
-                onPress={() => setShowPassword((prev) => !prev)}
-                cursor="pointer"
-              >
-                {showPassword ? (
-                  <Icon name="eye-off" color="gray" />
-                ) : (
-                  <Eye size={20} color="gray" />
-                )}
-              </View>
-            }
-          />
-          <BaseInput
-            label="Confirm Password"
-            secureTextEntry={!showConfirmPassword}
-            value={inputs.passwordConfirmation}
-            onChangeText={(text) =>
-              handleInputChange("passwordConfirmation", text)
-            }
-            placeholder="Confirm your password"
-            colorType="primary"
-            variant="outline"
-            errorMessage={errors.passwordConfirmation}
-            rightIcon={
-              <View
-                onPress={() => setShowConfirmPassword((prev) => !prev)}
-                cursor="pointer"
-              >
-                {showConfirmPassword ? (
-                  <EyeOff size={20} color="gray" />
-                ) : (
-                  <Eye size={20} color="gray" />
-                )}
-              </View>
-            }
-          />
+          <YStack gap="$2">
+            <BaseInput
+              label="Password"
+              secureTextEntry={!showPassword}
+              value={inputs.password}
+              onChangeText={(text) => handleInputChange("password", text)}
+              placeholder="password"
+              colorType="primary"
+              variant="outline"
+              borderColor={errors.password ? "$errorMain" : undefined}
+              rightIcon={
+                <View
+                  onPress={() => setShowPassword((prev) => !prev)}
+                  cursor="pointer"
+                >
+                  {showPassword ? (
+                    <Icon name="visibilityOff" size={20} color="gray" />
+                  ) : (
+                    <Icon name="removeRedEye" size={20} color="gray" />
+                  )}
+                </View>
+              }
+            />
+            {errors.password && (
+              <XStack gap="$1.5" alignItems="center">
+                <Text color="$errorMain" fontSize="$2">
+                  *
+                </Text>
+                <Text color="$errorMain" fontSize="$2">
+                  {errors.password}
+                </Text>
+              </XStack>
+            )}
+          </YStack>
+
+          {/* -- Confirm Password Input -- */}
+          <YStack gap="$2">
+            <BaseInput
+              label="Confirm Password"
+              secureTextEntry={!showConfirmPassword}
+              value={inputs.passwordConfirmation}
+              onChangeText={(text) =>
+                handleInputChange("passwordConfirmation", text)
+              }
+              placeholder="Confirm your password"
+              colorType="primary"
+              variant="outline"
+              borderColor={
+                errors.passwordConfirmation ? "$errorMain" : undefined
+              }
+              rightIcon={
+                <View
+                  onPress={() => setShowConfirmPassword((prev) => !prev)}
+                  cursor="pointer"
+                >
+                  {showConfirmPassword ? (
+                    <Icon name="visibilityOff" size={20} color="gray" />
+                  ) : (
+                    <Icon name="removeRedEye" size={20} color="gray" />
+                  )}
+                </View>
+              }
+            />
+            {errors.passwordConfirmation && (
+              <XStack gap="$1.5" alignItems="center">
+                <Text color="$errorMain" fontSize="$2">
+                  *
+                </Text>
+                <Text color="$errorMain" fontSize="$2">
+                  {errors.passwordConfirmation}
+                </Text>
+              </XStack>
+            )}
+          </YStack>
 
           {!!errors.general && (
-            <Text color="$errorMain" fontSize="$3" textAlign="center">
+            <Text color="$errorMain" fontSize="$3" textAlign="center" mt="$2">
               {errors.general}
             </Text>
           )}
@@ -185,6 +271,7 @@ export default function SignUpScreen() {
             loading={isLoading}
             onPress={handleSignUp}
             width="100%"
+            mt="$3"
           >
             {isLoading ? "Signing up..." : "Sign up"}
           </BaseButton>
@@ -193,7 +280,6 @@ export default function SignUpScreen() {
             <Text fontSize="$3" color="$textPrimary">
               Already have an account?
             </Text>
-
             <Link href="/" asChild>
               <Text
                 fontSize="$3"
@@ -207,6 +293,83 @@ export default function SignUpScreen() {
           </XStack>
         </YStack>
       </YStack>
+
+      <Modal
+        transparent
+        visible={modalState.visible}
+        animationType="fade"
+        onRequestClose={handleCloseModal}
+      >
+        <YStack
+          flex={1}
+          justifyContent="center"
+          alignItems="center"
+          backgroundColor="rgba(0, 0, 0, 0.73)"
+          px="$4"
+        >
+          <YStack
+            backgroundColor="$background"
+            width="100%"
+            maxWidth={350}
+            p="$5"
+            borderRadius="$4"
+            gap="$4"
+            alignItems="center"
+            shadowColor="#16d620"
+            shadowOpacity={0.2}
+            shadowRadius={10}
+            elevation={5}
+          >
+            <View
+              width={60}
+              height={60}
+              borderRadius={30}
+              backgroundColor={
+                modalState.type === "success" ? "$green4Light" : "$red4Light"
+              }
+              justifyContent="center"
+              alignItems="center"
+              mb="$2"
+            >
+              <Text
+                fontSize={32}
+                color={
+                  modalState.type === "success" ? "$greenMain" : "$redMain"
+                }
+              >
+                {modalState.type === "success" ? "✓" : "✕"}
+              </Text>
+            </View>
+
+            <Text
+              fontSize="$6"
+              fontWeight="bold"
+              color="$textPrimary"
+              textAlign="center"
+            >
+              {modalState.title}
+            </Text>
+
+            <Text
+              fontSize="$4"
+              color="$textSecondary"
+              textAlign="center"
+              mb="$2"
+            >
+              {modalState.description}
+            </Text>
+
+            <BaseButton
+              appearance="solid"
+              colorType="success"
+              onPress={handleCloseModal}
+              width="100%"
+            >
+              OK
+            </BaseButton>
+          </YStack>
+        </YStack>
+      </Modal>
     </YStack>
   );
 }

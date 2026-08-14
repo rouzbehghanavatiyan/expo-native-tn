@@ -9,7 +9,6 @@ import {
   setPaginationShowWatch,
 } from "@/src/slices/main";
 import { useAppDispatch, useAppSelector } from "@/src/store/reduxHookType";
-import { logger } from "@/src/utils/logger";
 import { useLocalSearchParams } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -135,8 +134,6 @@ export default function ShowWatchScreen() {
   const viewabilityConfig = useRef({
     itemVisiblePercentThreshold: 50,
   }).current;
-
-  logger.info("datadatadatadatadatadatadata", data);
 
   const showInitialLoader =
     !hasFetchedOnce.current && (!data || data.length === 0);

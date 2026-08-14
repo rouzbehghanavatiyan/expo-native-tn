@@ -23,7 +23,7 @@ import { FormErrors, FormValues } from "@/src/utils/GlobalType";
 import { Link, useRouter } from "expo-router";
 import { jwtDecode } from "jwt-decode";
 import { useState } from "react";
-import { Alert, Modal, Pressable } from "react-native"; // اضافه شدن Modal و Pressable
+import { Modal, Pressable } from "react-native"; // اضافه شدن Modal و Pressable
 import { Checkbox, Image, Text, View, XStack, YStack } from "tamagui";
 
 const LoginScreen: React.FC<any> = () => {
@@ -216,13 +216,11 @@ const LoginScreen: React.FC<any> = () => {
             {loading ? "Signing in..." : "Sign in"}
           </BaseButton>
 
-          <BaseButton
-            appearance="ghost"
-            colorType="primary"
-            onPress={() => Alert.alert("Forgot Password", "Coming soon")}
-          >
-            Forgot password?
-          </BaseButton>
+          <Link href="/forgotPassword" asChild>
+            <BaseButton appearance="ghost" colorType="primary">
+              Forgot password?
+            </BaseButton>
+          </Link>
 
           <XStack justifyContent="center" mt="$2" gap="$2" flexWrap="wrap">
             <Text fontSize="$3" color="$textPrimary">
