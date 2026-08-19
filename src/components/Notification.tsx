@@ -3,6 +3,7 @@ import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeabl
 import { Text, XStack, YStack } from "tamagui";
 import {
   registerForPushNotifications,
+  saveSubscription,
   sendUserNotif,
 } from "../services/notificationService";
 import { useAppSelector } from "../store/reduxHookType";
@@ -18,7 +19,6 @@ const Notification = () => {
   // اجرای خودکار به محض ورود به صفحه
   useEffect(() => {
     const autoSendTestNotification = async () => {
-      // بررسی می‌کنیم که کاربر حتماً در استیت موجود باشد
       const userId = main?.userLogin?.user?.id;
       if (!userId) return;
 
@@ -32,15 +32,21 @@ const Notification = () => {
           setExpoToken(token);
           logger.info("✅ Token received automatically:", token);
 
-          // ۲. ارسال بلافاصله به سرور
-          const postData = {
+          // ۲. ذخیره توکن در دیتابیس بک‌اند (بسیار مهم)
+          await saveSubscription({
             userId: userId,
             expoPushToken: token,
+          });
+          logger.info("✅ Token successfully saved to database");
+
+          // ۳. درخواست ارسال نوتیفیکیشن آزمایشی به سرور
+          const postData = {
+            userId: userId,
             message: "Hello! This is an auto-test notification on mount.",
           };
 
           await sendUserNotif(postData);
-          logger.info("✅ Auto-test notification successfully sent to server");
+          logger.info("✅ Auto-test notification trigger sent to server");
         } else {
           logger.warn("❌ No token received. Cannot send auto-notification.");
         }
@@ -61,7 +67,7 @@ const Notification = () => {
     };
 
     autoSendTestNotification();
-  }, [main?.userLogin?.user?.id]); // با تغییر/لود شدن آیدی کاربر، این کد یک‌بار اجرا می‌شود
+  }, [main?.userLogin?.user?.id]);
 
   const handleDelete = (index: number) => {
     setNotifications((prev) => prev.filter((_, i) => i !== index));
