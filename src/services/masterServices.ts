@@ -12,6 +12,7 @@ export const attachmentList = async (postData: {
       subCatId: postData?.subCatId,
     },
   });
+  console.log("response", response);
   return response.data;
 };
 
@@ -149,4 +150,8 @@ export const removeInvite = async (invId: number) => {
 
 export const addScoure = async (data: any) => {
   return await api.post(`/addScoure`, data);
+};
+
+export const addProfile = async (data: any) => {
+  return await api.post(`/addProfile`, data);
 };

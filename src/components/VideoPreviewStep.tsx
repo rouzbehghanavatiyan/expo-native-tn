@@ -5,7 +5,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { OnLoadData, OnProgressData, VideoRef } from "react-native-video";
 import { Spinner, View, XStack } from "tamagui";
 import { RsetShowTimerButtn } from "../slices/main";
-import { goToStep, removeInviteThunk } from "../slices/video";
+import {
+  goToStep,
+  removeInviteThunk,
+  RsetSelectedResize,
+} from "../slices/video";
 import { useAppDispatch, useAppSelector } from "../store/reduxHookType";
 import BaseButton from "./BaseButtom";
 import { Icon } from "./Icon";
@@ -38,11 +42,8 @@ const VideoPreviewStep: React.FC<VideoPreviewStepProps> = ({
   const [duration, setDuration] = useState(0);
   const [trimRange, setTrimRange] = useState([0, 0]);
   const showTimerButtn = useAppSelector((state) => state.main.showTimerButtn);
-
-  const [selectedIcon, setSelectedIcon] = useState<
-    "AspectRatio" | "CheckBoxOutlineBlank" | null
-  >("CheckBoxOutlineBlank");
-
+  const videoSlice = useAppSelector((state) => state.video);
+  const selectedResize = videoSlice.selectedResize;
   const [videoLayout, setVideoLayout] = useState({
     width: SCREEN_WIDTH - 32,
     height: 300,
@@ -135,11 +136,11 @@ const VideoPreviewStep: React.FC<VideoPreviewStepProps> = ({
   };
 
   const imageStyle: ImageStyle = {
-    width: selectedIcon === "AspectRatio" ? SCREEN_WIDTH : SCREEN_WIDTH - 32,
+    width: selectedResize === 1 ? SCREEN_WIDTH : SCREEN_WIDTH - 32,
     height: SCREEN_HEIGHT * 0.5,
-    resizeMode: selectedIcon === "AspectRatio" ? "stretch" : "contain",
+    resizeMode: selectedResize === 1 ? "stretch" : "contain",
     backgroundColor: "black",
-    borderRadius: selectedIcon === "AspectRatio" ? 0 : 12,
+    borderRadius: selectedResize === 1 ? 0 : 12,
   };
 
   return (
@@ -188,11 +189,10 @@ const VideoPreviewStep: React.FC<VideoPreviewStepProps> = ({
             marginBottom="$4"
           >
             <Pressable
-              onPress={() => setSelectedIcon("AspectRatio")}
+              onPress={() => dispatch(RsetSelectedResize(1))}
               style={{
-                borderWidth: selectedIcon === "AspectRatio" ? 1 : 0,
-                borderColor:
-                  selectedIcon === "AspectRatio" ? "#22c55e" : "transparent",
+                borderWidth: selectedResize === 1 ? 1 : 0,
+                borderColor: selectedResize === 1 ? "#22c55e" : "transparent",
                 borderRadius: 12,
                 padding: 4,
               }}
@@ -200,13 +200,10 @@ const VideoPreviewStep: React.FC<VideoPreviewStepProps> = ({
               <Icon size={45} name="CheckBoxOutlineBlank" color="white" />
             </Pressable>
             <Pressable
-              onPress={() => setSelectedIcon("CheckBoxOutlineBlank")}
+              onPress={() => dispatch(RsetSelectedResize(2))}
               style={{
-                borderWidth: selectedIcon === "CheckBoxOutlineBlank" ? 1 : 0,
-                borderColor:
-                  selectedIcon === "CheckBoxOutlineBlank"
-                    ? "#22c55e"
-                    : "transparent",
+                borderWidth: selectedResize === 2 ? 1 : 0,
+                borderColor: selectedResize === 2 ? "#22c55e" : "transparent",
                 borderRadius: 12,
                 padding: 4,
               }}

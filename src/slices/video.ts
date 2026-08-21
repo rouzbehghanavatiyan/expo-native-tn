@@ -21,6 +21,7 @@ const initialState: VideoState = {
   videoFile: null,
   showTimeout: false,
   isLoading: false,
+  selectedResize: 1,
   error: null,
   showDeactivatedModal: false,
   currentStep: 1,
@@ -66,17 +67,19 @@ export const uploadFullProcessThunk = createAsyncThunk(
   "video/uploadFullProcess",
   async (
     { userId, gearId, segments, mode, allFormData, movieMeta, router }: any,
-    { rejectWithValue, dispatch },
+    { rejectWithValue, dispatch, getState },
   ) => {
     try {
+      const state = getState() as any;
       const gearIdStorage = await AsyncStorage.getItem("gearId");
       console.log(
         "gearIdgearIdgearIdgearIdgearIdgearIdgearIdgearIdgearId",
         gearId,
       );
-
+      const currentResizeMode = state.video.selectedResize || 1;
       const postData = {
         userId: Number(userId),
+        resizeMode: currentResizeMode,
         description: allFormData?.description || movieMeta?.desc || "",
         title: allFormData?.title || movieMeta?.title || "",
         subSubCategoryId: Number(
@@ -213,6 +216,9 @@ const videoSlice = createSlice({
     setMovieData(state, action: PayloadAction<VideoState["movieData"]>) {
       state.movieData = action?.payload;
     },
+    RsetSelectedResize(state, action: PayloadAction<any>) {
+      state.selectedResize = action?.payload;
+    },
     updateMovieData(
       state,
       action: PayloadAction<Partial<VideoState["movieData"]>>,
@@ -282,6 +288,7 @@ export const {
   RsetIsLoading,
   updateMovieData,
   setVideoSrc,
+  RsetSelectedResize,
   setShowTimeout,
   setShowDeactivatedModal,
 } = videoSlice.actions;

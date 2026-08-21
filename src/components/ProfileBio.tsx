@@ -145,7 +145,7 @@ const ProfileBio: React.FC<ProfileBioProps> = ({
             justifyContent="center"
             alignItems="center"
           >
-            <Text fontWeight="bold" fontSize={10} color="$grey900" zIndex={10}>
+            <Text fontWeight="bold" fontSize={10} color="$grey500" zIndex={10}>
               {rankPercentage}%
             </Text>
           </View>

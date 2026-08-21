@@ -112,7 +112,7 @@ const tokens = createTokens({
     redMain: "#f44336",
     orangeMain: "#ff9800",
     blueMain: "#2196f3",
-    greenMain: "#4caf50",
+    greenMain: "#0d7509",
   },
 });
 

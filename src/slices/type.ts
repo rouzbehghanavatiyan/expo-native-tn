@@ -4,6 +4,7 @@ export interface VideoState {
   isWaitingForMatch?: boolean;
   showTimeout: boolean;
   isLoading: boolean;
+  selectedResize: number;
   showDeactivatedModal: boolean;
   error: string | null;
   currentStep: number;

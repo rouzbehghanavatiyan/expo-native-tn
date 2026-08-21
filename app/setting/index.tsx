@@ -13,7 +13,6 @@ export default function SettingLayout() {
 
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-
   const handleLogoutConfirm = async () => {
     try {
       setIsLoggingOut(true);
@@ -34,6 +33,10 @@ export default function SettingLayout() {
     }
     if (category.name === "Profile") {
       router.push("/setting/editProfile");
+      return;
+    }
+    if (category.name === "Learning") {
+      router.push("/learning");
       return;
     }
     if (category.name === "Support") {
@@ -74,7 +77,6 @@ export default function SettingLayout() {
         animationType="fade"
         onRequestClose={() => setLogoutDialogOpen(false)}
       >
-        {/* بک‌دراپ */}
         <Pressable
           style={{
             flex: 1,
@@ -85,7 +87,6 @@ export default function SettingLayout() {
           }}
           onPress={() => !isLoggingOut && setLogoutDialogOpen(false)}
         >
-          {/* جلوگیری از بسته شدن با کلیک روی خود باکس */}
           <Pressable
             onPress={(e) => e.stopPropagation()}
             style={{ width: "100%", maxWidth: 360 }}
