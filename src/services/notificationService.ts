@@ -1,15 +1,12 @@
 import Constants from "expo-constants";
-import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
-import { Platform } from "react-native";
-import { logger } from "../utils/logger";
 import { api } from "./api";
 
+// آدرس پایه برای نوتیفیکیشن‌ها از .env خوانده می‌شود
 const notifBaseURL = process.env.EXPO_PUBLIC_NOTIF;
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
-    // shouldShowAlert: true,
     shouldPlaySound: true,
     shouldSetBadge: false,
     shouldShowBanner: true,
@@ -17,73 +14,110 @@ Notifications.setNotificationHandler({
   }),
 });
 
-export async function registerForPushNotifications(
-  userId: number | string,
-): Promise<string | null> {
-  try {
-    if (!Device.isDevice) {
-      logger.warn("Push notifications فقط روی دستگاه واقعی کار می‌کند");
-      return null;
-    }
-    console.log("VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVv");
+// export async function registerForPushNotifications(userId: number) {
+//   if (!userId) {
+//     console.log(
+//       "❌ UserId is missing, cannot register for push notifications.",
+//     );
+//     return;
+//   }
 
-    const perm = await Notifications.getPermissionsAsync();
-    logger.info("Permissions:", perm);
+//   try {
+//     const { status: existingStatus } =
+//       await Notifications.getPermissionsAsync();
+//     let finalStatus = existingStatus;
 
-    let finalStatus = perm.status;
+//     if (existingStatus !== "granted") {
+//       const { status } = await Notifications.requestPermissionsAsync();
+//       finalStatus = status;
+//     }
 
-    if (finalStatus !== "granted") {
-      const requested = await Notifications.requestPermissionsAsync();
-      logger.info("Requested permissions:", requested);
-      finalStatus = requested.status;
-    }
+//     if (finalStatus !== "granted") {
+//       console.log("❌ Failed to get push token for push notification!");
+//       return;
+//     }
 
-    if (finalStatus !== "granted") {
-      logger.warn("Notification permission not granted");
-      return null;
-    }
+//     if (Platform.OS === "android") {
+//       await Notifications.setNotificationChannelAsync("default", {
+//         name: "default",
+//         importance: Notifications.AndroidImportance.MAX,
+//       });
+//     }
 
-    if (Platform.OS === "android") {
-      console.log("Helllllllllllllllllllllllllllllllllllllllllll");
+//     const projectId =
+//       Constants.expoConfig?.extra?.eas?.projectId ??
+//       Constants.easConfig?.projectId;
 
-      await Notifications.setNotificationChannelAsync("default", {
-        name: "default",
-        importance: Notifications.AndroidImportance.MAX,
-      });
-    }
+//     const tokenData = await Notifications.getExpoPushTokenAsync(
+//       projectId ? { projectId } : undefined,
+//     );
 
-    const projectId =
-      Constants.expoConfig?.extra?.eas?.projectId ??
-      Constants.easConfig?.projectId;
+//     const expoPushToken = tokenData.data;
+//     console.log("✅ Expo Push Token Generated:", expoPushToken);
 
-    logger.info("projectId:", projectId);
+//     // اصلاح مهم: ارسال Data به بک‌اند با استفاده از تابع کمکی خودتان
+//     const postData = {
+//       userId: userId,
+//       expoPushToken: expoPushToken,
+//     };
 
-    if (!projectId) {
-      logger.warn("projectId پیدا نشد");
-      return null;
-    }
+//     const resSubs = await saveSubscription(postData);
 
-    const token = await Notifications.getExpoPushTokenAsync({ projectId });
+//     // اصلاح سینتکس Axios
+//     if (resSubs.status === 200 || resSubs.status === 201) {
+//       console.log("✅ Token successfully saved to backend");
+//     } else {
+//       console.log(
+//         "❌ Failed to save token to backend, Status:",
+//         resSubs.status,
+//       );
+//     }
+//   } catch (error: any) {
+//     console.error(
+//       "❌ Error generating/sending push token:",
+//       error.message || error,
+//     );
+//     if (error.response) {
+//       console.error("❌ Server Error Response:", error.response.data);
+//     }
+//   }
+// }
 
-    logger.info("Expo token:", token);
-    return token.data;
-  } catch (error: any) {
-    logger.error("registerForPushNotifications error message:", error?.message);
-    logger.error(
-      "registerForPushNotifications error response:",
-      error?.response,
-    );
-    logger.error("registerForPushNotifications raw:", error);
+// ---- توابع سرویس ---- //
+
+export const registerForPushNotifications = async (userId: number) => {
+  // گرفتن projectId از تنظیمات app.json
+  const projectId =
+    Constants?.expoConfig?.extra?.eas?.projectId ??
+    Constants?.easConfig?.projectId;
+
+  if (!projectId) {
+    console.error("❌ Project ID not found. Run 'eas init' or check app.json.");
     return null;
   }
-}
+
+  try {
+    const tokenData = await Notifications.getExpoPushTokenAsync({
+      projectId, // 👈 این بخش حتماً باید پاس داده شود
+    });
+
+    return tokenData.data;
+  } catch (error) {
+    console.error("❌ Error fetching Expo token:", error);
+    return null;
+  }
+};
 
 export const createSubscription = async () => {
   const url = `${notifBaseURL}/public-key`;
   return await api.get(url);
 };
 
-export const saveSubscription = async (postData: any) => {
+export const saveSubscription = async (postData: {
+  userId: number;
+  expoPushToken: string;
+}) => {
+  // اگر در Ocelot مسیر /subscribe تعریف شده، به شکل زیر ارسال می‌شود
   const url = `${notifBaseURL}/subscribe`;
   return await api.post(url, postData);
 };

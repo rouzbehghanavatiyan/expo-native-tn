@@ -52,11 +52,7 @@ const Notification = () => {
         }
       } catch (error: any) {
         if (error.response) {
-          logger.error(
-            "Server error:",
-            error.response.status,
-            error.response.data,
-          );
+          logger.error("Server error:", error.response.status);
         } else {
           logger.error(
             "Error in auto-sending test notification:",
