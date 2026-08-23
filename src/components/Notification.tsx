@@ -1,11 +1,7 @@
 import React, { useEffect, useState } from "react";
 import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 import { Text, XStack, YStack } from "tamagui";
-import {
-  registerForPushNotifications,
-  saveSubscription,
-  sendUserNotif,
-} from "../services/notificationService";
+import { sendUserNotif } from "../services/notificationService";
 import { useAppSelector } from "../store/reduxHookType";
 import { logger } from "../utils/logger";
 import { Icon } from "./Icon";
@@ -16,53 +12,20 @@ const Notification = () => {
   const [expoToken, setExpoToken] = useState<string | null>(null);
   const main = useAppSelector((state) => state?.main);
 
-  // اجرای خودکار به محض ورود به صفحه
-  useEffect(() => {
-    const autoSendTestNotification = async () => {
-      const userId = main?.userLogin?.user?.id;
-      if (!userId) return;
-
-      try {
-        logger.info("Auto-fetching token on mount for user:", userId);
-
-        // ۱. دریافت توکن
-        const token = await registerForPushNotifications(userId);
-
-        if (token) {
-          setExpoToken(token);
-          logger.info("✅ Token received automatically:", token);
-
-          // ۲. ذخیره توکن در دیتابیس بک‌اند (بسیار مهم)
-          await saveSubscription({
-            userId: userId,
-            expoPushToken: token,
-          });
-          logger.info("✅ Token successfully saved to database");
-
-          // ۳. درخواست ارسال نوتیفیکیشن آزمایشی به سرور
-          const postData = {
-            userId: userId,
-            message: "Hello! This is an auto-test notification on mount.",
-          };
-
-          await sendUserNotif(postData);
-          logger.info("✅ Auto-test notification trigger sent to server");
-        } else {
-          logger.warn("❌ No token received. Cannot send auto-notification.");
-        }
-      } catch (error: any) {
-        if (error.response) {
-          logger.error("Server error:", error.response.status);
-        } else {
-          logger.error(
-            "Error in auto-sending test notification:",
-            error.message,
-          );
-        }
-      }
+  const handleSendNotifToUser = async () => {
+    const postData = {
+      userId: main?.userLogin?.user?.id,
+      message: "hello rouzbeh",
     };
+    const res = await sendUserNotif(postData);
+    logger.info("send notifffffffffff", res);
+  };
 
-    autoSendTestNotification();
+  useEffect(() => {
+    const run = async () => {
+      await handleSendNotifToUser();
+    };
+    run();
   }, [main?.userLogin?.user?.id]);
 
   const handleDelete = (index: number) => {
@@ -71,14 +34,12 @@ const Notification = () => {
 
   const renderRightActions = () => (
     <YStack width={80} bg="#ef4444" ai="center" jc="center">
-      {/* اخطار آیکون با تغییر trash به delete برطرف شد */}
       <Icon name="delete" color="white" size={24} />
     </YStack>
   );
 
   return (
     <YStack f={1} bg="$background">
-      {/* بخش نمایش وضعیت توکن (دکمه‌های دستی حذف شدند چون خودکار کار می‌کند) */}
       <YStack p="$4" gap="$2" bg="$gray3">
         <Text textAlign="center" fontWeight="bold">
           Auto Test Status
@@ -94,7 +55,6 @@ const Notification = () => {
         )}
       </YStack>
 
-      {/* لیست نوتیفیکیشن‌ها */}
       <YStack mt="$2">
         {notifications.map((item, index) => (
           <ReanimatedSwipeable
