@@ -48,7 +48,6 @@ const AppHeader = () => {
       const targetUserId = data?.recieveId;
       logger.info("data", data);
       if (currentUser?.id === Number(targetUserId)) {
-        console.log("HELLLLLLLLLLLLLLLLLLLLLLLLLLLL");
         if (!routes.isMessage) {
           dispatch(incrementUnreadCount());
         }
