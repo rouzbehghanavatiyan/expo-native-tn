@@ -26,18 +26,19 @@ export default function ShowWatchSlide({
   const findeVideoInTournomentTop = video?.attachmentMatched?.insertDate;
   const findeVideoInTournomentBott = video?.attachmentInserted?.insertDate;
 
-  const hasValidInsertDate = (dateString: any) => {
-    if (!dateString) return false;
-
+  const getTimestamp = (dateString: any) => {
+    if (!dateString) return 0;
     const fixedDate = dateString.endsWith("Z") ? dateString : `${dateString}Z`;
-    const insertTime = new Date(fixedDate).getTime();
-    const now = new Date().getTime();
-    return now - insertTime >= 60000;
+    return new Date(fixedDate).getTime();
   };
 
+  const timeTop = getTimestamp(findeVideoInTournomentTop);
+  const timeBott = getTimestamp(findeVideoInTournomentBott);
+
+  const latestTime = Math.max(timeTop, timeBott);
+
   const isTimeUp =
-    hasValidInsertDate(findeVideoInTournomentTop) ||
-    hasValidInsertDate(findeVideoInTournomentBott);
+    latestTime > 0 ? new Date().getTime() - latestTime >= 120000 : false;
 
   const resultInserted =
     video?.likeInserted > video?.likeMatched

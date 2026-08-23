@@ -30,6 +30,7 @@ import {
 import { View, YStack } from "tamagui";
 import Comments from "../comments";
 import VideosProfileItem from "../profile/VideosProfileItem";
+import { setNeedProfileRefresh } from "@/src/slices/video";
 
 const Profile: React.FC = () => {
   const route = useRoute<any>();
@@ -38,6 +39,9 @@ const Profile: React.FC = () => {
   const userLogin = useAppSelector((state) => state?.main?.userLogin);
   const followerCountRedux = useAppSelector(
     (state) => state?.main?.followerLength,
+  );
+  const needProfileRefresh = useAppSelector(
+    (state) => state?.video?.needProfileRefresh,
   );
   const followingCountRedux = useAppSelector(
     (state) => state?.main?.followingLength,
@@ -169,6 +173,13 @@ const Profile: React.FC = () => {
         item?.inviteMatched?.insertDate !== -1,
     );
   }, [allVideoData]);
+
+  useEffect(() => {
+    if (needProfileRefresh) {
+      onRefresh();
+      dispatch(setNeedProfileRefresh(false));
+    }
+  }, [needProfileRefresh]);
 
   useEffect(() => {
     if (!itsMatchingWithTimer) return;
