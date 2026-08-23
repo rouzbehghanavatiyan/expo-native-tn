@@ -9,6 +9,7 @@ import {
   setPaginationShowWatch,
 } from "@/src/slices/main";
 import { useAppDispatch, useAppSelector } from "@/src/store/reduxHookType";
+import { logger } from "@/src/utils/logger";
 import { useLocalSearchParams } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -29,7 +30,6 @@ export default function ShowWatchScreen() {
   const dispatch = useAppDispatch();
   const hasFetchedOnce = useRef(false);
 
-  // تغییر نام data به reduxData برای جلوگیری از تداخل با خروجی هوک useShowWatch
   const { data: reduxData, pagination } = useAppSelector(
     (state) => state.main.showWatchMatch,
   );
