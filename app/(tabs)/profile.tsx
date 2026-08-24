@@ -9,6 +9,7 @@ import {
   userAttachmentList,
 } from "@/src/services/masterServices";
 import { RsetProfileVideo } from "@/src/slices/main";
+import { setNeedProfileRefresh } from "@/src/slices/video";
 import { useAppDispatch, useAppSelector } from "@/src/store/reduxHookType";
 import { getImageUrl } from "@/src/utils/fileHelper";
 import { logger } from "@/src/utils/logger";
@@ -30,7 +31,6 @@ import {
 import { View, YStack } from "tamagui";
 import Comments from "../comments";
 import VideosProfileItem from "../profile/VideosProfileItem";
-import { setNeedProfileRefresh } from "@/src/slices/video";
 
 const Profile: React.FC = () => {
   const route = useRoute<any>();
@@ -265,7 +265,7 @@ const Profile: React.FC = () => {
           ListHeaderComponent={renderHeader}
           renderItem={({ item }) => (
             <VideosProfileItem
-              profileWatch
+              profileWatch={true}
               itsMatchingWithTimer={itsMatchingWithTimer}
               activeVideoId={currentlyPlayingId}
               onPlay={handleVideoPlay}

@@ -2,7 +2,6 @@ import React from "react";
 import { Dimensions, StyleSheet, View } from "react-native";
 import { Icon } from "./Icon";
 import VideoSection from "./VideoSection";
-import { logger } from "../utils/logger";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -25,10 +24,14 @@ export default function ShowWatchSlide({
 }: any) {
   const findeVideoInTournomentTop = video?.attachmentMatched?.insertDate;
   const findeVideoInTournomentBott = video?.attachmentInserted?.insertDate;
+  const getTimeNow = new Date();
 
   const getTimestamp = (dateString: any) => {
     if (!dateString) return 0;
-    const fixedDate = dateString.endsWith("Z") ? dateString : `${dateString}Z`;
+    let fixedDate = dateString;
+    if (!fixedDate.endsWith("Z") && fixedDate.indexOf("+") === -1) {
+      fixedDate = `${fixedDate}+03:30`;
+    }
     return new Date(fixedDate).getTime();
   };
 
@@ -54,22 +57,17 @@ export default function ShowWatchSlide({
         ? "Loss"
         : "Draw";
 
-  console.log("time insert Top", findeVideoInTournomentTop);
-  console.log("time insert Bott", findeVideoInTournomentBott);
-
-  logger.info("reduxData", isTimeUp);
-
   return (
     <>
       <View style={styles.half}>
         <VideoSection
-          itsHome={true}
+          itsHome={itsHome}
           inviteWatch={inviteWatch}
           score={showScore ? video?.scoreInserted : null}
           result={showResult || isTimeUp ? resultInserted : null}
           showLiked={showLiked}
           countLiked={showCountLiked ? video?.likeInserted : null}
-          endTime={isTimeUp}
+          endTime={isTimeUp ? false : true}
           video={video}
           isPlaying={
             currentlyPlayingId === video?.attachmentInserted?.attachmentId
@@ -98,13 +96,13 @@ export default function ShowWatchSlide({
       ) : null}
       <View style={styles.half}>
         <VideoSection
-          itsHome={true}
+          itsHome={itsHome}
           inviteWatch={inviteWatch}
           score={showScore ? video?.scoreMatched : null}
           result={showResult || isTimeUp ? resultMatched : null}
           showLiked={showLiked}
           countLiked={showCountLiked ? video?.likeMatched : null}
-          endTime={isTimeUp}
+          endTime={isTimeUp ? false : true}
           video={video}
           isPlaying={
             currentlyPlayingId === video?.attachmentMatched?.attachmentId

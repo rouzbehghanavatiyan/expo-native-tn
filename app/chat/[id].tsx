@@ -12,6 +12,7 @@ import { FlatList, KeyboardAvoidingView, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Text, XStack, YStack } from "tamagui";
 import ChatHeader from "./ChatHeader";
+import { logger } from "@/src/utils/logger";
 
 interface MessageType {
   id?: string; // تغییر به string برای پشتیبانی از GUID
@@ -34,8 +35,8 @@ export default function PrivateChat() {
   }>();
   const userScore = Number(score);
   const main = useAppSelector((state) => state?.main);
-  const userIdLogin = main?.userLogin?.user?.id; // این مقدار حالا باید string (GUID) باشد
-  const reciveUserId = id; // حذف Number() برای حفظ فرمت GUID
+  const userIdLogin = main?.userLogin?.user?.id;
+  const reciveUserId = id;
   const [messages, setMessages] = useState<MessageType[]>([]);
   const [title, setTitle] = useState("");
   const [showStickers, setShowStickers] = useState(false);
@@ -87,21 +88,18 @@ export default function PrivateChat() {
 
   const handleReciveMessage = useCallback(
     (data: MessageType) => {
+      logger.debug("MessageType", data);
       const shouldShow =
-        (data.sender === userIdLogin && data.recieveId === reciveUserId) ||
-        (data.recieveId === userIdLogin && data.sender === reciveUserId);
+        (data.senderId === userIdLogin && data.recieveId === reciveUserId) ||
+        (data.recieveId === userIdLogin && data.senderId === reciveUserId);
 
       if (!shouldShow) return;
-
-      // 👈 منطق Mark as Read را همینجا قرار دهید
-      if (data.sender === reciveUserId) {
+      if (data.senderId === reciveUserId) {
         socketClient?.emit("mark_messages_as_read", {
           sender: reciveUserId,
           receiver: userIdLogin,
         });
       }
-
-      // 👈 اگر پیام را خودمان فرستاده‌ایم، چون قبلاً در handleSendMessage به لیست اضافه شده، اینجا اضافه نمی‌کنیم
       if (data.sender === userIdLogin) return;
 
       setMessages((prev) => {
@@ -190,7 +188,6 @@ export default function PrivateChat() {
 
   useEffect(() => {
     if (!userIdLogin || !reciveUserId) return;
-
     paginationRef.current = { skip: 0, take: 10 };
     isInitialLoadRef.current = true;
     isLoadingMoreRef.current = false;
@@ -226,6 +223,7 @@ export default function PrivateChat() {
       });
     };
   }, [userIdLogin, reciveUserId, handleReciveMessage]);
+
   useEffect(() => {
     if (firstItemIdRef.current !== null && messages.length > 0) {
       const index = messages.findIndex(
@@ -259,7 +257,8 @@ export default function PrivateChat() {
   const otherUserProfile = profile || "";
 
   const renderMessage = ({ item }: { item: MessageType }) => {
-    const isOwn = item.sender === userIdLogin;
+    const isOwn = Number(item.senderId) === userIdLogin;
+    logger.info("item", item);
 
     const messageAvatar = isOwn
       ? userProfile
@@ -289,7 +288,6 @@ export default function PrivateChat() {
             style={{ writingDirection: "rtl", textAlign: "right" }}
             flexWrap="wrap"
           >
-            {/* در صورت وجود آبجکت json برای content، مقدار صحیح آن را نمایش بدهید. در غیر اینصورت مستقیما رندر کنید */}
             {typeof item?.content === "string" ? item?.content : item?.title}
           </Text>
 

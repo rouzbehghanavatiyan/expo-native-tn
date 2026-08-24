@@ -66,6 +66,8 @@ const OptionBottom: React.FC<OptionBottomProps> = ({
   //   inviteWatch,
   // );
 
+  console.log("LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL", endTime);
+
   const movieId = useMemo(() => {
     if (!video) return null;
     return positionVideo === 0
@@ -216,7 +218,9 @@ const OptionBottom: React.FC<OptionBottomProps> = ({
             <Icon size={20} name="chat-bubble-outline" color="white" />
           </TouchableOpacity>
         </View>
-        {((inviteWatch && result) || (itsHome && result) || !endTime) && (
+        {((!endTime && inviteWatch) ||
+          (!endTime && profileWatch) ||
+          (!endTime && itsHome)) && (
           <View flex={1} alignItems="center">
             <View px={2} marginTop={50} py={1} borderRadius="$3">
               <Text
@@ -232,7 +236,7 @@ const OptionBottom: React.FC<OptionBottomProps> = ({
         )}
         <View flex={1} alignItems="flex-end">
           <XStack gap={2} alignItems="center">
-            {endTime && (
+            {((endTime && inviteWatch) || (profileWatch && endTime)) && (
               <TouchableOpacity
                 onPress={handleLikeClick}
                 style={{ padding: 8, zIndex: 999 }}
@@ -244,15 +248,16 @@ const OptionBottom: React.FC<OptionBottomProps> = ({
                 )}
               </TouchableOpacity>
             )}
-            {endTime && (
+            {((endTime && itsHome) || (endTime && profileWatch)) && (
               <XStack gap={1} alignItems="center">
                 <Text margin={2} pt={1} color="$grey300" fontSize="$3">
                   {fixNumberCount(localLikeCount)}
                 </Text>
               </XStack>
             )}
-
-            {!endTime && (
+            {((!endTime && inviteWatch) ||
+              (!endTime && profileWatch) ||
+              (!endTime && itsHome)) && (
               <XStack gap={5} alignItems="center">
                 <Text marginTop={3} color="$grey300" fontSize="$3">
                   {fixNumberCount(localLikeCount)}
