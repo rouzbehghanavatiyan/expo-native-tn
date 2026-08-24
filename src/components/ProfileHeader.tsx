@@ -14,6 +14,7 @@ interface ProfileHeaderProps {
   followersCount?: number;
   followingCount?: number;
   score?: number;
+
   setProfileImage?: (image: string) => void;
 }
 
@@ -111,12 +112,10 @@ const ProfileHeader = forwardRef(
               />
             </YStack>
           </View>
-
           <YStack ml="$2" gap="$2" justifyContent="center">
             <Text fontSize="$6" fontWeight="bold" color="$textPrimary">
               {userName}
             </Text>
-
             <XStack gap="$4">
               <View
                 onPress={() => router.push("/(social)/followers")}

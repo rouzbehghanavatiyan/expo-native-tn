@@ -1,8 +1,9 @@
 import BaseButton from "@/src/components/BaseButtom";
 import { Icon } from "@/src/components/Icon";
 import MainTitle from "@/src/components/MainTitle";
-import { getStatus } from "@/src/services/masterServices";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { addProfile } from "@/src/services/masterServices";
+import { useAppSelector } from "@/src/store/reduxHookType";
+import { logger } from "@/src/utils/logger";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { Modal, Pressable } from "react-native";
@@ -14,22 +15,24 @@ const BASE_URL =
 
 export default function EditProfile() {
   const router = useRouter();
-
-  const [bio, setBio] = useState("");
-  const [location, setLocation] = useState("");
-  const [mail, setMail] = useState("");
-
+  const userLogin = useAppSelector((state) => state?.main?.userLogin);
+  const [bio, setBio] = useState(userLogin?.bio || "");
+  const [location, setLocation] = useState(userLogin?.location || "");
+  const [mail, setMail] = useState(userLogin?.mail || "");
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [feedbackTitle, setFeedbackTitle] = useState("");
   const [feedbackMessage, setFeedbackMessage] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
 
   useEffect(() => {
-    fetchCurrentStatus();
-  }, []);
+    if (userLogin) {
+      setBio(userLogin.bio || "");
+      setLocation(userLogin.location || "");
+      setMail(userLogin.mail || "");
+    }
+  }, [userLogin]);
 
   const showFeedback = (title: string, message: string, success: boolean) => {
     setFeedbackTitle(title);
@@ -38,68 +41,26 @@ export default function EditProfile() {
     setFeedbackOpen(true);
   };
 
-  const fetchCurrentStatus = async () => {
-    try {
-      setIsLoading(true);
-      const response = await getStatus();
-      const { code, message, data } = response?.data;
-
-      if (code === 0) {
-        setBio(data.bio || "");
-        setLocation(data.location || "");
-        setMail(data.mail || "");
-      }
-    } catch (error) {
-      console.log("Error fetching status:", error);
-      showFeedback(
-        "Error",
-        "Could not load profile details. Check connection.",
-        false,
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const handleSubmit = async () => {
-    // ولیدیشن ساده ایمیل
-    if (mail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail)) {
-      showFeedback(
-        "Validation Error",
-        "Please enter a valid email address.",
-        false,
-      );
-      return;
-    }
-
+    // if (mail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail)) {
+    //   showFeedback(
+    //     "Validation Error",
+    //     "Please enter a valid email address.",
+    //     false,
+    //   );
+    //   return;
+    // }
+    const postData = {
+      userId: userLogin?.user?.id,
+      Bio: bio || null,
+      Location: location || null,
+      Mail: mail || null,
+    };
     try {
       setIsSubmitting(true);
-      const token = await AsyncStorage.getItem("token");
 
-      const response = await fetch(`${BASE_URL}/api/status`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          bio,
-          location,
-          mail,
-        }),
-      });
-
-      const result = await response.json();
-
-      if (response.ok) {
-        showFeedback("Success", "Profile status updated successfully!", true);
-      } else {
-        showFeedback(
-          "Error",
-          result.message || "Failed to update profile.",
-          false,
-        );
-      }
+      const res = await addProfile(postData);
+      logger.info("resProfile", res);
     } catch (error) {
       console.log("Error updating status:", error);
       showFeedback(
@@ -141,13 +102,15 @@ export default function EditProfile() {
               value={mail}
               onChangeText={setMail}
               bg="$backgroundHover"
-              borderColor="$borderColor"
+              borderColor="#E0E0E0" // <-- خاکستری بسیار ملایم
+              borderWidth={1} // <-- اطمینان از ظرافت خط
               keyboardType="email-address"
               autoCapitalize="none"
               borderRadius="$3"
               h={45}
             />
           </YStack>
+
           <YStack gap="$2">
             <XStack alignItems="center" gap="$1.5">
               <Icon name="location-on" size={16} color="#777777" />
@@ -160,11 +123,13 @@ export default function EditProfile() {
               value={location}
               onChangeText={setLocation}
               bg="$backgroundHover"
-              borderColor="$borderColor"
+              borderColor="#E0E0E0" // <-- اعمال تغییر
+              borderWidth={1} // <-- اعمال تغییر
               borderRadius="$3"
               h={45}
             />
           </YStack>
+
           <YStack gap="$2">
             <XStack alignItems="center" gap="$1.5">
               <Icon name="chat-bubble-outline" size={16} color="#777777" />
@@ -177,7 +142,8 @@ export default function EditProfile() {
               value={bio}
               onChangeText={setBio}
               bg="$backgroundHover"
-              borderColor="$borderColor"
+              borderColor="#E0E0E0" // <-- اعمال تغییر
+              borderWidth={1} // <-- اعمال تغییر
               borderRadius="$3"
               numberOfLines={4}
               h={110}
@@ -185,6 +151,7 @@ export default function EditProfile() {
               p="$3"
             />
           </YStack>
+
           <XStack gap="$3" mt="auto" mb="$4">
             <BaseButton
               flex={1}
@@ -212,6 +179,7 @@ export default function EditProfile() {
           </XStack>
         </YStack>
       )}
+
       <Modal
         visible={feedbackOpen}
         transparent

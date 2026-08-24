@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Image, Modal, Pressable, StyleSheet } from "react-native";
 import { Progress, ScrollView, Text, View, XStack, YStack } from "tamagui";
-import { getStatus } from "../services/nestServices";
 import { Icon } from "./Icon";
 
 const Started = require("../assets/ranks/starter.png");
@@ -25,6 +24,7 @@ const word = require("../assets/ranks/worldMain.png");
 interface ProfileBioProps {
   rankPercentage: number;
   rankScore: number;
+  userLogin: any;
 }
 
 const allRanks = [
@@ -94,27 +94,10 @@ const otherRanks = allRanks.slice(1);
 const ProfileBio: React.FC<ProfileBioProps> = ({
   rankScore,
   rankPercentage,
+  userLogin,
 }) => {
-  const [fields, setFields] = useState<any>();
   const [showRanksModal, setShowRanksModal] = useState(false);
   const [zoomedRank, setZoomedRank] = useState<any>(null);
-
-  const fetchCurrentStatus = async () => {
-    try {
-      const response = await getStatus();
-      const { code, data } = response?.data;
-
-      if (code === 0) {
-        setFields(data);
-      }
-    } catch (error) {
-      console.log("Error fetching status:", error);
-    }
-  };
-
-  useEffect(() => {
-    fetchCurrentStatus();
-  }, []);
 
   return (
     <YStack px="$4" alignItems="center" w="100%">
@@ -170,7 +153,6 @@ const ProfileBio: React.FC<ProfileBioProps> = ({
             paddingVertical: 40,
           }}
         >
-          {/* پس‌زمینه تاریک */}
           <Pressable
             style={[
               StyleSheet.absoluteFill,
@@ -324,28 +306,25 @@ const ProfileBio: React.FC<ProfileBioProps> = ({
           )}
         </View>
       </Modal>
-
       <YStack w="100%" mt="$5" alignItems="flex-start" gap="$3">
-        {fields?.bio && (
+        {userLogin?.bio && (
           <Text color="$textPrimary" fontSize="$3" lineHeight={20} mb="$1">
-            {fields?.bio}
+            {userLogin?.bio}
           </Text>
         )}
-
-        {fields?.location && (
+        {userLogin?.location && (
           <XStack alignItems="center" gap="$2">
             <Icon name="location-on" size={16} color="#777777" />
             <Text color="$textSecondary" fontSize="$3">
-              {fields?.location}
+              {userLogin?.location}
             </Text>
           </XStack>
         )}
-
-        {fields?.website && (
+        {userLogin?.mail && (
           <XStack alignItems="center" gap="$2">
             <Icon name="language" size={16} color="#007aff" />
             <Text fontWeight="600" color="$infoMain" fontSize="$3">
-              {fields?.website}
+              {userLogin?.mail}
             </Text>
           </XStack>
         )}
