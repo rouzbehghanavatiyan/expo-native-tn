@@ -1,10 +1,12 @@
 import { Ionicons } from "@expo/vector-icons";
 import { usePathname, useRouter } from "expo-router";
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useCallback } from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { H1 } from "tamagui";
 import { useAppDispatch, useAppSelector } from "../store/reduxHookType";
 import { socketClient } from "../utils/socketClient";
+import { clearUnreadCount, incrementUnreadCount } from "../slices/main";
+import { logger } from "../utils/logger";
 
 const AppHeader = () => {
   const router = useRouter();
@@ -20,7 +22,7 @@ const AppHeader = () => {
       isProfile: pathname === "/profile",
       isShowWatch: pathname === "/watch/show",
       isNotification: pathname === "/notification",
-      isMessage: pathname === "/privateMessage",
+      isMessage: pathname === "/chat",
       isTopScore: pathname === "/topScore",
     }),
     [pathname],
@@ -32,29 +34,39 @@ const AppHeader = () => {
   };
   const headerTitle = titleMap[pathname] || "Clash Talent";
 
-  const handleReadConfirmation = (data: any) => {
-    // if (currentUser?.id === data.receiver) {
-    //   dispatch(clearUnreadCount());
-    // }
-  };
+  const handleReadConfirmation = useCallback(
+    (data: any) => {
+      if (currentUser?.id === data?.receiver) {
+        dispatch(clearUnreadCount());
+      }
+    },
+    [currentUser, dispatch],
+  );
 
-  const handleReceiveMessage = (data: any) => {
-    // if (currentUser?.id === data?.recieveId) {
-    //   dispatch(incrementUnreadCount());
-    // }
-  };
+  const handleReceiveMessage = useCallback(
+    (data: any) => {
+      const targetUserId = data?.recieveId;
+      logger.info("data", data);
+      if (currentUser?.id === Number(targetUserId)) {
+        if (!routes.isMessage) {
+          dispatch(incrementUnreadCount());
+        }
+      }
+    },
+    [currentUser, dispatch, routes],
+  );
 
   useEffect(() => {
     if (!socketClient || !currentUser) return;
 
-    socketClient?.on("receive_message", handleReceiveMessage);
-    socketClient?.on("messages_read_confirmation", handleReadConfirmation);
+    socketClient.on("receive_message", handleReceiveMessage);
+    socketClient.on("messages_read_confirmation", handleReadConfirmation);
 
     return () => {
-      socketClient?.off("receive_message", handleReceiveMessage);
-      socketClient?.off("messages_read_confirmation", handleReadConfirmation);
+      socketClient.off("receive_message", handleReceiveMessage);
+      socketClient.off("messages_read_confirmation", handleReadConfirmation);
     };
-  }, [socketClient, currentUser]);
+  }, [currentUser, handleReceiveMessage, handleReadConfirmation]);
 
   const handleBack = () => router.back();
 
@@ -64,14 +76,16 @@ const AppHeader = () => {
         <Ionicons name="ticket-outline" size={22} color="#10153D" />
       </TouchableOpacity>
 
-      <TouchableOpacity
-        // onPress={() => router.push("/messages")}
-        style={{ marginLeft: 16 }}
-      >
+      <TouchableOpacity style={{ marginLeft: 16 }}>
         <View>
           <Ionicons
             name="mail-outline"
-            onPress={() => router.push("/chat")}
+            onPress={() => {
+              if (unreadCount > 0) {
+                dispatch(clearUnreadCount());
+              }
+              router.push("/chat");
+            }}
             size={22}
             color="#10153D"
           />
@@ -86,15 +100,9 @@ const AppHeader = () => {
   return (
     <View style={styles.header}>
       <View style={styles.leftSection}>
-        {/* {!routes.isWatch && (
-          <TouchableOpacity onPress={handleBack}>
-            <Ionicons name="arrow-back" size={24} color="#10153D" />
-          </TouchableOpacity>
-        )} */}
         <H1
           style={styles.logo}
           fontFamily="$logo"
-          // mt="$4"
           color="$textPrimary"
           size="$6"
         >
@@ -130,7 +138,6 @@ const styles = StyleSheet.create({
     elevation: 2,
     zIndex: 10,
   },
-
   leftSection: {
     flexDirection: "row",
     alignItems: "center",

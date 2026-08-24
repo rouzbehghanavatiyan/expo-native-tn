@@ -23,6 +23,7 @@ const initialState: VideoState = {
   isLoading: false,
   selectedResize: 1,
   error: null,
+  needProfileRefresh: false,
   showDeactivatedModal: false,
   currentStep: 1,
   isWaitingForMatch: false,
@@ -131,7 +132,7 @@ export const uploadFullProcessThunk = createAsyncThunk(
       const inviteRes = await addInvite(requestData);
       const inviteData = inviteRes?.data?.data;
       logger.info("inviteRes inviteRes inviteRes", inviteRes?.data);
-
+      dispatch(setNeedProfileRefresh(true));
       dispatch(RsetIsLoading(false));
       dispatch(RsetShowTimerButtn(true));
       socketClient.emit("register_user", userId);
@@ -219,6 +220,9 @@ const videoSlice = createSlice({
     RsetSelectedResize(state, action: PayloadAction<any>) {
       state.selectedResize = action?.payload;
     },
+    setNeedProfileRefresh: (state, action) => {
+      state.needProfileRefresh = action.payload;
+    },
     updateMovieData(
       state,
       action: PayloadAction<Partial<VideoState["movieData"]>>,
@@ -290,6 +294,7 @@ export const {
   setVideoSrc,
   RsetSelectedResize,
   setShowTimeout,
+  setNeedProfileRefresh,
   setShowDeactivatedModal,
 } = videoSlice.actions;
 

@@ -65,13 +65,15 @@ export default function PrivateChat() {
     if (!title.trim()) return;
 
     const timeString = new Date().toTimeString().slice(0, 5);
+    const tempId = Date.now().toString();
 
     const message: MessageType = {
-      tempId: Date.now().toString(),
+      id: tempId, // 👈 حتما این را اضافه کنید تا mergeUniqueMessages آن را حذف نکند
+      tempId: tempId,
       sender: userIdLogin,
       recieveId: reciveUserId,
       title: title.trim(),
-      content: title.trim(), // ست کردن content برای ارسال به بک‌اند
+      content: title.trim(),
       time: timeString,
       userProfile: "",
     };
@@ -90,6 +92,16 @@ export default function PrivateChat() {
         (data.recieveId === userIdLogin && data.sender === reciveUserId);
 
       if (!shouldShow) return;
+
+      // 👈 منطق Mark as Read را همینجا قرار دهید
+      if (data.sender === reciveUserId) {
+        socketClient?.emit("mark_messages_as_read", {
+          sender: reciveUserId,
+          receiver: userIdLogin,
+        });
+      }
+
+      // 👈 اگر پیام را خودمان فرستاده‌ایم، چون قبلاً در handleSendMessage به لیست اضافه شده، اینجا اضافه نمی‌کنیم
       if (data.sender === userIdLogin) return;
 
       setMessages((prev) => {
@@ -105,28 +117,29 @@ export default function PrivateChat() {
 
       scrollToBottom();
     },
-    [userIdLogin, reciveUserId],
+    [userIdLogin, reciveUserId], // dependencies
   );
 
-  useEffect(() => {
-    // اصلاح نام متغیرها برای جلوگیری از خطای ReferenceError
-    socketClient.emit("mark_messages_as_read", {
-      sender: reciveUserId, // کسی که پیام‌ها را فرستاده بود
-      receiver: userIdLogin, // شما که پیام‌ها را دریافت کردید
-    });
+  // useEffect(() => {
+  //   // اصلاح نام متغیرها برای جلوگیری از خطای ReferenceError
+  //   socketClient.emit("mark_messages_as_read", {
+  //     sender: reciveUserId, // کسی که پیام‌ها را فرستاده بود
+  //     receiver: userIdLogin, // شما که پیام‌ها را دریافت کردید
+  //   });
 
-    socketClient.on("receive_message", (newMessage) => {
-      // اگر فرستنده همان شخصی است که در چت با او هستیم
-      if (newMessage.sender === reciveUserId) {
-        socketClient.emit("mark_messages_as_read", {
-          sender: reciveUserId,
-          receiver: userIdLogin,
-        });
-      }
-    });
-
-    return () => socketClient.off("receive_message");
-  }, [reciveUserId, userIdLogin]);
+  //   socketClient.on("receive_message", (newMessage) => {
+  //     // اگر فرستنده همان شخصی است که در چت با او هستیم
+  //     if (newMessage.sender === reciveUserId) {
+  //       socketClient.emit("mark_messages_as_read", {
+  //         sender: reciveUserId,
+  //         receiver: userIdLogin,
+  //       });
+  //     }
+  //   });
+  //   return () => {
+  //     socketClient.off("receive_message");
+  //   };
+  // }, [reciveUserId, userIdLogin]);
 
   const getMessages = async (isLoadMore = false) => {
     if (!userIdLogin || !reciveUserId) return;
@@ -195,6 +208,11 @@ export default function PrivateChat() {
       }, 700);
     });
 
+    socketClient?.emit("mark_messages_as_read", {
+      sender: reciveUserId,
+      receiver: userIdLogin,
+    });
+
     socketClient?.on("receive_message", handleReciveMessage);
 
     return () => {
@@ -208,7 +226,6 @@ export default function PrivateChat() {
       });
     };
   }, [userIdLogin, reciveUserId, handleReciveMessage]);
-
   useEffect(() => {
     if (firstItemIdRef.current !== null && messages.length > 0) {
       const index = messages.findIndex(
@@ -379,7 +396,7 @@ export default function PrivateChat() {
             )}
           </YStack>
         </KeyboardAvoidingView>
-        </SafeAreaView>
+      </SafeAreaView>
     </>
   );
 }

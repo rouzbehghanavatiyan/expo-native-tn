@@ -2,6 +2,7 @@ import React from "react";
 import { Dimensions, StyleSheet, View } from "react-native";
 import { Icon } from "./Icon";
 import VideoSection from "./VideoSection";
+import { logger } from "../utils/logger";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -22,14 +23,22 @@ export default function ShowWatchSlide({
   showLiked,
   showCountLiked,
 }: any) {
-  const findeVideoInTournomentTop = video?.inviteMatched?.insertDate;
-  const findeVideoInTournomentBott = video?.inviteInserted?.insertDate;
-  const hasValidInsertDate = (value: unknown) =>
-    value !== undefined && value !== null && value !== -1 && value !== "";
+  const findeVideoInTournomentTop = video?.attachmentMatched?.insertDate;
+  const findeVideoInTournomentBott = video?.attachmentInserted?.insertDate;
 
-  const showTimer =
-    hasValidInsertDate(findeVideoInTournomentTop) ||
-    hasValidInsertDate(findeVideoInTournomentBott);
+  const getTimestamp = (dateString: any) => {
+    if (!dateString) return 0;
+    const fixedDate = dateString.endsWith("Z") ? dateString : `${dateString}Z`;
+    return new Date(fixedDate).getTime();
+  };
+
+  const timeTop = getTimestamp(findeVideoInTournomentTop);
+  const timeBott = getTimestamp(findeVideoInTournomentBott);
+
+  const latestTime = Math.max(timeTop, timeBott);
+
+  const isTimeUp =
+    latestTime > 0 ? new Date().getTime() - latestTime >= 120000 : false;
 
   const resultInserted =
     video?.likeInserted > video?.likeMatched
@@ -45,6 +54,11 @@ export default function ShowWatchSlide({
         ? "Loss"
         : "Draw";
 
+  console.log("time insert Top", findeVideoInTournomentTop);
+  console.log("time insert Bott", findeVideoInTournomentBott);
+
+  logger.info("reduxData", isTimeUp);
+
   return (
     <>
       <View style={styles.half}>
@@ -52,10 +66,10 @@ export default function ShowWatchSlide({
           itsHome={true}
           inviteWatch={inviteWatch}
           score={showScore ? video?.scoreInserted : null}
-          result={showResult ? resultInserted : null}
+          result={showResult || isTimeUp ? resultInserted : null}
           showLiked={showLiked}
           countLiked={showCountLiked ? video?.likeInserted : null}
-          endTime={showTimer}
+          endTime={isTimeUp}
           video={video}
           isPlaying={
             currentlyPlayingId === video?.attachmentInserted?.attachmentId
@@ -87,10 +101,10 @@ export default function ShowWatchSlide({
           itsHome={true}
           inviteWatch={inviteWatch}
           score={showScore ? video?.scoreMatched : null}
-          result={showResult ? resultMatched : null}
+          result={showResult || isTimeUp ? resultMatched : null}
           showLiked={showLiked}
           countLiked={showCountLiked ? video?.likeMatched : null}
-          endTime={showTimer}
+          endTime={isTimeUp}
           video={video}
           isPlaying={
             currentlyPlayingId === video?.attachmentMatched?.attachmentId

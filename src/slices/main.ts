@@ -199,6 +199,17 @@ const mainSlice = createSlice({
     setUnreadMessagesCount: (state, action: PayloadAction<number>) => {
       state.unreadMessagesCount = action.payload;
     },
+
+    // 🟢 اضافه شدن اکشن برای افزایش تعداد پیام‌های خوانده نشده
+    incrementUnreadCount: (state) => {
+      state.unreadMessagesCount += 1;
+    },
+
+    // 🟢 اضافه شدن اکشن برای صفر کردن شمارنده
+    clearUnreadCount: (state) => {
+      state.unreadMessagesCount = 0;
+    },
+
     setLastMatch: (state, action: PayloadAction<any[]>) => {
       state.lastMatch = action.payload;
     },
@@ -251,6 +262,8 @@ export const {
 
   // other
   setUnreadMessagesCount,
+  incrementUnreadCount, // 🟢 اضافه شد
+  clearUnreadCount, // 🟢 اضافه شد
   setSelectedStep,
   resetSelectedSteps,
   setLastMatch,
