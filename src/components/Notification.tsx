@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 import { Text, XStack, YStack } from "tamagui";
-import { sendUserNotif } from "../services/notificationService";
+// وارد کردن فانکشن سینک کردن که بالاتر نوشتیم
+import { sendUserNotif, syncPushToken } from "../services/notificationService";
 import { useAppSelector } from "../store/reduxHookType";
 import { logger } from "../utils/logger";
 import { Icon } from "./Icon";
@@ -11,22 +12,30 @@ const Notification = () => {
   const [notifications, setNotifications] = useState([1, 2, 3, 4]);
   const [expoToken, setExpoToken] = useState<string | null>(null);
   const main = useAppSelector((state) => state?.main);
-
-  const handleSendNotifToUser = async () => {
-    const postData = {
-      userId: main?.userLogin?.user?.id,
-      message: "hello rouzbeh",
-    };
-    const res = await sendUserNotif(postData);
-    logger.info("send notifffffffffff", res);
-  };
+  const userId = main?.userLogin?.user?.id;
 
   useEffect(() => {
-    const run = async () => {
-      await handleSendNotifToUser();
+    const initToken = async () => {
+      if (userId) {
+        const token = await syncPushToken(userId);
+        if (token) setExpoToken(token);
+      }
     };
-    run();
-  }, [main?.userLogin?.user?.id]);
+    initToken();
+  }, [userId]);
+
+  const handleSendTestNotification = async () => {
+    if (!userId) return;
+    try {
+      await sendUserNotif({
+        userId: userId,
+        message: "Hello! This is a manual test notification.",
+      });
+      logger.info("✅ Test notification trigger sent to server");
+    } catch (error) {
+      logger.error("Error sending test notification", error);
+    }
+  };
 
   const handleDelete = (index: number) => {
     setNotifications((prev) => prev.filter((_, i) => i !== index));
@@ -40,21 +49,20 @@ const Notification = () => {
 
   return (
     <YStack f={1} bg="$background">
-      <YStack p="$4" gap="$2" bg="$gray3">
+      <YStack p="$4" gap="$2" bg="$gray3" onPress={handleSendTestNotification}>
         <Text textAlign="center" fontWeight="bold">
-          Auto Test Status
+          Auto Test Status (Tap to send test)
         </Text>
         {expoToken ? (
           <Text fontSize="$2" color="$green9" textAlign="center">
-            Token Ready & Sent: {expoToken.substring(0, 20)}...
+            Token Ready: {expoToken.substring(0, 20)}...
           </Text>
         ) : (
           <Text fontSize="$2" color="$red9" textAlign="center">
-            Fetching token or waiting for user...
+            Fetching token...
           </Text>
         )}
       </YStack>
-
       <YStack mt="$2">
         {notifications.map((item, index) => (
           <ReanimatedSwipeable

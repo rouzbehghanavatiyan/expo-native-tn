@@ -1,3 +1,4 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
 import { api } from "./api";
@@ -146,6 +147,39 @@ export const registerForPushNotifications = async (userId: number) => {
       error.message || error,
     );
     return null;
+  }
+};
+
+export const syncPushToken = async (userId: string | number) => {
+  if (!userId) return;
+
+  try {
+    const deviceToken = await registerForPushNotifications(userId);
+
+    if (!deviceToken) {
+      console.warn("❌ Could not get push token from device.");
+      return;
+    }
+
+    const cachedToken = await AsyncStorage.getItem("user_fcm_token");
+
+    if (deviceToken !== cachedToken) {
+      console.log("🔄 Token is new or changed. Sending to backend...");
+
+      await saveSubscription({
+        userId: userId,
+        expoPushToken: deviceToken,
+      });
+
+      await AsyncStorage.setItem("user_fcm_token", deviceToken);
+      console.log("✅ Token successfully synced and cached.");
+    } else {
+      console.log("✅ Token hasn't changed. No need to update backend.");
+    }
+
+    return deviceToken;
+  } catch (error) {
+    console.error("Error syncing push token:", error);
   }
 };
 

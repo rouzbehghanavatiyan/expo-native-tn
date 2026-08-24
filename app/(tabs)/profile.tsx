@@ -224,6 +224,8 @@ const Profile: React.FC = () => {
     setPercentage(Math.min(Math.max(calc, 1), 100));
   }, [userLogin?.score, userIdWhantToShow]);
 
+  logger.debug("userLogin", userLogin);
+
   const renderHeader = () => (
     <YStack bg="$grey100" gap="$4" p="$2">
       <ProfileHeader
@@ -240,6 +242,7 @@ const Profile: React.FC = () => {
         }
       />
       <ProfileBio
+        userLogin={userLogin}
         rankScore={userIdWhantToShow?.score ?? userLogin?.userLogin?.score}
         rankPercentage={percentage}
       />
