@@ -85,8 +85,31 @@ const VideoItemSkeleton: React.FC<PropsType> = ({ section }) => {
   const { height } = useWindowDimensions();
 
   switch (section) {
-    case "itsShowWatch":
-    case "itsHome":
+    case "itsShowWatch": {
+      const heights = [
+        height * 0.08,
+        height * 0.38,
+        height * 0.08,
+        height * 0.38,
+      ];
+
+      return (
+        <YStack
+          flex={1}
+          width="100%"
+          minHeight={height}
+          backgroundColor="#000"
+          px="$1"
+          pt="$2"
+          gap="$2"
+        >
+          {heights.map((itemHeight, index) => (
+            <SkeletonBox key={index} height={itemHeight} />
+          ))}
+        </YStack>
+      );
+    }
+    case "itsHome": {
       const heights = [
         height * 0.06,
         height * 0.38,
@@ -109,6 +132,7 @@ const VideoItemSkeleton: React.FC<PropsType> = ({ section }) => {
           ))}
         </YStack>
       );
+    }
     case "itsProfile": {
       const heights = [
         height * 0.06,
