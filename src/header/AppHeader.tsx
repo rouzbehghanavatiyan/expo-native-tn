@@ -1,20 +1,22 @@
 import { Ionicons } from "@expo/vector-icons";
 import { usePathname, useRouter } from "expo-router";
-import React, { useEffect, useMemo, useCallback } from "react";
+import React, { useCallback, useEffect, useMemo } from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { H1 } from "tamagui";
+import { unreadCount } from "../services/nestServices";
+import { clearUnreadCount, setUnreadMessagesCount } from "../slices/main";
 import { useAppDispatch, useAppSelector } from "../store/reduxHookType";
-import { socketClient } from "../utils/socketClient";
-import { clearUnreadCount, incrementUnreadCount } from "../slices/main";
 import { logger } from "../utils/logger";
+import { socketClient } from "../utils/socketClient";
 
 const AppHeader = () => {
   const router = useRouter();
   const pathname: any = usePathname();
   const dispatch = useAppDispatch();
-
   const currentUser = useAppSelector((state) => state.main.userLogin?.user);
-  const unreadCount = useAppSelector((state) => state.main.unreadMessagesCount);
+  const unreadMessagesCount = useAppSelector(
+    (state) => state?.main?.unreadMessagesCount,
+  );
 
   const routes = useMemo(
     () => ({
@@ -43,17 +45,15 @@ const AppHeader = () => {
     [currentUser, dispatch],
   );
 
+  // 🟢 فقط شمارنده‌ی کلی رو زیاد می‌کنیم؛ جزئیات لیست چت مسئولیت useGlobalChatSocket است
   const handleReceiveMessage = useCallback(
     (data: any) => {
-      const targetUserId = data?.recieveId;
-      logger.info("data", data);
-      if (currentUser?.id === Number(targetUserId)) {
-        if (!routes.isMessage) {
-          dispatch(incrementUnreadCount());
-        }
-      }
+      const targetUserId = data?.recieveId ?? data?.receiveId;
+      if (String(currentUser?.id) !== String(targetUserId)) return;
+
+      dispatch(setUnreadMessagesCount((unreadMessagesCount || 0) + 1));
     },
-    [currentUser, dispatch, routes],
+    [currentUser, unreadMessagesCount, dispatch],
   );
 
   useEffect(() => {
@@ -68,7 +68,19 @@ const AppHeader = () => {
     };
   }, [currentUser, handleReceiveMessage, handleReadConfirmation]);
 
-  const handleBack = () => router.back();
+  const getInitialCount = async () => {
+    try {
+      const count = await unreadCount(currentUser?.id);
+      dispatch(setUnreadMessagesCount(count?.count));
+    } catch (error) {
+      logger.error("خطا در دریافت تعداد پیام‌های خوانده نشده", error);
+    }
+  };
+
+  useEffect(() => {
+    if (!currentUser) return;
+    getInitialCount();
+  }, [currentUser, dispatch]);
 
   const ActionIcons = () => (
     <View style={styles.iconContainer}>
@@ -81,7 +93,7 @@ const AppHeader = () => {
           <Ionicons
             name="mail-outline"
             onPress={() => {
-              if (unreadCount > 0) {
+              if (unreadMessagesCount > 0) {
                 dispatch(clearUnreadCount());
               }
               router.push("/chat");
@@ -89,7 +101,7 @@ const AppHeader = () => {
             size={22}
             color="#10153D"
           />
-          {unreadCount > 0 && <View style={styles.badge} />}
+          {unreadMessagesCount > 0 && <View style={styles.badge} />}
         </View>
       </TouchableOpacity>
     </View>

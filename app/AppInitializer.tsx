@@ -1,6 +1,7 @@
 import AppLoading from "@/src/components/AppLoading";
 import { useAuthInitialization } from "@/src/hook/useAuthInitialization";
 import { useAuthRedirect } from "@/src/hook/useAuthRedirect";
+import { useGlobalChatSocket } from "@/src/hook/useGlobalChatSocket";
 import { usePushNotifications } from "@/src/hook/usePushNotifications";
 import { useSocketInitializer } from "@/src/hook/useSocketInitializer";
 import { useLocalSearchParams, usePathname } from "expo-router";
@@ -32,6 +33,7 @@ export default function AppInitializer({
   useAuthRedirect({ isInitializing, token, userId, userLoginId });
   useSocketInitializer({ userLoginId, userId });
   usePushNotifications();
+  useGlobalChatSocket();
 
   if (isInitializing) {
     return <AppLoading />;

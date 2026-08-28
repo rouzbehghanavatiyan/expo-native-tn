@@ -6,6 +6,7 @@ import { subSubCategoryList } from "../services/masterServices";
 import { RsetCategory, setSelectedStep } from "../slices/main";
 import { useAppDispatch, useAppSelector } from "../store/reduxHookType";
 import asyncWrapper from "../utils/asyncWrapper";
+import { logger } from "../utils/logger";
 import { Icon } from "./Icon";
 import MainTitle from "./MainTitle";
 import SoftLink from "./SoftLink";
@@ -28,25 +29,31 @@ const Gear: React.FC<any> = ({
   const main = useAppSelector((state) => state.main);
   const skillId = currentStep?.skill?.id;
 
-  const handleGetCategory = asyncWrapper(async () => {
-    if (!skillId) return;
-    if (main.categoryCache?.[skillId]) {
-      setAllSubSubCategory(main.categoryCache[skillId]);
-      return;
-    }
-    setIsLoading(true);
-    const res = await subSubCategoryList(skillId);
-    setIsLoading(false);
-    if (res?.data?.status === 0) {
-      const fetchedData = res.data.data || [];
-      setAllSubSubCategory(fetchedData);
-      dispatch(RsetCategory({ parentId: skillId, data: fetchedData }));
-    }
-  });
-
   useEffect(() => {
-    handleGetCategory();
-  }, []);
+    const handleGetCategory = asyncWrapper(async () => {
+      if (!skillId) return;
+
+      if (main.categoryCache?.[skillId]) {
+        setAllSubSubCategory(main.categoryCache[skillId]);
+        return;
+      }
+
+      setIsLoading(true);
+      const res = await subSubCategoryList(skillId);
+      setIsLoading(false);
+
+      if (res?.data?.status === 0) {
+        const fetchedData = res.data.data || [];
+        logger.info("fetchedData fetchedData fetchedData", fetchedData);
+        setAllSubSubCategory(fetchedData);
+        dispatch(RsetCategory({ parentId: skillId, data: fetchedData }));
+      }
+    });
+
+    if (skillId) {
+      handleGetCategory();
+    }
+  }, [skillId, dispatch, main.categoryCache]);
 
   const handleAcceptCategory = async (data: any) => {
     const arenaId = currentStep?.arena?.id;

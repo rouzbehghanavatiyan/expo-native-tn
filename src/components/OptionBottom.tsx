@@ -66,8 +66,6 @@ const OptionBottom: React.FC<OptionBottomProps> = ({
   //   inviteWatch,
   // );
 
-  console.log("LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL", endTime);
-
   const movieId = useMemo(() => {
     if (!video) return null;
     return positionVideo === 0

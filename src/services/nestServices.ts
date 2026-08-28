@@ -43,7 +43,7 @@ export const uploadVideo = async (postData: any) => {
 };
 
 export const allUserMessagese = async (userIdLogin: number) => {
-  return await chatApi.get(`/chat/allUserMessagese`, {
+  return await chatApi.get(`api/chat/allUserMessagese`, {
     params: { userIdLogin },
   });
 };
@@ -67,7 +67,7 @@ export const userMessages = async (
   take: number,
 ): Promise<any> => {
   try {
-    const response = await chatApi.get(`/chat/userMessages`, {
+    const response = await chatApi.get(`api/chat/userMessages`, {
       params: {
         userIdLogin,
         userIdSender,
@@ -80,5 +80,37 @@ export const userMessages = async (
     throw new Error(
       error?.response?.data?.message || "Failed to fetch user messages",
     );
+  }
+};
+
+export const markAsRead = async (payload: {
+  senderId: number;
+  receiveId: number;
+  messageId?: number;
+}) => {
+  try {
+    if (!payload.senderId || !payload.receiveId) {
+      console.warn("⚠️ اخطار: senderId یا receiveId نامعتبر است", payload);
+      return;
+    }
+
+    const response = await chatApi.patch("api/chat/markAsRead", payload);
+    return response.data;
+  } catch (error: any) {
+    console.error(
+      "❌ خطای API در markAsRead:",
+      error.response?.data || error.message,
+    );
+    throw error;
+  }
+};
+
+export const unreadCount = async (userId: string | number) => {
+  try {
+    const response = await chatApi.get(`api/chat/unreadCount/${userId}`);
+    return response?.data;
+  } catch (error: any) {
+    console.error(error.response?.data || error.message);
+    throw error;
   }
 };

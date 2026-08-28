@@ -1,4 +1,4 @@
-import { registerForPushNotifications } from "@/src/services/notificationService";
+import { syncPushToken } from "@/src/services/notificationService"; // ایمپورت اضافه شد
 import * as Notifications from "expo-notifications";
 import { useEffect, useRef } from "react";
 import { useAppSelector } from "../store/reduxHookType";
@@ -11,7 +11,10 @@ export function usePushNotifications() {
   useEffect(() => {
     const userId = main?.userLogin?.user?.id;
 
-    registerForPushNotifications(userId);
+    // به محض لاگین کاربر، توکن بررسی و در صورت نیاز سینک می‌شود
+    if (userId) {
+      syncPushToken(userId);
+    }
 
     notificationListener.current =
       Notifications.addNotificationReceivedListener((notification) => {
@@ -28,5 +31,5 @@ export function usePushNotifications() {
       notificationListener.current?.remove();
       responseListener.current?.remove();
     };
-  }, []);
+  }, [main?.userLogin?.user?.id]); // وابستگی به userId اضافه شد
 }

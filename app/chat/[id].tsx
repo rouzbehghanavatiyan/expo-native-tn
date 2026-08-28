@@ -1,9 +1,11 @@
 import AppLoading from "@/src/components/AppLoading";
 import ImageRank from "@/src/components/ImageRank";
 import MessageInput from "@/src/components/MessageInput";
-import { userMessages } from "@/src/services/nestServices";
-import { useAppSelector } from "@/src/store/reduxHookType";
-import { getImageUrl, mergeUniqueMessages } from "@/src/utils/fileHelper";
+import { markAsRead, userMessages } from "@/src/services/nestServices";
+import { markSenderAsRead } from "@/src/slices/chat";
+import { useAppDispatch, useAppSelector } from "@/src/store/reduxHookType";
+import { getImageUrl } from "@/src/utils/fileHelper";
+import { logger } from "@/src/utils/logger";
 import { socketClient } from "@/src/utils/socketClient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Stack, useLocalSearchParams } from "expo-router";
@@ -12,19 +14,40 @@ import { FlatList, KeyboardAvoidingView, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Text, XStack, YStack } from "tamagui";
 import ChatHeader from "./ChatHeader";
-import { logger } from "@/src/utils/logger";
 
 interface MessageType {
-  id?: string; // تغییر به string برای پشتیبانی از GUID
-  tempId: any;
-  userProfile: string;
-  sender: string; // تغییر به string
-  recieveId: string; // تغییر به string
+  id?: string | number;
+  tempId?: any;
+  userProfile?: string;
+  senderId: string | number;
+  receiveId: string | number;
   title?: string;
-  content?: any; // اضافه شدن content (چون در بک‌اند از simple-json استفاده کردید)
+  content?: any;
   time: string;
+  createdAt?: string;
   userNameSender?: string;
+  isRead?: boolean;
 }
+
+const PAGE_SIZE = 10;
+
+// timestamp کمکی برای مرتب‌سازی نزولی (جدید -> قدیم)
+const getTimestamp = (m: MessageType) => {
+  if (m.createdAt) return new Date(m.createdAt).getTime();
+  return Date.now(); // پیام تازه ارسال‌شده/آپتیمیستیک، همیشه جدیدترین است
+};
+
+// merge + dedupe + سورت نزولی، برای هماهنگی با FlatList معکوس (inverted)
+const mergeDescending = (a: MessageType[], b: MessageType[]) => {
+  const map = new Map<string, MessageType>();
+  [...a, ...b].forEach((m) => {
+    const key = m.id != null ? `id-${m.id}` : `temp-${m.tempId}`;
+    map.set(key, { ...(map.get(key) || {}), ...m });
+  });
+  return Array.from(map.values()).sort(
+    (x, y) => getTimestamp(y) - getTimestamp(x),
+  );
+};
 
 export default function PrivateChat() {
   const { id, userName, profile, score } = useLocalSearchParams<{
@@ -37,30 +60,44 @@ export default function PrivateChat() {
   const main = useAppSelector((state) => state?.main);
   const userIdLogin = main?.userLogin?.user?.id;
   const reciveUserId = id;
+
+  // پیام‌ها به‌صورت نزولی نگه‌داری می‌شوند: index 0 = جدیدترین
   const [messages, setMessages] = useState<MessageType[]>([]);
   const [title, setTitle] = useState("");
   const [showStickers, setShowStickers] = useState(false);
   const flatListRef = useRef<FlatList>(null);
   const userInfo = useAppSelector((state) => state.main?.userLogin);
   const userProfile = getImageUrl(userInfo?.profile);
+
   const isInitialLoadRef = useRef(true);
   const isLoadingMoreRef = useRef(false);
-  const lastLoadMoreTimeRef = useRef(0);
+  const hasMoreRef = useRef(true);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
-
-  const initialScrollDoneRef = useRef(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
-  const paginationRef = useRef({ skip: 0, take: 10 });
-  const firstItemIdRef = useRef<string | null>(null);
+  const dispatch = useAppDispatch();
+  const paginationRef = useRef({ skip: 0, take: PAGE_SIZE });
 
   const scrollToBottom = (animated = true) => {
+    // در لیست inverted، offset صفر = پایین صفحه (جدیدترین پیام)
     requestAnimationFrame(() => {
-      setTimeout(() => {
-        flatListRef.current?.scrollToEnd({ animated });
-      }, 100);
+      flatListRef.current?.scrollToOffset({ offset: 0, animated });
     });
   };
+
+  const triggerMarkAsRead = useCallback(async () => {
+    if (!userIdLogin || !reciveUserId) return;
+    try {
+      socketClient?.emit("mark_messages_as_read", {
+        sender: reciveUserId,
+        receiver: userIdLogin,
+      });
+      await markAsRead(reciveUserId, userIdLogin);
+      await AsyncStorage.setItem(`message_read_${reciveUserId}`, "true");
+      dispatch(markSenderAsRead(String(reciveUserId)));
+    } catch (err) {
+      logger.error("Error triggering markAsRead:", err);
+    }
+  }, [userIdLogin, reciveUserId, dispatch]);
 
   const handleSendMessage = async () => {
     if (!title.trim()) return;
@@ -68,197 +105,198 @@ export default function PrivateChat() {
     const timeString = new Date().toTimeString().slice(0, 5);
     const tempId = Date.now().toString();
 
-    const message: MessageType = {
-      id: tempId, // 👈 حتما این را اضافه کنید تا mergeUniqueMessages آن را حذف نکند
+    const serverMessage = {
+      id: tempId,
       tempId: tempId,
       sender: userIdLogin,
       recieveId: reciveUserId,
       title: title.trim(),
       content: title.trim(),
       time: timeString,
-      userProfile: "",
+      userProfile: userInfo?.profile || "",
+      isRead: false,
     };
 
-    socketClient?.emit("send_message", message);
-    setMessages((prev) => mergeUniqueMessages([...prev, message]));
+    socketClient?.emit("send_message", serverMessage);
+
+    const uiMessage: MessageType = {
+      ...serverMessage,
+      senderId: userIdLogin,
+      receiveId: reciveUserId,
+      createdAt: new Date().toISOString(),
+    };
+
+    // جدیدترین پیام باید در ابتدای آرایه (index 0) قرار بگیرد
+    setMessages((prev) => mergeDescending(prev, [uiMessage]));
     setTitle("");
     setShowStickers(false);
     scrollToBottom();
   };
 
   const handleReciveMessage = useCallback(
-    (data: MessageType) => {
-      logger.debug("MessageType", data);
+    (data: any) => {
+      logger.debug("Received Message:", data);
+
+      const sender = String(data.senderId ?? data.sender);
+      const receiver = String(data.receiveId ?? data.recieveId);
+      const currentLogin = String(userIdLogin);
+      const currentOther = String(reciveUserId);
+
       const shouldShow =
-        (data.senderId === userIdLogin && data.recieveId === reciveUserId) ||
-        (data.recieveId === userIdLogin && data.senderId === reciveUserId);
+        (sender === currentLogin && receiver === currentOther) ||
+        (receiver === currentLogin && sender === currentOther);
 
       if (!shouldShow) return;
-      if (data.senderId === reciveUserId) {
-        socketClient?.emit("mark_messages_as_read", {
-          sender: reciveUserId,
-          receiver: userIdLogin,
-        });
+      if (sender === currentLogin) return;
+
+      const normalizedMsg: MessageType = {
+        id: data.id,
+        tempId: data.tempId,
+        senderId: sender,
+        receiveId: receiver,
+        title: data.title,
+        content: data.content ?? data.title,
+        time: data.time || new Date().toTimeString().slice(0, 5),
+        createdAt: data.createdAt || new Date().toISOString(),
+        userProfile: data.userProfile || "",
+        isRead: data.isRead ?? false,
+      };
+
+      if (sender === currentOther) {
+        triggerMarkAsRead();
       }
-      if (data.sender === userIdLogin) return;
 
-      setMessages((prev) => {
-        const exists = prev.some(
-          (msg) =>
-            (data.id != null && msg.id === data.id) ||
-            (data.tempId && msg.tempId === data.tempId),
-        );
-
-        if (exists) return prev;
-        return [...prev, data];
-      });
-
+      setMessages((prev) => mergeDescending(prev, [normalizedMsg]));
       scrollToBottom();
     },
-    [userIdLogin, reciveUserId], // dependencies
+    [userIdLogin, reciveUserId, triggerMarkAsRead],
   );
 
-  // useEffect(() => {
-  //   // اصلاح نام متغیرها برای جلوگیری از خطای ReferenceError
-  //   socketClient.emit("mark_messages_as_read", {
-  //     sender: reciveUserId, // کسی که پیام‌ها را فرستاده بود
-  //     receiver: userIdLogin, // شما که پیام‌ها را دریافت کردید
-  //   });
-
-  //   socketClient.on("receive_message", (newMessage) => {
-  //     // اگر فرستنده همان شخصی است که در چت با او هستیم
-  //     if (newMessage.sender === reciveUserId) {
-  //       socketClient.emit("mark_messages_as_read", {
-  //         sender: reciveUserId,
-  //         receiver: userIdLogin,
-  //       });
-  //     }
-  //   });
-  //   return () => {
-  //     socketClient.off("receive_message");
-  //   };
-  // }, [reciveUserId, userIdLogin]);
-
-  const getMessages = async (isLoadMore = false) => {
-    if (!userIdLogin || !reciveUserId) return;
-    if (isLoadMore && (!hasMore || isLoadingMoreRef.current)) return;
-
-    try {
-      if (isLoadMore) {
-        setIsLoadingMore(true);
-        isLoadingMoreRef.current = true;
-      } else {
-        setIsInitialLoading(true);
+  const handleMessagesReadEvent = useCallback(
+    (data: { sender: string | number; receiver: string | number }) => {
+      if (String(data.receiver) === String(reciveUserId)) {
+        setMessages((prev) =>
+          prev.map((msg) =>
+            String(msg.senderId) === String(userIdLogin)
+              ? { ...msg, isRead: true }
+              : msg,
+          ),
+        );
       }
+    },
+    [reciveUserId, userIdLogin],
+  );
 
-      const res = await userMessages(
-        userIdLogin,
-        reciveUserId,
-        paginationRef.current.skip,
-        paginationRef.current.take,
-      );
+  const getMessages = useCallback(
+    async (isLoadMore = false) => {
+      if (!userIdLogin || !reciveUserId) return;
+      if (isLoadMore && (!hasMoreRef.current || isLoadingMoreRef.current))
+        return;
 
-      const fetchedMessages: MessageType[] = res?.data?.messages || [];
-      const fetchedHasMore: boolean = res?.data?.hasMore ?? false;
+      try {
+        if (isLoadMore) {
+          setIsLoadingMore(true);
+          isLoadingMoreRef.current = true;
+        } else {
+          setIsInitialLoading(true);
+        }
 
-      setHasMore(fetchedHasMore);
+        const res = await userMessages(
+          userIdLogin,
+          reciveUserId as any,
+          paginationRef.current.skip,
+          paginationRef.current.take,
+        );
 
-      if (isLoadMore) {
-        setMessages((prev) => {
-          firstItemIdRef.current = prev[0]?.id ? String(prev[0].id) : null;
-          return mergeUniqueMessages([...fetchedMessages, ...prev]);
-        });
-      } else {
-        setMessages(mergeUniqueMessages(fetchedMessages));
-        scrollToBottom(false);
+        logger.debug("user messages:", res?.data);
+
+        // پاسخ سرور صعودی است (قدیم -> جدید)؛ نرمال‌سازی فیلدها
+        const fetched: MessageType[] = (res?.data?.messages || []).map(
+          (m: any) => {
+            let messageTime = m.time;
+            if (!messageTime && m.createdAt) {
+              const date = new Date(m.createdAt);
+              const hours = date.getHours().toString().padStart(2, "0");
+              const minutes = date.getMinutes().toString().padStart(2, "0");
+              messageTime = `${hours}:${minutes}`;
+            }
+            return {
+              ...m,
+              senderId: m.senderId ?? m.sender,
+              receiveId: m.receiveId ?? m.recieveId,
+              time: messageTime || new Date().toTimeString().slice(0, 5),
+            };
+          },
+        );
+
+        const fetchedHasMore: boolean = res?.data?.hasMore ?? false;
+        hasMoreRef.current = fetchedHasMore;
+        setHasMoreState(fetchedHasMore);
+
+        // merge می‌کند و به‌صورت نزولی (جدید -> قدیم) مرتب می‌کند
+        setMessages((prev) => mergeDescending(prev, fetched));
+
+        paginationRef.current.skip += fetched.length;
+      } catch (error) {
+        console.log("getMessages error:", error);
+      } finally {
+        if (isLoadMore) {
+          setIsLoadingMore(false);
+          isLoadingMoreRef.current = false;
+        } else {
+          setIsInitialLoading(false);
+        }
       }
+    },
+    [userIdLogin, reciveUserId],
+  );
 
-      paginationRef.current.skip += fetchedMessages.length;
-    } catch (error) {
-      console.log("getMessages error:", error);
-    } finally {
-      if (isLoadMore) {
-        setIsLoadingMore(false);
-        isLoadingMoreRef.current = false;
-      } else {
-        setIsInitialLoading(false);
-      }
-    }
-  };
+  const [, setHasMoreState] = useState(true);
 
   useEffect(() => {
     if (!userIdLogin || !reciveUserId) return;
-    paginationRef.current = { skip: 0, take: 10 };
+    paginationRef.current = { skip: 0, take: PAGE_SIZE };
     isInitialLoadRef.current = true;
     isLoadingMoreRef.current = false;
-    initialScrollDoneRef.current = false;
-    firstItemIdRef.current = null;
-    lastLoadMoreTimeRef.current = 0;
+    hasMoreRef.current = true;
 
     setMessages([]);
-    setHasMore(true);
     setIsLoadingMore(false);
 
     getMessages(false).finally(() => {
       setTimeout(() => {
         isInitialLoadRef.current = false;
-      }, 700);
+      }, 500);
     });
-
-    socketClient?.emit("mark_messages_as_read", {
-      sender: reciveUserId,
-      receiver: userIdLogin,
-    });
-
+    triggerMarkAsRead();
     socketClient?.on("receive_message", handleReciveMessage);
+    socketClient?.on("messages_read", handleMessagesReadEvent);
 
     return () => {
       socketClient?.off("receive_message", handleReciveMessage);
-
-      AsyncStorage.setItem(`message_read_${reciveUserId}`, "true");
-
-      socketClient?.emit("mark_messages_as_read", {
-        sender: reciveUserId,
-        receiver: userIdLogin,
-      });
+      socketClient?.off("messages_read", handleMessagesReadEvent);
+      triggerMarkAsRead();
     };
-  }, [userIdLogin, reciveUserId, handleReciveMessage]);
+  }, [
+    userIdLogin,
+    reciveUserId,
+    getMessages,
+    handleReciveMessage,
+    handleMessagesReadEvent,
+    triggerMarkAsRead,
+  ]);
 
-  useEffect(() => {
-    if (firstItemIdRef.current !== null && messages.length > 0) {
-      const index = messages.findIndex(
-        (m, i) => String(m.id ?? i) === firstItemIdRef.current,
-      );
-      if (index > 0) {
-        setTimeout(() => {
-          flatListRef.current?.scrollToIndex({
-            index,
-            animated: false,
-          });
-        }, 50);
-      }
-      firstItemIdRef.current = null;
-    }
-  }, [messages]);
-
-  const handleScrollToIndexFailed = (info: {
-    index: number;
-    highestMeasuredFrameIndex: number;
-    averageItemLength: number;
-  }) => {
-    setTimeout(() => {
-      flatListRef.current?.scrollToIndex({
-        index: Math.min(info.index, info.highestMeasuredFrameIndex),
-        animated: false,
-      });
-    }, 100);
-  };
+  const handleLoadMore = useCallback(() => {
+    if (isInitialLoadRef.current) return;
+    if (isLoadingMoreRef.current) return;
+    if (!hasMoreRef.current) return;
+    getMessages(true);
+  }, [getMessages]);
 
   const otherUserProfile = profile || "";
 
   const renderMessage = ({ item }: { item: MessageType }) => {
-    const isOwn = Number(item.senderId) === userIdLogin;
-    logger.info("item", item);
+    const isOwn = String(item.senderId) === String(userIdLogin);
 
     const messageAvatar = isOwn
       ? userProfile
@@ -291,14 +329,16 @@ export default function PrivateChat() {
             {typeof item?.content === "string" ? item?.content : item?.title}
           </Text>
 
-          <Text
-            fontSize={8}
-            color="$grey400"
+          <XStack
             alignSelf={isOwn ? "flex-end" : "flex-start"}
+            alignItems="center"
+            gap="$1"
             mt="$1"
           >
-            {item?.time?.slice(0, 5)}
-          </Text>
+            <Text fontSize={8} color="$grey400">
+              {item?.time?.slice(0, 5)}
+            </Text>
+          </XStack>
         </YStack>
 
         {isOwn && <ImageRank imgSrc={messageAvatar} imgSize={35} />}
@@ -306,95 +346,76 @@ export default function PrivateChat() {
     );
   };
 
-  const handleLoadMore = useCallback(() => {
-    if (isInitialLoadRef.current) return;
-    if (isLoadingMoreRef.current) return;
-    if (!hasMore) return;
-
-    const now = Date.now();
-
-    if (now - lastLoadMoreTimeRef.current < 1000) return;
-
-    lastLoadMoreTimeRef.current = now;
-
-    getMessages(true);
-  }, [hasMore, userIdLogin, reciveUserId]);
-
   return (
-    <>
-      <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
-        <Stack.Screen options={{ headerShown: false }} />
-        <KeyboardAvoidingView
-          style={{ flex: 1 }}
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
-        >
-          <YStack flex={1} bg="$background">
-            <ChatHeader
-              userName={userName}
-              userProfile={profile}
-              score={userScore}
-            />
-            {isInitialLoading ? (
-              <YStack
-                flex={1}
-                alignItems="center"
-                justifyContent="center"
-                bg="$background"
-              >
-                <AppLoading />
-              </YStack>
-            ) : (
-              <FlatList
-                ref={flatListRef}
-                data={messages}
-                keyExtractor={(item, index) => {
-                  if (item.id != null) return `msg-${item.id}`;
-                  if (item.tempId != null) return `temp-${item.tempId}`;
-                  return `idx-${index}`;
-                }}
-                renderItem={renderMessage}
-                onScroll={(event) => {
-                  const offsetY = event.nativeEvent.contentOffset.y;
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
+      <Stack.Screen options={{ headerShown: false }} />
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+      >
+        <YStack flex={1} bg="$background">
+          <ChatHeader
+            userName={userName}
+            userProfile={profile}
+            score={userScore}
+          />
+          {isInitialLoading ? (
+            <YStack
+              flex={1}
+              alignItems="center"
+              justifyContent="center"
+              bg="$background"
+            >
+              <AppLoading />
+            </YStack>
+          ) : (
+            <FlatList
+              ref={flatListRef}
+              data={messages}
+              inverted
+              keyExtractor={(item, index) => {
+                if (item.id != null) return `msg-${item.id}`;
+                if (item.tempId != null) return `temp-${item.tempId}`;
+                return `idx-${index}`;
+              }}
+              renderItem={renderMessage}
+              onScroll={({ nativeEvent }) => {
+                const { contentOffset, contentSize, layoutMeasurement } =
+                  nativeEvent;
+                const paddingToEnd = 60; // فاصله‌ی حساسیت قبل از رسیدن به انتهای دیتا (بالای صفحه در حالت inverted)
+                const isCloseToEnd =
+                  contentOffset.y + layoutMeasurement.height >=
+                  contentSize.height - paddingToEnd;
 
-                  if (offsetY <= 80) {
-                    handleLoadMore();
-                  }
-                }}
-                scrollEventThrottle={16}
-                ListHeaderComponent={
-                  isLoadingMore ? (
-                    <XStack justifyContent="center">
-                      <AppLoading />
-                    </XStack>
-                  ) : null
+                if (isCloseToEnd) {
+                  handleLoadMore();
                 }
-                contentContainerStyle={{
-                  flexGrow: 1,
-                  justifyContent: "flex-end",
-                  paddingVertical: 10,
-                }}
-                onScrollToIndexFailed={handleScrollToIndexFailed}
-                onContentSizeChange={() => {
-                  if (!initialScrollDoneRef.current && messages.length > 0) {
-                    initialScrollDoneRef.current = true;
-                    scrollToBottom(false);
-                  }
-                }}
-              />
-            )}
-            {!isInitialLoading && (
-              <MessageInput
-                title={title}
-                setTitle={setTitle}
-                handleSendMessage={handleSendMessage}
-                showStickers={showStickers}
-                setShowStickers={setShowStickers}
-                onAttachClick={() => console.log("Attach clicked")}
-              />
-            )}
-          </YStack>
-        </KeyboardAvoidingView>
-      </SafeAreaView>
-    </>
+              }}
+              scrollEventThrottle={16}
+              ListFooterComponent={
+                isLoadingMore ? (
+                  <XStack justifyContent="center" py="$2">
+                    <AppLoading />
+                  </XStack>
+                ) : null
+              }
+              contentContainerStyle={{
+                paddingVertical: 10,
+              }}
+            />
+          )}
+          {!isInitialLoading && (
+            <MessageInput
+              title={title}
+              setTitle={setTitle}
+              handleSendMessage={handleSendMessage}
+              showStickers={showStickers}
+              setShowStickers={setShowStickers}
+              onAttachClick={() => console.log("Attach clicked")}
+            />
+          )}
+        </YStack>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }

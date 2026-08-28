@@ -19,24 +19,31 @@ const Skill: React.FC<any> = ({
   const main = useAppSelector((state) => state.main);
   const arenaId = currentStep?.arena?.id;
 
-  const handleGetCategory = asyncWrapper(async () => {
-    if (!arenaId) return;
+  useEffect(() => {
+    const handleGetCategory = asyncWrapper(async () => {
+      if (!arenaId) return;
 
-    if (main.categoryCache?.[arenaId]) {
-      setAllSubCategory(main.categoryCache[arenaId]);
-      return;
+      if (main.categoryCache?.[arenaId]) {
+        setAllSubCategory(main.categoryCache[arenaId]);
+        return;
+      }
+
+      setIsLoading(true);
+      const res = await subCategoryList(arenaId);
+      setIsLoading(false);
+
+      if (res?.data?.status === 0) {
+        const fetchedData = res.data.data || [];
+        setAllSubCategory(fetchedData);
+        dispatch(RsetCategory({ parentId: arenaId, data: fetchedData }));
+      }
+    });
+
+    // فراخوانی در صورت وجود arenaId
+    if (arenaId) {
+      handleGetCategory();
     }
-
-    setIsLoading(true);
-    const res = await subCategoryList(arenaId);
-    setIsLoading(false);
-
-    if (res?.data?.status === 0) {
-      const fetchedData = res.data.data || [];
-      setAllSubCategory(fetchedData);
-      dispatch(RsetCategory({ parentId: arenaId, data: fetchedData }));
-    }
-  });
+  }, [arenaId, dispatch, main.categoryCache, setAllSubCategory]); // وابستگی‌ها اضافه شدند
 
   const handleAcceptCategory = async (data: any) => {
     dispatch(setSelectedStep({ step: "skillId", id: data.id }));
@@ -47,10 +54,6 @@ const Skill: React.FC<any> = ({
       icon: data.icon,
     });
   };
-
-  useEffect(() => {
-    handleGetCategory();
-  }, []);
 
   const categoriesWithIcons = allSubCategory?.map((category: any) => ({
     ...category,

@@ -3,7 +3,6 @@ import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
 import { api } from "./api";
 
-// آدرس پایه برای نوتیفیکیشن‌ها از .env خوانده می‌شود
 const notifBaseURL = process.env.EXPO_PUBLIC_NOTIF;
 
 Notifications.setNotificationHandler({
@@ -16,85 +15,8 @@ Notifications.setNotificationHandler({
   }),
 });
 
-// export async function registerForPushNotifications(userId: number) {
-//   if (!userId) {
-//     console.log(
-//       "❌ UserId is missing, cannot register for push notifications.",
-//     );
-//     return;
-//   }
-
-//   try {
-//     const { status: existingStatus } =
-//       await Notifications.getPermissionsAsync();
-//     let finalStatus = existingStatus;
-
-//     if (existingStatus !== "granted") {
-//       const { status } = await Notifications.requestPermissionsAsync();
-//       finalStatus = status;
-//     }
-
-//     if (finalStatus !== "granted") {
-//       console.log("❌ Failed to get push token for push notification!");
-//       return;
-//     }
-
-//     if (Platform.OS === "android") {
-//       await Notifications.setNotificationChannelAsync("default", {
-//         name: "default",
-//         importance: Notifications.AndroidImportance.MAX,
-//       });
-//     }
-
-//     const projectId =
-//       Constants.expoConfig?.extra?.eas?.projectId ??
-//       Constants.easConfig?.projectId;
-
-//     const tokenData = await Notifications.getExpoPushTokenAsync(
-//       projectId ? { projectId } : undefined,
-//     );
-
-//     const expoPushToken = tokenData.data;
-//     console.log("✅ Expo Push Token Generated:", expoPushToken);
-
-//     // اصلاح مهم: ارسال Data به بک‌اند با استفاده از تابع کمکی خودتان
-//     const postData = {
-//       userId: userId,
-//       expoPushToken: expoPushToken,
-//     };
-
-//     const resSubs = await saveSubscription(postData);
-
-//     // اصلاح سینتکس Axios
-//     if (resSubs.status === 200 || resSubs.status === 201) {
-//       console.log("✅ Token successfully saved to backend");
-//     } else {
-//       console.log(
-//         "❌ Failed to save token to backend, Status:",
-//         resSubs.status,
-//       );
-//     }
-//   } catch (error: any) {
-//     console.error(
-//       "❌ Error generating/sending push token:",
-//       error.message || error,
-//     );
-//     if (error.response) {
-//       console.error("❌ Server Error Response:", error.response.data);
-//     }
-//   }
-// }
-
-export const registerForPushNotifications = async (userId: number) => {
-  if (!userId) {
-    console.log(
-      "❌ UserId is missing, cannot register for push notifications.",
-    );
-    return null;
-  }
-
+export const registerForPushNotifications = async () => {
   try {
-    // ۱. بررسی و دریافت پرمیشن‌ها
     const { status: existingStatus } =
       await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
@@ -109,7 +31,6 @@ export const registerForPushNotifications = async (userId: number) => {
       return null;
     }
 
-    // ۲. تنظیم کانال نوتیفیکیشن برای اندروید
     if (Platform.OS === "android") {
       await Notifications.setNotificationChannelAsync("default", {
         name: "default",
@@ -117,35 +38,13 @@ export const registerForPushNotifications = async (userId: number) => {
       });
     }
 
-    // ۳. دریافت توکن مستقیم دستگاه (FCM Token) به جای Expo Token
     const tokenData = await Notifications.getDevicePushTokenAsync();
     const fcmToken = tokenData.data;
 
     console.log("✅ FCM Token Generated:", fcmToken);
-
-    // ۴. ارسال توکن به بک‌اند
-    const postData = {
-      userId: userId,
-      expoPushToken: fcmToken, // به دلیل ساختار DTO بک‌اند شما، کلید را تغییر ندادیم
-    };
-
-    const resSubs = await saveSubscription(postData);
-
-    if (resSubs.status === 200 || resSubs.status === 201) {
-      console.log("✅ Token successfully saved to backend");
-    } else {
-      console.log(
-        "❌ Failed to save token to backend, Status:",
-        resSubs.status,
-      );
-    }
-
     return fcmToken;
   } catch (error: any) {
-    console.error(
-      "❌ Error generating/sending push token:",
-      error.message || error,
-    );
+    console.error("❌ Error generating push token:", error.message || error);
     return null;
   }
 };
@@ -154,7 +53,7 @@ export const syncPushToken = async (userId: string | number) => {
   if (!userId) return;
 
   try {
-    const deviceToken = await registerForPushNotifications(userId);
+    const deviceToken = await registerForPushNotifications(); // نیازی به پاس دادن userId نیست
 
     if (!deviceToken) {
       console.warn("❌ Could not get push token from device.");
@@ -166,8 +65,9 @@ export const syncPushToken = async (userId: string | number) => {
     if (deviceToken !== cachedToken) {
       console.log("🔄 Token is new or changed. Sending to backend...");
 
+      // فقط اینجا به بک‌اند ارسال می‌شود
       await saveSubscription({
-        userId: userId,
+        userId: Number(userId),
         expoPushToken: deviceToken,
       });
 

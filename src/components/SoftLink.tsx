@@ -8,7 +8,7 @@ interface SoftLinkProps {
   isLoading?: boolean;
 }
 
-const SoftLink: FC<SoftLinkProps> = ({
+const SoftLink: FC<any> = ({
   categories = [],
   handleBack,
   handleAcceptCategory = () => {},

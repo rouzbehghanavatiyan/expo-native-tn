@@ -2,11 +2,9 @@ import { Icon } from "@/src/components/Icon";
 import ImageRank from "@/src/components/ImageRank";
 import MainTitle from "@/src/components/MainTitle";
 import { allUserMessagese } from "@/src/services/nestServices";
-import { useAppSelector } from "@/src/store/reduxHookType";
+import { markSenderAsRead, setChatUsers } from "@/src/slices/chat";
+import { useAppDispatch, useAppSelector } from "@/src/store/reduxHookType";
 import { getImageUrl } from "@/src/utils/fileHelper";
-import { logger } from "@/src/utils/logger";
-import { socketClient } from "@/src/utils/socketClient";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import { Pressable } from "react-native";
@@ -22,38 +20,28 @@ interface MessageData {
   userNameSender?: string;
   score?: number;
   unreadCount?: number;
+  isReadChat?: boolean;
   [key: string]: any;
 }
 
 const ChatRoom: React.FC = () => {
   const router = useRouter();
   const main = useAppSelector((state) => state?.main);
+  const userSender = useAppSelector((state) => state.chat.users);
+  const chatListLoaded = useAppSelector((state) => state.chat.loaded);
   const userIdLogin = main?.userLogin?.user?.id;
-
+  const dispatch = useAppDispatch();
   const [isLoading, setIsLoading] = useState(false);
-  const [userSender, setUserSender] = useState<MessageData[]>([]);
-  const [unreadMessages, setUnreadMessages] = useState<Record<string, boolean>>(
-    {},
-  );
 
   const handleGetUserMessages = useCallback(
     async (showLoading = true) => {
       try {
         if (showLoading) setIsLoading(true);
+        if (!userIdLogin) return;
         const res = await allUserMessagese(userIdLogin);
-
         const { data, status } = res?.data || {};
         if (status === 0 && data) {
-          setUserSender(data);
-
-          const storedReadStatus: Record<string, boolean> = {};
-          for (const user of data) {
-            const value = await AsyncStorage.getItem(
-              `message_read_${user.sender}`,
-            );
-            storedReadStatus[user.sender] = value === "false";
-          }
-          setUnreadMessages(storedReadStatus);
+          dispatch(setChatUsers(data));
         }
       } catch (error) {
         console.log(error);
@@ -61,24 +49,22 @@ const ChatRoom: React.FC = () => {
         if (showLoading) setIsLoading(false);
       }
     },
-    [userIdLogin],
+    [userIdLogin, dispatch],
   );
 
-  const handleRedirect = async (data: MessageData) => {
+  // 🟢 فقط یک بار، وقتی که هیچوقت لود نشده (کش خالیه)
+  useEffect(() => {
+    if (!chatListLoaded) {
+      handleGetUserMessages(true);
+    }
+  }, [handleGetUserMessages, chatListLoaded]);
+
+  const handleRedirect = (data: MessageData) => {
     const senderStr = String(data.sender);
-    await AsyncStorage.setItem(`message_read_${senderStr}`, "true");
 
-    setUnreadMessages((prev) => ({
-      ...prev,
-      [senderStr]: false,
-    }));
-
-    // 🟢 ۲. صفر کردن تعداد پیام نخوانده در خود آرایه برای پاک شدن قطعی Badge
-    setUserSender((prevUsers) =>
-      prevUsers.map((user) =>
-        String(user.sender) === senderStr ? { ...user, unreadCount: 0 } : user,
-      ),
-    );
+    // 🟢 آپدیت خوش‌بینانه (optimistic) بلافاصله در Redux، تا badge سریع محو بشه
+    // (آپدیت قطعی و واقعی توسط triggerMarkAsRead در PrivateChat انجام میشه)
+    dispatch(markSenderAsRead(senderStr));
 
     router.push({
       pathname: "/chat/[id]",
@@ -90,109 +76,6 @@ const ChatRoom: React.FC = () => {
       },
     });
   };
-
-  const handleMessagesReadConfirmation = useCallback(
-    (data: { sender: string }) => {
-      const senderStr = String(data.sender);
-      setUnreadMessages((prev) => ({
-        ...prev,
-        [senderStr]: false,
-      }));
-
-      // 🟢 ۳. اینجا هم Badge درون آرایه را صفر می‌کنیم
-      setUserSender((prevUsers) =>
-        prevUsers.map((user) =>
-          String(user.sender) === senderStr
-            ? { ...user, unreadCount: 0 }
-            : user,
-        ),
-      );
-    },
-    [],
-  );
-
-  const handleReceiveMessage = useCallback(
-    async (data: MessageData) => {
-      const targetUserId = data?.recieveId ?? data?.receiveId;
-
-      if (String(userIdLogin) === String(targetUserId)) {
-        const senderStr = String(data.sender);
-
-        await AsyncStorage.setItem(`message_read_${senderStr}`, "false");
-
-        setUnreadMessages((prev) => ({
-          ...prev,
-          [senderStr]: true,
-        }));
-
-        setUserSender((prevUsers) => {
-          if (!prevUsers) return prevUsers;
-
-          const existingUserIndex = prevUsers.findIndex(
-            (user) => String(user.sender) === senderStr,
-          );
-
-          if (existingUserIndex > -1) {
-            // 🟢 ۴. اگر کاربر از قبل در لیست هست، مقدار پیام نخوانده را اضافه کن و او را به ابتدای لیست بیاور
-            const updatedUsers = [...prevUsers];
-            const updatedUser = { ...updatedUsers[existingUserIndex] };
-
-            updatedUser.unreadCount = (updatedUser.unreadCount || 0) + 1;
-
-            // حذف از مکان فعلی و اضافه کردن به ایندکس صفر (بالای لیست)
-            updatedUsers.splice(existingUserIndex, 1);
-            updatedUsers.unshift(updatedUser);
-
-            return updatedUsers;
-          } else {
-            // 🟢 ۵. پیام از شخصی آمده که قبلاً با او چت نداشتیم! لیست را در بک‌گراند آپدیت می‌کنیم تا به صفحه اضافه شود
-            handleGetUserMessages(false);
-            return prevUsers;
-          }
-        });
-      }
-    },
-    [userIdLogin, handleGetUserMessages],
-  );
-
-  useEffect(() => {
-    if (!socketClient) return;
-
-    socketClient.on("receive_message", handleReceiveMessage);
-    socketClient.on(
-      "messages_read_confirmation",
-      handleMessagesReadConfirmation,
-    );
-
-    return () => {
-      socketClient.off("receive_message", handleReceiveMessage);
-      socketClient.off(
-        "messages_read_confirmation",
-        handleMessagesReadConfirmation,
-      );
-    };
-  }, [handleReceiveMessage, handleMessagesReadConfirmation]);
-
-  useEffect(() => {
-    handleGetUserMessages(true);
-  }, [handleGetUserMessages]);
-
-  useEffect(() => {
-    const loadStoredReadStatus = async () => {
-      const storedReadStatus: Record<string, boolean> = {};
-
-      for (const user of userSender) {
-        const value = await AsyncStorage.getItem(`message_read_${user.sender}`);
-        storedReadStatus[user.sender] = value !== "true";
-      }
-
-      setUnreadMessages(storedReadStatus);
-    };
-
-    if (userSender.length > 0) {
-      loadStoredReadStatus();
-    }
-  }, [userSender]);
 
   if (isLoading) {
     return (
@@ -218,7 +101,7 @@ const ChatRoom: React.FC = () => {
 
             const showBadge =
               (user?.unreadCount && user.unreadCount > 0) ||
-              unreadMessages[String(user.sender)];
+              user?.isReadChat === false;
 
             return (
               <Pressable key={uniqueKey} onPress={() => handleRedirect(user)}>
@@ -239,20 +122,14 @@ const ChatRoom: React.FC = () => {
 
                   {showBadge ? (
                     <View
-                      minWidth={20}
-                      height={20}
+                      minWidth={10}
+                      height={10}
                       borderRadius={10}
                       bg="#FF3040"
                       alignItems="center"
                       justifyContent="center"
                       px="$1"
-                    >
-                      <Text color="white" fontSize={12} fontWeight="bold">
-                        {user?.unreadCount && user.unreadCount > 0
-                          ? user.unreadCount
-                          : "!"}
-                      </Text>
-                    </View>
+                    />
                   ) : null}
                 </XStack>
               </Pressable>

@@ -2,10 +2,6 @@ import Arena from "@/src/components/Arena";
 import Gear from "@/src/components/Gear";
 import { Icon } from "@/src/components/Icon";
 import Skill from "@/src/components/skill";
-import {
-  subCategoryList,
-  subSubCategoryList,
-} from "@/src/services/masterServices";
 import { logger } from "@/src/utils/logger";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useEffect, useState } from "react";
@@ -43,9 +39,6 @@ const Sot: React.FC = () => {
     const updatedSteps: any = stepsData?.map((step, index) =>
       index === stepNumber - 1 ? { title: data.name, icon: data.icon } : step,
     );
-
-    logger.info("updatedSteps updatedSteps updatedSteps", currentStep);
-
     setStepsData(updatedSteps);
 
     if (rememberMe) {
@@ -126,47 +119,44 @@ const Sot: React.FC = () => {
       const arenaName = await AsyncStorage.getItem("arenaName");
       const skillName = await AsyncStorage.getItem("skillName");
 
+      let currentStepNum = 1;
+      let newCurrentStep = { ...initialCurrentStep };
+      let newStepsData = [...initialSteps];
+
       if (arenaId) {
-        const res = await subCategoryList(arenaId);
-        const { data, status } = res?.data;
-        if (status === 0) {
-          setAllSubCategory(data || []);
-          setCurrentStep((prev: any) => ({
-            ...prev,
-            number: 2,
-            arena: (data || []).find(
-              (item: any) => item.id === parseInt(arenaId),
-            ),
-          }));
-          setStepsData((prev: any) => [
-            { title: arenaName, icon: arenaIconName },
-            prev[1],
-            prev[2],
-          ]);
-        }
+        currentStepNum = 2;
+        newCurrentStep.arena = {
+          id: parseInt(arenaId),
+          name: arenaName,
+          icon: arenaIconName,
+        };
+        newStepsData[0] = {
+          title: arenaName,
+          icon: arenaIconName,
+          session: "Arena",
+        };
       }
 
       if (arenaId && skillId) {
-        const res = await subSubCategoryList(skillId);
-        const { data, status } = res?.data;
-        if (status === 0) {
-          setAllSubCategory(data || []);
-          setCurrentStep((prev: any) => ({
-            ...prev,
-            number: 3,
-            skill: (data || []).find(
-              (item: any) => item.subCategoryId === parseInt(skillId),
-            ),
-          }));
-          setStepsData((prev: any) => [
-            prev[0],
-            { title: skillName, icon: skillIconName },
-            prev[2],
-          ]);
-        }
+        currentStepNum = 3;
+        newCurrentStep.skill = {
+          id: parseInt(skillId),
+          name: skillName,
+          icon: skillIconName,
+        };
+        newStepsData[1] = {
+          title: skillName,
+          icon: skillIconName,
+          session: "Skill",
+        };
       }
+
+      // آپدیت کردن استیت با دیتاهای لوکال استوریج (باعث میشه کامپوننت های فرزند رندر بشن و خودشون API رو بزنن)
+      newCurrentStep.number = currentStepNum;
+      setCurrentStep(newCurrentStep);
+      setStepsData(newStepsData);
     } catch (error) {
-      console.error("server error:", error);
+      console.error("Storage fetch error:", error);
     }
   };
 
@@ -222,6 +212,8 @@ const Sot: React.FC = () => {
         );
     }
   };
+
+  logger.info("allSubCategory", allSubCategory);
 
   return (
     <View style={styles.container}>

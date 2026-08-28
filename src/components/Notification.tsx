@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 import { Text, XStack, YStack } from "tamagui";
 // وارد کردن فانکشن سینک کردن که بالاتر نوشتیم
-import { sendUserNotif, syncPushToken } from "../services/notificationService";
+import { sendUserNotif } from "../services/notificationService";
 import { useAppSelector } from "../store/reduxHookType";
 import { logger } from "../utils/logger";
 import { Icon } from "./Icon";
@@ -13,16 +13,6 @@ const Notification = () => {
   const [expoToken, setExpoToken] = useState<string | null>(null);
   const main = useAppSelector((state) => state?.main);
   const userId = main?.userLogin?.user?.id;
-
-  useEffect(() => {
-    const initToken = async () => {
-      if (userId) {
-        const token = await syncPushToken(userId);
-        if (token) setExpoToken(token);
-      }
-    };
-    initToken();
-  }, [userId]);
 
   const handleSendTestNotification = async () => {
     if (!userId) return;
