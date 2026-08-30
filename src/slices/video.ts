@@ -11,6 +11,7 @@ import {
   addMovie,
   removeInvite,
 } from "../services/masterServices";
+import { sendUserNotif } from "../services/notificationService";
 import { logger } from "../utils/logger";
 import { socketClient } from "../utils/socketClient";
 import { RsetShowTimerButtn } from "./main";
@@ -83,9 +84,10 @@ export const uploadFullProcessThunk = createAsyncThunk(
         resizeMode: currentResizeMode,
         description: allFormData?.description || movieMeta?.desc || "",
         title: allFormData?.title || movieMeta?.title || "",
-        subSubCategoryId: Number(
-          allFormData?.subSubCategoryId || gearId || gearIdStorage,
-        ),
+        // subSubCategoryId: Number(
+        //   allFormData?.subSubCategoryId || gearId || gearIdStorage,
+        // ),
+        subSubCategoryId: 1,
         modeId: 3,
       };
 
@@ -140,11 +142,41 @@ export const uploadFullProcessThunk = createAsyncThunk(
         ...inviteData,
         senderUserId: userId,
       });
-
-      const handleReceiveInvite = (data: any) => {
-        console.log("✅✅✅✅✅✅✅ Match found!", data);
+      const currentUserId = Number(userId);
+      const notifyMatchedUser = async (rawReceiverId: any) => {
+        const receiverUserId = Number(rawReceiverId);
+        if (!receiverUserId || receiverUserId === currentUserId) {
+          logger.warn(
+            "⚠️ Could not resolve receiver userId for match notification",
+            rawReceiverId,
+          );
+          return;
+        }
+        try {
+          const res = await sendUserNotif({
+            userId: receiverUserId,
+            message: "شما یک مچ جدید پیدا کردید! 🎉",
+          });
+          logger.info("✅ Match notification sent", res?.data);
+        } catch (error) {
+          logger.error("❌ Error sending match notification", error);
+        }
+      };
+      const handleReceiveInvite = async (data: any) => {
+        logger.info("✅ Match found!", {
+          senderUserId: data?.senderUserId,
+          userId: data?.userId,
+        });
         stopMatchTimer();
         dispatch(RsetShowTimerButtn(false));
+
+        const receiverUserId =
+          Number(data?.senderUserId) === currentUserId
+            ? Number(data?.userId)
+            : Number(data?.senderUserId);
+
+        await notifyMatchedUser(receiverUserId);
+
         socketClient.off("receive_invite", handleReceiveInvite);
         router.replace("/(tabs)/profile");
       };
@@ -155,6 +187,8 @@ export const uploadFullProcessThunk = createAsyncThunk(
         stopMatchTimer();
         router.replace("/(tabs)/profile");
         dispatch(RsetShowTimerButtn(false));
+        await notifyMatchedUser(inviteData?.userId);
+
         socketClient.off("receive_invite", handleReceiveInvite);
       } else {
         startMatchTimer(() => {

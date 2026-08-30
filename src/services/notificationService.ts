@@ -51,9 +51,8 @@ export const registerForPushNotifications = async () => {
 
 export const syncPushToken = async (userId: string | number) => {
   if (!userId) return;
-
   try {
-    const deviceToken = await registerForPushNotifications(); // نیازی به پاس دادن userId نیست
+    const deviceToken = await registerForPushNotifications();
 
     if (!deviceToken) {
       console.warn("❌ Could not get push token from device.");

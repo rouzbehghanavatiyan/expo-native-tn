@@ -8,7 +8,6 @@ import {
   setPaginationHomeMatch,
 } from "@/src/slices/main";
 import { useAppDispatch, useAppSelector } from "@/src/store/reduxHookType";
-import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { FlashList } from "@shopify/flash-list";
 import React, { useCallback, useRef, useState } from "react";
@@ -23,13 +22,16 @@ const HomeScreen: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const { width, height } = useWindowDimensions();
   const headerHeight = useHeaderHeight();
-  const tabBarHeight = useBottomTabBarHeight();
-  const usableHeight: any = height - headerHeight - tabBarHeight;
+
+  // ارتفاع قابل استفاده دقیقاً تا کف صفحه بدون کم کردن ارتفاع تب‌بار
+  const usableHeight = height - headerHeight;
+
   const [refreshing, setRefreshing] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [commentPosition, setCommentPosition] = useState(0);
   const [selectedVideo, setSelectedVideo] = useState<any>(null);
   const dispatch = useAppDispatch();
+
   const handleOpenComments = useCallback((video: any, position: number) => {
     setSelectedVideo(video);
     setCommentPosition(position ?? 0);
@@ -249,11 +251,6 @@ const styles = StyleSheet.create({
     lineHeight: 21,
     color: "#9CA3AF",
     textAlign: "center",
-  },
-  loaderWrapper: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
   },
 });
 

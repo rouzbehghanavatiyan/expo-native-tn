@@ -12,7 +12,6 @@ export const attachmentList = async (postData: {
       subCatId: postData?.subCatId,
     },
   });
-  console.log("response", response);
   return response.data;
 };
 

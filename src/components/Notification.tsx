@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 import { Text, XStack, YStack } from "tamagui";
-// وارد کردن فانکشن سینک کردن که بالاتر نوشتیم
 import { sendUserNotif } from "../services/notificationService";
 import { useAppSelector } from "../store/reduxHookType";
 import { logger } from "../utils/logger";

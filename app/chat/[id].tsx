@@ -291,6 +291,43 @@ export default function PrivateChat() {
     [userIdLogin, reciveUserId],
   );
 
+  // useEffect(() => {
+  //   if (!userIdLogin || !reciveUserId) return;
+  //   paginationRef.current = { skip: 0, take: PAGE_SIZE };
+  //   isInitialLoadRef.current = true;
+  //   isLoadingMoreRef.current = false;
+  //   hasMoreRef.current = true;
+
+  //   setMessages([]);
+  //   setIsLoadingMore(false);
+
+  //   getMessages(false).finally(() => {
+  //     setTimeout(() => {
+  //       isInitialLoadRef.current = false;
+  //     }, 500);
+  //   });
+  //   triggerMarkAsRead();
+
+  //   socketClient?.on("receive_message", handleReciveMessage);
+  //   socketClient?.on("messages_read", handleMessagesReadEvent);
+  //   socketClient?.on("message_sent_ack", handleMessageSentAck);
+
+  //   return () => {
+  //     socketClient?.off("receive_message", handleReciveMessage);
+  //     socketClient?.off("messages_read", handleMessagesReadEvent);
+  //     socketClient?.off("message_sent_ack", handleMessageSentAck);
+  //     triggerMarkAsRead();
+  //   };
+  // }, [
+  //   userIdLogin,
+  //   reciveUserId,
+  //   getMessages,
+  //   handleReciveMessage,
+  //   handleMessagesReadEvent,
+  //   handleMessageSentAck,
+  //   triggerMarkAsRead,
+  // ]);
+
   useEffect(() => {
     if (!userIdLogin || !reciveUserId) return;
     paginationRef.current = { skip: 0, take: PAGE_SIZE };
@@ -300,6 +337,11 @@ export default function PrivateChat() {
 
     setMessages([]);
     setIsLoadingMore(false);
+
+    socketClient?.emit("join_chat", {
+      userId: userIdLogin,
+      peerId: reciveUserId,
+    });
 
     getMessages(false).finally(() => {
       setTimeout(() => {
@@ -313,6 +355,7 @@ export default function PrivateChat() {
     socketClient?.on("message_sent_ack", handleMessageSentAck);
 
     return () => {
+      socketClient?.emit("leave_chat", userIdLogin);
       socketClient?.off("receive_message", handleReciveMessage);
       socketClient?.off("messages_read", handleMessagesReadEvent);
       socketClient?.off("message_sent_ack", handleMessageSentAck);

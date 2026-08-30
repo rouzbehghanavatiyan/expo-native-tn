@@ -143,7 +143,7 @@ const CustomVideo = memo(
               ref={videoRef}
               source={{ uri: cachedUri }}
               style={StyleSheet.absoluteFill as ViewStyle}
-              resizeMode="stretch"
+              resizeMode="contain"
               repeat
               paused={!shouldPlay}
               onLoad={handleLoad}
