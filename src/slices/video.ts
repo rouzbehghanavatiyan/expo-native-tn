@@ -155,7 +155,7 @@ export const uploadFullProcessThunk = createAsyncThunk(
         try {
           const res = await sendUserNotif({
             userId: receiverUserId,
-            message: "شما یک مچ جدید پیدا کردید! 🎉",
+            message: "Your video has been successfully uploaded to Match!🎉",
           });
           logger.info("✅ Match notification sent", res?.data);
         } catch (error) {
