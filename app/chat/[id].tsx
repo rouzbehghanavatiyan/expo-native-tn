@@ -14,15 +14,15 @@ import { FlatList, KeyboardAvoidingView, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Text, XStack, YStack } from "tamagui";
 import ChatHeader from "./ChatHeader";
+import SmartText from "./SmartText";
 
 interface MessageType {
   id?: string | number;
-  tempId?: any;
+  tempId?: string;
   userProfile?: string;
   senderId: string | number;
   receiveId: string | number;
-  title?: string;
-  content?: any;
+  content: string;
   time: string;
   createdAt?: string;
   userNameSender?: string;
@@ -31,23 +31,40 @@ interface MessageType {
 
 const PAGE_SIZE = 10;
 
-// timestamp کمکی برای مرتب‌سازی نزولی (جدید -> قدیم)
-const getTimestamp = (m: MessageType) => {
-  if (m.createdAt) return new Date(m.createdAt).getTime();
-  return Date.now(); // پیام تازه ارسال‌شده/آپتیمیستیک، همیشه جدیدترین است
-};
+/** تبدیل یک تاریخ (ISO یا هر فرمت قابل‌پارس) به ساعت:دقیقه برای نمایش */
+function formatTime(dateInput?: string): string {
+  if (!dateInput) return "";
+  const d = new Date(dateInput);
+  if (isNaN(d.getTime())) return "";
+  return d.toTimeString().slice(0, 5);
+}
 
-// merge + dedupe + سورت نزولی، برای هماهنگی با FlatList معکوس (inverted)
-const mergeDescending = (a: MessageType[], b: MessageType[]) => {
-  const map = new Map<string, MessageType>();
-  [...a, ...b].forEach((m) => {
-    const key = m.id != null ? `id-${m.id}` : `temp-${m.tempId}`;
-    map.set(key, { ...(map.get(key) || {}), ...m });
-  });
-  return Array.from(map.values()).sort(
-    (x, y) => getTimestamp(y) - getTimestamp(x),
+/**
+ * چون FlatList به صورت inverted رندر می‌شود (index 0 = پایین صفحه = جدیدترین پیام)،
+ * آرایه‌ی پیام‌ها همیشه باید به صورت نزولی (جدید -> قدیم) مرتب باشد.
+ * این تابع پیام‌های جدید فچ‌شده را با پیام‌های موجود merge می‌کند،
+ * از تکراری‌شدن (بر اساس id) جلوگیری می‌کند و دوباره مرتب‌سازی می‌کند.
+ */
+function mergeDescending(
+  prev: MessageType[],
+  fetched: MessageType[],
+): MessageType[] {
+  const existingIds = new Set(
+    prev.filter((m) => m.id != null).map((m) => String(m.id)),
   );
-};
+
+  const toAdd = fetched.filter(
+    (m) => m.id == null || !existingIds.has(String(m.id)),
+  );
+
+  const merged = [...prev, ...toAdd];
+
+  return merged.sort((a, b) => {
+    const timeA = new Date(a.createdAt || a.time).getTime();
+    const timeB = new Date(b.createdAt || b.time).getTime();
+    return timeB - timeA; // نزولی: جدید -> قدیم
+  });
+}
 
 export default function PrivateChat() {
   const { id, userName, profile, score } = useLocalSearchParams<{
@@ -61,19 +78,20 @@ export default function PrivateChat() {
   const userIdLogin = main?.userLogin?.user?.id;
   const reciveUserId = id;
 
-  // پیام‌ها به‌صورت نزولی نگه‌داری می‌شوند: index 0 = جدیدترین
   const [messages, setMessages] = useState<MessageType[]>([]);
   const [title, setTitle] = useState("");
   const [showStickers, setShowStickers] = useState(false);
   const flatListRef = useRef<FlatList>(null);
   const userInfo = useAppSelector((state) => state.main?.userLogin);
   const userProfile = getImageUrl(userInfo?.profile);
+  const otherUserProfile = profile ? getImageUrl(profile) : "";
 
   const isInitialLoadRef = useRef(true);
   const isLoadingMoreRef = useRef(false);
   const hasMoreRef = useRef(true);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [, setHasMoreState] = useState(true);
   const dispatch = useAppDispatch();
   const paginationRef = useRef({ skip: 0, take: PAGE_SIZE });
 
@@ -100,38 +118,58 @@ export default function PrivateChat() {
   }, [userIdLogin, reciveUserId, dispatch]);
 
   const handleSendMessage = async () => {
-    if (!title.trim()) return;
+    const trimmed = title.trim();
+    if (!trimmed || !userIdLogin || !reciveUserId) return;
 
-    const timeString = new Date().toTimeString().slice(0, 5);
-    const tempId = Date.now().toString();
+    const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const now = new Date();
 
     const serverMessage = {
-      id: tempId,
-      tempId: tempId,
       sender: userIdLogin,
       recieveId: reciveUserId,
-      title: title.trim(),
-      content: title.trim(),
-      time: timeString,
+      content: trimmed,
+      userProfile: userInfo?.profile || "",
+      userNameSender: userInfo?.userName || "",
+      tempId,
+    };
+
+    const optimisticMessage: MessageType = {
+      tempId,
+      senderId: userIdLogin,
+      receiveId: reciveUserId,
+      content: trimmed,
+      time: formatTime(now.toISOString()),
+      createdAt: now.toISOString(),
       userProfile: userInfo?.profile || "",
       isRead: false,
     };
 
     socketClient?.emit("send_message", serverMessage);
 
-    const uiMessage: MessageType = {
-      ...serverMessage,
-      senderId: userIdLogin,
-      receiveId: reciveUserId,
-      createdAt: new Date().toISOString(),
-    };
-
-    // جدیدترین پیام باید در ابتدای آرایه (index 0) قرار بگیرد
-    setMessages((prev) => mergeDescending(prev, [uiMessage]));
+    // پیام جدید باید ابتدای آرایه اضافه شود چون آرایه نزولی (جدید -> قدیم) است
+    setMessages((prev) => [optimisticMessage, ...prev]);
     setTitle("");
     setShowStickers(false);
     scrollToBottom();
   };
+
+  // وقتی سرور پیام را ذخیره کرد، id واقعی دیتابیس را جایگزین tempId می‌کند
+  const handleMessageSentAck = useCallback((data: any) => {
+    if (!data?.tempId) return;
+    setMessages((prev) =>
+      prev.map((msg) =>
+        msg.tempId === data.tempId
+          ? {
+              ...msg,
+              id: data.id,
+              // زمان واقعی سرور جایگزین زمان محلیِ optimistic می‌شود
+              createdAt: data.createdAt || msg.createdAt,
+              time: data.createdAt ? formatTime(data.createdAt) : msg.time,
+            }
+          : msg,
+      ),
+    );
+  }, []);
 
   const handleReciveMessage = useCallback(
     (data: any) => {
@@ -147,17 +185,19 @@ export default function PrivateChat() {
         (receiver === currentLogin && sender === currentOther);
 
       if (!shouldShow) return;
+      // پیام‌های خودمان قبلا به صورت optimistic اضافه شده‌اند
       if (sender === currentLogin) return;
+
+      const createdAt = data.createdAt || data.time || new Date().toISOString();
 
       const normalizedMsg: MessageType = {
         id: data.id,
         tempId: data.tempId,
         senderId: sender,
         receiveId: receiver,
-        title: data.title,
-        content: data.content ?? data.title,
-        time: data.time || new Date().toTimeString().slice(0, 5),
-        createdAt: data.createdAt || new Date().toISOString(),
+        content: data.content ?? data.title ?? "",
+        time: formatTime(createdAt),
+        createdAt,
         userProfile: data.userProfile || "",
         isRead: data.isRead ?? false,
       };
@@ -166,7 +206,8 @@ export default function PrivateChat() {
         triggerMarkAsRead();
       }
 
-      setMessages((prev) => mergeDescending(prev, [normalizedMsg]));
+      // پیام جدید باید ابتدای آرایه اضافه شود چون آرایه نزولی (جدید -> قدیم) است
+      setMessages((prev) => [normalizedMsg, ...prev]);
       scrollToBottom();
     },
     [userIdLogin, reciveUserId, triggerMarkAsRead],
@@ -208,23 +249,23 @@ export default function PrivateChat() {
           paginationRef.current.take,
         );
 
-        logger.debug("user messages:", res?.data);
-
-        // پاسخ سرور صعودی است (قدیم -> جدید)؛ نرمال‌سازی فیلدها
         const fetched: MessageType[] = (res?.data?.messages || []).map(
           (m: any) => {
-            let messageTime = m.time;
-            if (!messageTime && m.createdAt) {
-              const date = new Date(m.createdAt);
-              const hours = date.getHours().toString().padStart(2, "0");
-              const minutes = date.getMinutes().toString().padStart(2, "0");
-              messageTime = `${hours}:${minutes}`;
-            }
+            const createdAt = m.createdAt || m.time || new Date().toISOString();
+            const rawContent = m.content;
+            const contentText =
+              rawContent && typeof rawContent === "object"
+                ? (rawContent.text ?? "")
+                : (rawContent ?? m.title ?? "");
             return {
-              ...m,
+              id: m.id,
               senderId: m.senderId ?? m.sender,
               receiveId: m.receiveId ?? m.recieveId,
-              time: messageTime || new Date().toTimeString().slice(0, 5),
+              content: contentText,
+              time: formatTime(createdAt),
+              createdAt,
+              userProfile: m.userProfile,
+              isRead: m.isRead ?? false,
             };
           },
         );
@@ -233,12 +274,11 @@ export default function PrivateChat() {
         hasMoreRef.current = fetchedHasMore;
         setHasMoreState(fetchedHasMore);
 
-        // merge می‌کند و به‌صورت نزولی (جدید -> قدیم) مرتب می‌کند
         setMessages((prev) => mergeDescending(prev, fetched));
 
         paginationRef.current.skip += fetched.length;
       } catch (error) {
-        console.log("getMessages error:", error);
+        logger.error("getMessages error:", error);
       } finally {
         if (isLoadMore) {
           setIsLoadingMore(false);
@@ -250,8 +290,6 @@ export default function PrivateChat() {
     },
     [userIdLogin, reciveUserId],
   );
-
-  const [, setHasMoreState] = useState(true);
 
   useEffect(() => {
     if (!userIdLogin || !reciveUserId) return;
@@ -269,12 +307,15 @@ export default function PrivateChat() {
       }, 500);
     });
     triggerMarkAsRead();
+
     socketClient?.on("receive_message", handleReciveMessage);
     socketClient?.on("messages_read", handleMessagesReadEvent);
+    socketClient?.on("message_sent_ack", handleMessageSentAck);
 
     return () => {
       socketClient?.off("receive_message", handleReciveMessage);
       socketClient?.off("messages_read", handleMessagesReadEvent);
+      socketClient?.off("message_sent_ack", handleMessageSentAck);
       triggerMarkAsRead();
     };
   }, [
@@ -283,6 +324,7 @@ export default function PrivateChat() {
     getMessages,
     handleReciveMessage,
     handleMessagesReadEvent,
+    handleMessageSentAck,
     triggerMarkAsRead,
   ]);
 
@@ -293,8 +335,6 @@ export default function PrivateChat() {
     getMessages(true);
   }, [getMessages]);
 
-  const otherUserProfile = profile || "";
-
   const renderMessage = ({ item }: { item: MessageType }) => {
     const isOwn = String(item.senderId) === String(userIdLogin);
 
@@ -302,7 +342,13 @@ export default function PrivateChat() {
       ? userProfile
       : item.userProfile
         ? getImageUrl(item.userProfile)
-        : otherUserProfile;
+        : profile;
+
+    // const messageAvatar = isOwn
+    //   ? userProfile
+    //   : item.userProfile
+    //     ? getImageUrl(item.userProfile)
+    //     : otherUserProfile;
 
     return (
       <XStack
@@ -321,13 +367,15 @@ export default function PrivateChat() {
           px="$3"
           py="$2"
           mx="$2"
+          shadowColor="black"
+          shadowOffset={{ width: 0, height: 1 }}
+          shadowOpacity={0.05}
+          shadowRadius={3}
+          elevation={1.5}
         >
-          <Text
-            style={{ writingDirection: "rtl", textAlign: "right" }}
-            flexWrap="wrap"
-          >
-            {typeof item?.content === "string" ? item?.content : item?.title}
-          </Text>
+          <SmartText style={{ writingDirection: "rtl", textAlign: "right" }}>
+            {item.content}
+          </SmartText>
 
           <XStack
             alignSelf={isOwn ? "flex-end" : "flex-start"}
@@ -336,8 +384,13 @@ export default function PrivateChat() {
             mt="$1"
           >
             <Text fontSize={8} color="$grey400">
-              {item?.time?.slice(0, 5)}
+              {item.time}
             </Text>
+            {isOwn && (
+              <Text fontSize={9} color={item.isRead ? "$blue500" : "$grey400"}>
+                {item.isRead ? "✓✓" : "✓"}
+              </Text>
+            )}
           </XStack>
         </YStack>
 

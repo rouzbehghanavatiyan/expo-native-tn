@@ -5,14 +5,18 @@ import { useAppSelector } from "@/src/store/reduxHookType";
 import { getImageUrl } from "@/src/utils/fileHelper";
 import { FontAwesome } from "@expo/vector-icons";
 import { Tabs, usePathname } from "expo-router";
-import { Image } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { Image, Pressable } from "react-native";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { YStack } from "tamagui";
 
 export default function TabLayout() {
   const userInfo = useAppSelector((state) => state.main?.userLogin);
   const pathname = usePathname();
   const userProfile = getImageUrl(userInfo?.profile);
+  const insets = useSafeAreaInsets();
 
   const isWatchTab =
     pathname === "/home" ||
@@ -27,18 +31,38 @@ export default function TabLayout() {
           screenOptions={{
             headerShown: false,
             tabBarShowLabel: false,
-            tabBarActiveTintColor: "black",
-            tabBarIconStyle: {
-              marginTop: 2,
+            tabBarItemStyle: {
+              justifyContent: "center",
+              alignItems: "center",
+              backgroundColor: "transparent",
+              pointerEvents: "box-none",
             },
+            tabBarButton: (props) => (
+              <Pressable
+                {...props}
+                android_ripple={{ color: "transparent" }}
+                style={[
+                  props.style,
+                  {
+                    backgroundColor: "transparent",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: 20,
+                    height: 20,
+                    pointerEvents: "auto",
+                  },
+                ]}
+              />
+            ),
             tabBarStyle: {
-              height: 48,
-              paddingTop: 6,
-              paddingBottom: 6,
-              backgroundColor: "#fff",
-              borderTopWidth: 0.5,
-              borderTopColor: "#E5E5E5",
+              position: "absolute",
+              backgroundColor: "transparent",
+              borderTopWidth: 0,
               elevation: 0,
+              shadowOpacity: 0,
+              height: 50,
+              bottom: insets.bottom > 0 ? insets.bottom - 65 : 12,
+              pointerEvents: "box-none",
             },
           }}
         >

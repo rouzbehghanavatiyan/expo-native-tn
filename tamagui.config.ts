@@ -3,18 +3,18 @@ import { shorthands } from "@tamagui/shorthands";
 import { createFont, createTamagui, createTokens } from "tamagui";
 
 const typographyFont = createFont({
-  family: "PlusJakartaSans",
+  family: "Vazirmatn",
   size: {
-    1: 12, // Caption / Overline
-    2: 14, // Body2 / Subtitle2
-    3: 16, // Body1 / Subtitle1
-    4: 20, // h6
-    5: 24, // h5
-    6: 34, // h4
-    7: 48, // h3
-    8: 60, // h2
-    9: 96, // h1
-    true: 16, // Default (Body1)
+    1: 12,
+    2: 14,
+    3: 16,
+    4: 20,
+    5: 24,
+    6: 34,
+    7: 48,
+    8: 60,
+    9: 96,
+    true: 16,
   },
   lineHeight: {
     1: 18,
@@ -28,17 +28,21 @@ const typographyFont = createFont({
     9: 112,
   },
   weight: {
-    regular: "400",
-    medium: "500",
-    bold: "700",
-    true: "400",
+    regular: "Vazirmatn",
+    medium: "VazirmatnMedium",
+    bold: "VazirmatnBold",
+    true: "Vazirmatn",
   },
   letterSpacing: {
     1: 0,
     2: -0.5,
   },
+  face: {
+    400: { normal: "Vazirmatn" },
+    500: { normal: "VazirmatnMedium" },
+    700: { normal: "VazirmatnBold" },
+  },
 });
-
 const logoFont = createFont({
   family: "logoFont",
   size: { 1: 24, 2: 32, 3: 48, true: 32 },

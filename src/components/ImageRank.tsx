@@ -250,7 +250,7 @@ const ImageRank: React.FC<ProfileWithRankProps> = ({
                 left: getRankPosition().left,
                 width: rankSize,
                 height: rankSize,
-                zIndex: 10,
+                zIndex: 20,
               },
             ]}
           >
