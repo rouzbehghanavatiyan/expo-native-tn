@@ -45,7 +45,6 @@ const AppHeader = () => {
     [currentUser, dispatch],
   );
 
-  // 🟢 فقط شمارنده‌ی کلی رو زیاد می‌کنیم؛ جزئیات لیست چت مسئولیت useGlobalChatSocket است
   const handleReceiveMessage = useCallback(
     (data: any) => {
       const targetUserId = data?.recieveId ?? data?.receiveId;
@@ -84,9 +83,9 @@ const AppHeader = () => {
 
   const ActionIcons = () => (
     <View style={styles.iconContainer}>
-      <TouchableOpacity onPress={() => router.push("/store")}>
+      {/* <TouchableOpacity onPress={() => router.push("/store")}>
         <Ionicons name="ticket-outline" size={22} color="#10153D" />
-      </TouchableOpacity>
+      </TouchableOpacity> */}
 
       <TouchableOpacity style={{ marginLeft: 16 }}>
         <View>

@@ -13,6 +13,7 @@ export default function SettingLayout() {
 
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+
   const handleLogoutConfirm = async () => {
     try {
       setIsLoggingOut(true);
@@ -27,29 +28,27 @@ export default function SettingLayout() {
   };
 
   const handleAcceptCategory = async (category: any) => {
-    if (category.name === "Signout") {
-      setLogoutDialogOpen(true);
-      return;
-    }
-    if (category.name === "Profile") {
-      router.push("/setting/editProfile");
-      return;
-    }
-    if (category.name === "Learning") {
-      router.push("/learning");
-      return;
-    }
-    if (category.name === "Support") {
-      router.push("/support");
-      return;
-    }
-    if (category.name === "About us") {
-      router.push("/about");
-      return;
-    }
-    if (category.name === "Mark") {
-      router.push("/mark");
-      return;
+    switch (category.name) {
+      case "Signout":
+        setLogoutDialogOpen(true);
+        break;
+      case "Profile":
+        router.push("/setting/editProfile");
+        break;
+      case "Learning":
+        router.push("/learning"); // هدایت به پوشه learning که بالا ساختیم
+        break;
+      case "Support":
+        router.push("/support");
+        break;
+      case "About us":
+        router.push("/about");
+        break;
+      case "Mark":
+        router.push("/mark");
+        break;
+      default:
+        break;
     }
   };
 
@@ -66,11 +65,11 @@ export default function SettingLayout() {
             { name: "Support", id: 3, icon: "support-agent" },
             { name: "About us", id: 4, icon: "info" },
             { name: "Mark", id: 5, icon: "star" },
+            { name: "Learning", id: 6, icon: "school" },
           ]}
           isLoading={false}
         />
       </View>
-
       <Modal
         visible={logoutDialogOpen}
         transparent
@@ -107,14 +106,12 @@ export default function SettingLayout() {
                   will be removed.
                 </Text>
               </YStack>
-
               <XStack jc="flex-end" gap={10}>
                 <BaseButton
                   disabled={isLoggingOut}
                   onPress={() => setLogoutDialogOpen(false)}
                   bg="$grey400"
                   variant="outlined"
-                  type="submit"
                 >
                   Cancel
                 </BaseButton>
