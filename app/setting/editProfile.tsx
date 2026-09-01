@@ -69,11 +69,10 @@ export default function EditProfile() {
         showFeedback(
           "Success",
           res?.data?.message || "Profile updated successfully.",
-          true, // این پارامتر isSuccess را true می‌کند
+          true,
         );
-        router.back();
+        // router.back();
       } else {
-        // در صورتی که status چیزی غیر از 2 بود (مثلا خطای ولیدیشن سمت سرور)
         showFeedback(
           "Error",
           res?.data?.message || "Failed to update profile.",
