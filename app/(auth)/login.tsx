@@ -24,7 +24,7 @@ import { Link, useRouter } from "expo-router";
 import { jwtDecode } from "jwt-decode";
 import { useState } from "react";
 import { Modal, Pressable } from "react-native"; // اضافه شدن Modal و Pressable
-import { Checkbox, Image, Text, View, XStack, YStack } from "tamagui";
+import { Image, Text, View, XStack, YStack } from "tamagui";
 
 const LoginScreen: React.FC<any> = () => {
   const router = useRouter();
@@ -150,7 +150,7 @@ const LoginScreen: React.FC<any> = () => {
           </Text>
         </YStack>
 
-        <YStack gap="$4">
+        <YStack gap="$8">
           <YStack gap="$2">
             <BaseInput
               label="Username"
@@ -160,14 +160,10 @@ const LoginScreen: React.FC<any> = () => {
               hasError={!!errors.username}
               variant="outline"
               errorMessage={errors.username}
+              // خود BaseInput باید فضای خالی ثابت برای ارور داشته باشد
+              // یا ارور را با position="absolute" نمایش دهد
             />
-            {!!errors.username && (
-              <Text color="$errorMain" fontSize="$3">
-                {errors.username}
-              </Text>
-            )}
           </YStack>
-
           <YStack gap="$2">
             <View position="relative">
               <BaseInput
@@ -191,21 +187,6 @@ const LoginScreen: React.FC<any> = () => {
               />
             </View>
           </YStack>
-
-          <XStack alignItems="center" justifyContent="space-between" mt="$2">
-            <XStack alignItems="center" gap="$2">
-              <Checkbox id="remember-me" size="$8" defaultChecked={false}>
-                <Checkbox.Indicator>
-                  <Icon name="check" size={20} color="gray" />
-                </Checkbox.Indicator>
-              </Checkbox>
-
-              <Text fontSize="$3" color="$textPrimary">
-                Remember me
-              </Text>
-            </XStack>
-          </XStack>
-
           <BaseButton
             appearance="solid"
             colorType="primary"

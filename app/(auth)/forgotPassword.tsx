@@ -1,8 +1,6 @@
 import Logo from "@/src/assets/images/logocircle.png";
 import BaseButton from "@/src/components/BaseButtom";
 import BaseInput from "@/src/components/BaseInput";
-// فرض بر این است که متد forgotPassword در سرویس‌های شما وجود دارد
-// import { forgotPassword } from "@/src/services/masterServices";
 import { Link, useRouter } from "expo-router";
 import React, { useState } from "react";
 import { Modal } from "react-native";
@@ -136,7 +134,6 @@ export default function ForgotPasswordScreen() {
         </YStack>
 
         <YStack gap="$3">
-          {/* -- Identifier Input -- */}
           <YStack gap="$2">
             <BaseInput
               label="Email or Username"
@@ -145,7 +142,6 @@ export default function ForgotPasswordScreen() {
               placeholder="e.g., user@example.com or john_doe"
               colorType="primary"
               variant="outline"
-              borderColor={errors.identifier ? "$errorMain" : undefined}
               autoCapitalize="none"
             />
             {errors.identifier && (

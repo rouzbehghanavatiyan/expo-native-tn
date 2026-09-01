@@ -6,10 +6,10 @@ import { getImageUrl } from "@/src/utils/fileHelper";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  BackHandler,
   Dimensions,
   FlatList,
-  Keyboard,
-  Modal,
+  KeyboardAvoidingView,
   Platform,
   TextInput,
   TouchableOpacity,
@@ -19,6 +19,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text, View, XStack, YStack } from "tamagui";
 
 const SCREEN_HEIGHT = Dimensions.get("window").height;
+
 interface CommentsProps {
   visible: boolean;
   onClose: () => void;
@@ -46,28 +47,6 @@ const Comments: React.FC<CommentsProps> = ({
   const main = useAppSelector((state) => state?.main);
   const [answerData, setAnswerData] = useState<any>({});
   const flatListRef = useRef<FlatList<any>>(null);
-
-  // 👇 ارتفاع کیبورد رو دستی track می‌کنیم چون داخل Modal، KeyboardAvoidingView قابل اعتماد نیست
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
-
-  useEffect(() => {
-    const showEvent =
-      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
-    const hideEvent =
-      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
-
-    const showSub = Keyboard.addListener(showEvent, (e) => {
-      setKeyboardHeight(e.endCoordinates?.height || 0);
-    });
-    const hideSub = Keyboard.addListener(hideEvent, () => {
-      setKeyboardHeight(0);
-    });
-
-    return () => {
-      showSub.remove();
-      hideSub.remove();
-    };
-  }, []);
 
   const movieId =
     positionVideo === 0
@@ -133,6 +112,18 @@ const Comments: React.FC<CommentsProps> = ({
     }
   }, [visible, movieId, fetchComments]);
 
+  // Android hardware back button should close the sheet (Modal used to do this for us)
+  useEffect(() => {
+    if (Platform.OS !== "android" || !visible) return;
+
+    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+      handleClose();
+      return true;
+    });
+
+    return () => sub.remove();
+  }, [visible, handleClose]);
+
   const handleSend = useCallback(async () => {
     const trimmed = text.trim();
 
@@ -170,223 +161,221 @@ const Comments: React.FC<CommentsProps> = ({
     fetchComments,
   ]);
 
-  return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      transparent
-      onRequestClose={handleClose}
-      statusBarTranslucent={true}
+  if (!visible) return null;
+
+  const inputFooter = (
+    <XStack
+      alignItems="flex-end"
+      borderTopWidth={0.5}
+      borderTopColor="#2c2c2e"
+      pt={10}
+      pb={Math.max(insets.bottom, 12)}
+      px={4}
+      gap={10}
+      backgroundColor="#1c1c1e"
     >
-      <View flex={1} justifyContent="flex-end">
-        {/* لایه تاریک پس‌زمینه (برای بستن مودال) */}
-        <TouchableWithoutFeedback onPress={handleClose}>
-          <View
-            position="absolute"
-            top={0}
-            bottom={0}
-            left={0}
-            right={0}
-            backgroundColor="rgba(0,0,0,0.5)"
-          />
-        </TouchableWithoutFeedback>
-
-        {/* کادر اصلی کامنت‌ها - با marginBottom دستی بالای کیبورد میره */}
-        <View
-          backgroundColor="#1c1c1e"
-          borderTopLeftRadius={24}
-          borderTopRightRadius={24}
-          height={SCREEN_HEIGHT * 0.8}
-          marginBottom={keyboardHeight}
-          paddingTop={12}
-          paddingHorizontal={12}
-          paddingBottom={0}
-        >
-          <XStack
-            alignItems="center"
-            justifyContent="space-between"
-            pb={12}
-            borderBottomWidth={0.5}
-            borderBottomColor="#2c2c2e"
-          >
-            <View width={32} />
-
-            <YStack alignItems="center">
-              <View
-                width={40}
-                height={4}
-                borderRadius={2}
-                backgroundColor="#666"
-                mb={10}
-              />
-              <Text color="white" fontSize={16} fontWeight="700">
-                Comments
-              </Text>
-            </YStack>
-
-            <TouchableOpacity
-              onPress={handleClose}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            >
-              <Icon name="close" color="white" size={22} />
-            </TouchableOpacity>
-          </XStack>
-
-          <View flex={1}>
-            {loading && comments.length === 0 ? (
-              <View flex={1} justifyContent="center" alignItems="center">
-                <ActivityIndicator color="#fff" />
-              </View>
-            ) : (
-              <>
-                {loading && comments.length > 0 && (
-                  <View
-                    position="absolute"
-                    top={8}
-                    left={0}
-                    right={0}
-                    zIndex={10}
-                    alignItems="center"
-                    pointerEvents="none"
-                  >
-                    <View
-                      backgroundColor="rgba(0,0,0,0.45)"
-                      px={10}
-                      py={6}
-                      borderRadius={20}
-                    >
-                      <ActivityIndicator color="#fff" size="small" />
-                    </View>
-                  </View>
-                )}
-
-                <FlatList
-                  ref={flatListRef}
-                  contentContainerStyle={{
-                    paddingBottom: 10,
-                    flexGrow: comments.length === 0 ? 1 : undefined,
-                  }}
-                  style={{ flex: 1 }}
-                  data={comments}
-                  keyExtractor={(item, index) =>
-                    item?.id?.toString() || index.toString()
-                  }
-                  onContentSizeChange={() => {
-                    flatListRef.current?.scrollToEnd({ animated: true });
-                  }}
-                  onLayout={() => {
-                    flatListRef.current?.scrollToEnd({ animated: false });
-                  }}
-                  renderItem={({ item }) => (
-                    <YStack py={10} px={4} gap={8}>
-                      <XStack gap={10} alignItems="flex-start">
-                        <ImageRank
-                          imgSrc={getImageUrl(item?.profile)}
-                          imgSize={36}
-                          userName={item?.userName}
-                          score={item?.score}
-                        />
-                        <YStack flex={1}>
-                          <Text fontSize={"$3"} color="#fff">
-                            {item?.desc}
-                          </Text>
-                        </YStack>
-                        <TouchableOpacity
-                          onPress={() => setAnswerData(item)}
-                          hitSlop={8}
-                          style={{ marginTop: 2 }}
-                        >
-                          <XStack marginRight={8} gap={10}>
-                            <Icon name="reply" color="#bdbdbd" size={16} />
-                          </XStack>
-                        </TouchableOpacity>
-                      </XStack>
-
-                      {item?.replies?.length > 0 &&
-                        item.replies.map((reply: any) => (
-                          <XStack
-                            key={reply.id}
-                            ml={46}
-                            mt={8}
-                            gap={8}
-                            alignItems="flex-start"
-                          >
-                            <ImageRank
-                              imgSrc={getImageUrl(reply?.profile)}
-                              imgSize={30}
-                              userName={reply?.userName}
-                              score={reply?.score}
-                            />
-                            <YStack flex={1}>
-                              <Text color="white">
-                                <Text color="#fff">{reply?.desc}</Text>
-                              </Text>
-                            </YStack>
-                          </XStack>
-                        ))}
-                    </YStack>
-                  )}
-                  ListEmptyComponent={
-                    <View
-                      flex={1}
-                      justifyContent="center"
-                      alignItems="center"
-                      py={20}
-                    >
-                      <Text color="#888">
-                        No comments yet. Be the first to comment!
-                      </Text>
-                    </View>
-                  }
-                />
-              </>
-            )}
-          </View>
-
-          {/* بخش فوتر (اینپوت) - چندخطی می‌شه تا کلمات ریپ بخورن */}
-          <XStack
-            alignItems="flex-end"
-            borderTopWidth={0.5}
-            borderTopColor="#2c2c2e"
-            pt={10}
-            pb={Math.max(insets.bottom, 12)}
-            px={4}
-            gap={10}
-          >
-            <View mb={2}>
-              <ImageRank imgSrc={userProfile} imgSize={30} />
-            </View>
-            <TextInput
-              value={text}
-              onChangeText={setText}
-              placeholder={
-                answerData?.id
-                  ? `Reply to ${answerData?.userName || "comment"}...`
-                  : "Add a comment..."
-              }
-              placeholderTextColor="#8e8e93"
-              multiline
-              style={{
-                flex: 1,
-                color: "#fff",
-                fontSize: 15,
-                maxHeight: 100, // بعد از چند خط اسکرول داخلی می‌شه، بی‌نهایت بزرگ نمی‌شه
-                paddingVertical: Platform.OS === "ios" ? 6 : 4,
-              }}
-            />
-            <TouchableOpacity
-              onPress={handleSend}
-              disabled={!text.trim() || sending}
-              style={{ marginBottom: 4 }}
-            >
-              <Text color={text.trim() ? "#0095F6" : "#555"} fontWeight="700">
-                <Icon name="send" color="gray" />
-              </Text>
-            </TouchableOpacity>
-          </XStack>
-        </View>
+      <View mb={2}>
+        <ImageRank imgSrc={userProfile} imgSize={30} />
       </View>
-    </Modal>
+      <TextInput
+        value={text}
+        onChangeText={setText}
+        placeholder={
+          answerData?.id
+            ? `Reply to ${answerData?.userName || "comment"}...`
+            : "Add a comment..."
+        }
+        placeholderTextColor="#8e8e93"
+        multiline
+        style={{
+          flex: 1,
+          color: "#fff",
+          fontSize: 15,
+          maxHeight: 100,
+          paddingVertical: Platform.OS === "ios" ? 6 : 4,
+        }}
+      />
+      <TouchableOpacity
+        onPress={handleSend}
+        disabled={!text.trim() || sending}
+        style={{ marginBottom: 4 }}
+      >
+        <Text color={text.trim() ? "#0095F6" : "#555"} fontWeight="700">
+          <Icon name="send" color="gray" />
+        </Text>
+      </TouchableOpacity>
+    </XStack>
+  );
+
+  return (
+    <View flex={1} justifyContent="flex-end">
+      <TouchableWithoutFeedback onPress={handleClose}>
+        <View
+          position="absolute"
+          top={0}
+          bottom={0}
+          left={0}
+          right={0}
+          backgroundColor="rgba(0,0,0,0.5)"
+        />
+      </TouchableWithoutFeedback>
+
+      <View
+        backgroundColor="#1c1c1e"
+        borderTopLeftRadius={24}
+        borderTopRightRadius={24}
+        height={SCREEN_HEIGHT * 0.8}
+        flexShrink={1}
+        paddingTop={12}
+        paddingHorizontal={12}
+        paddingBottom={0}
+      >
+        <XStack
+          alignItems="center"
+          justifyContent="space-between"
+          pb={12}
+          borderBottomWidth={0.5}
+          borderBottomColor="#2c2c2e"
+        >
+          <YStack alignItems="center">
+            <View
+              width={40}
+              height={4}
+              borderRadius={2}
+              backgroundColor="#666"
+              mb={10}
+            />
+            <Text color="white" fontSize={16} fontWeight="700">
+              Comments
+            </Text>
+          </YStack>
+
+          {/* <TouchableOpacity
+            onPress={handleClose}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Icon name="close" color="white" size={22} />
+          </TouchableOpacity> */}
+        </XStack>
+
+        <View flex={1}>
+          {loading && comments.length === 0 ? (
+            <View flex={1} justifyContent="center" alignItems="center">
+              <ActivityIndicator color="#fff" />
+            </View>
+          ) : (
+            <>
+              {loading && comments.length > 0 && (
+                <View
+                  position="absolute"
+                  top={8}
+                  left={0}
+                  right={0}
+                  zIndex={10}
+                  alignItems="center"
+                  pointerEvents="none"
+                >
+                  <View
+                    backgroundColor="rgba(0,0,0,0.45)"
+                    px={10}
+                    py={6}
+                    borderRadius={20}
+                  >
+                    <ActivityIndicator color="#fff" size="small" />
+                  </View>
+                </View>
+              )}
+              <FlatList
+                ref={flatListRef}
+                contentContainerStyle={{
+                  paddingBottom: 10,
+                  flexGrow: comments.length === 0 ? 1 : undefined,
+                }}
+                style={{ flex: 1 }}
+                data={comments}
+                keyExtractor={(item, index) =>
+                  item?.id?.toString() || index.toString()
+                }
+                onContentSizeChange={() => {
+                  flatListRef.current?.scrollToEnd({ animated: true });
+                }}
+                onLayout={() => {
+                  flatListRef.current?.scrollToEnd({ animated: false });
+                }}
+                renderItem={({ item }) => (
+                  <YStack py={10} px={4} gap={8}>
+                    <XStack gap={10} alignItems="flex-start">
+                      <ImageRank
+                        imgSrc={getImageUrl(item?.profile)}
+                        imgSize={36}
+                        userName={item?.userName}
+                        score={item?.score}
+                      />
+                      <YStack flex={1}>
+                        <Text fontSize={"$3"} color="#fff">
+                          {item?.desc}
+                        </Text>
+                      </YStack>
+                      <TouchableOpacity
+                        onPress={() => setAnswerData(item)}
+                        hitSlop={8}
+                        style={{ marginTop: 2 }}
+                      >
+                        <XStack marginRight={8} gap={10}>
+                          <Icon name="reply" color="#bdbdbd" size={16} />
+                        </XStack>
+                      </TouchableOpacity>
+                    </XStack>
+
+                    {item?.replies?.length > 0 &&
+                      item.replies.map((reply: any) => (
+                        <XStack
+                          key={reply.id}
+                          ml={46}
+                          mt={8}
+                          gap={8}
+                          alignItems="flex-start"
+                        >
+                          <ImageRank
+                            imgSrc={getImageUrl(reply?.profile)}
+                            imgSize={30}
+                            userName={reply?.userName}
+                            score={reply?.score}
+                          />
+                          <YStack flex={1}>
+                            <Text color="white">
+                              <Text color="#fff">{reply?.desc}</Text>
+                            </Text>
+                          </YStack>
+                        </XStack>
+                      ))}
+                  </YStack>
+                )}
+                ListEmptyComponent={
+                  <View
+                    flex={1}
+                    justifyContent="center"
+                    alignItems="center"
+                    py={20}
+                  >
+                    <Text color="#888">
+                      No comments yet. Be the first to comment!
+                    </Text>
+                  </View>
+                }
+              />
+            </>
+          )}
+        </View>
+        {Platform.OS === "ios" ? (
+          <KeyboardAvoidingView behavior="padding">
+            {inputFooter}
+          </KeyboardAvoidingView>
+        ) : (
+          inputFooter
+        )}
+      </View>
+    </View>
   );
 };
 
