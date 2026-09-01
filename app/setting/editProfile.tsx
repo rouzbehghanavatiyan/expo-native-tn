@@ -42,6 +42,7 @@ export default function EditProfile() {
   };
 
   const handleSubmit = async () => {
+    // در صورت نیاز به ولیدیشن ایمیل می‌توانید کد زیر را از حالت کامنت خارج کنید
     // if (mail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail)) {
     //   showFeedback(
     //     "Validation Error",
@@ -50,17 +51,35 @@ export default function EditProfile() {
     //   );
     //   return;
     // }
+
     const postData = {
       userId: userLogin?.user?.id,
       Bio: bio || null,
       Location: location || null,
       Mail: mail || null,
     };
+
     try {
       setIsSubmitting(true);
-
       const res = await addProfile(postData);
       logger.info("resProfile", res);
+
+      // بررسی وضعیت موفقیت‌آمیز بودن پاسخ (status === 2)
+      if (res?.data?.status === 2) {
+        showFeedback(
+          "Success",
+          res?.data?.message || "Profile updated successfully.",
+          true, // این پارامتر isSuccess را true می‌کند
+        );
+        router.back();
+      } else {
+        // در صورتی که status چیزی غیر از 2 بود (مثلا خطای ولیدیشن سمت سرور)
+        showFeedback(
+          "Error",
+          res?.data?.message || "Failed to update profile.",
+          false,
+        );
+      }
     } catch (error) {
       console.log("Error updating status:", error);
       showFeedback(

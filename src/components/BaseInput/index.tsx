@@ -111,7 +111,6 @@ const BaseInput = React.forwardRef<any, BaseInputProps>(
       }).start();
     }, [isFloating]);
 
-    // مقادیر اینترپولیت برای جابجایی و کوچک شدن
     const translateY = floatAnim.interpolate({
       inputRange: [0, 1],
       outputRange: [14, -12], // ۱۴: وسط اینپوت | -۱۲: روی بوردر بالایی
@@ -122,7 +121,6 @@ const BaseInput = React.forwardRef<any, BaseInputProps>(
       outputRange: [1, 0.85], // لیبل هنگام رفتن روی بوردر کمی کوچک می‌شود
     });
 
-    // مدیریت ایونت‌ها برای آپدیت استیت‌ها
     const handleFocus = (e: any) => {
       setIsFocused(true);
       onFocus?.(e);
@@ -147,7 +145,6 @@ const BaseInput = React.forwardRef<any, BaseInputProps>(
         : "transparent";
     const focusBorderColor = isError ? "$errorMain" : mainColor;
 
-    // تشخیص رنگ لیبل
     const labelColor = isError
       ? "$errorMain"
       : isFocused
@@ -157,18 +154,17 @@ const BaseInput = React.forwardRef<any, BaseInputProps>(
     return (
       <YStack gap="$1" width="100%">
         <XStack position="relative" alignItems="center" width="100%">
-          {/* لیبل انیمیشن‌دار (Floating Label) */}
           {label && (
             <Animated.View
               style={{
                 position: "absolute",
-                top: 0, // 👈 این خط مشکل نرسیدن به بوردر را حل می‌کند
-                right: rightIcon ? 42 : 12, // 👈 برای راست‌چین (RTL) بودن
+                top: 0,
+                left: rightIcon ? 42 : 12,
                 transform: [{ translateY }, { scale }],
                 zIndex: 15,
                 paddingHorizontal: 4,
                 backgroundColor:
-                  isFloating && variant === "outline" ? "white" : "transparent",
+                  isFloating && variant === "outline" ? "gray" : "transparent",
               }}
               pointerEvents="none"
             >

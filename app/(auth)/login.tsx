@@ -160,8 +160,6 @@ const LoginScreen: React.FC<any> = () => {
               hasError={!!errors.username}
               variant="outline"
               errorMessage={errors.username}
-              // خود BaseInput باید فضای خالی ثابت برای ارور داشته باشد
-              // یا ارور را با position="absolute" نمایش دهد
             />
           </YStack>
           <YStack gap="$2">
