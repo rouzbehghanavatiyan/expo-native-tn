@@ -9,7 +9,7 @@ import {
   followingLength,
   profileAttachment,
 } from "@/src/services/masterServices";
-import { saveToken } from "@/src/services/tokenServices";
+import { saveTokens } from "@/src/services/tokenServices";
 import {
   RsetCategory,
   RsetFollowerLength,
@@ -23,7 +23,7 @@ import { FormErrors, FormValues } from "@/src/utils/GlobalType";
 import { Link, useRouter } from "expo-router";
 import { jwtDecode } from "jwt-decode";
 import { useState } from "react";
-import { Modal, Pressable } from "react-native"; // اضافه شدن Modal و Pressable
+import { Modal, Pressable } from "react-native";
 import { Image, Text, View, XStack, YStack } from "tamagui";
 
 const LoginScreen: React.FC<any> = () => {
@@ -34,7 +34,6 @@ const LoginScreen: React.FC<any> = () => {
   const [loading, setLoading] = useState(false);
   const [loginAttempts, setLoginAttempts] = useState(0);
 
-  // استیت‌های جدید برای مودال خطای Tamagui
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
 
@@ -65,9 +64,11 @@ const LoginScreen: React.FC<any> = () => {
         password: formState.password,
       });
 
-      if (response?.status === 0) {
+      if (response?.status === 0 || response?.status === 200) {
         const token = response?.data?.token;
-        await saveToken(token);
+        const refreshToken = response?.data?.refreshToken;
+
+        await saveTokens(token, refreshToken);
 
         const decoded: any = jwtDecode(token);
         const userId: any = Number(Object.values(decoded)?.[1]);
@@ -203,7 +204,7 @@ const LoginScreen: React.FC<any> = () => {
 
           <XStack justifyContent="center" mt="$2" gap="$2" flexWrap="wrap">
             <Text fontSize="$3" color="$textPrimary">
-              Don't have an account?
+              {`Dont't have an account?`}
             </Text>
 
             <Link href="/signup" asChild>
