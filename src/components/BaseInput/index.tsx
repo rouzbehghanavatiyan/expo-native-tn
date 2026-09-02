@@ -9,6 +9,7 @@ export interface BaseInputProps extends Omit<
   InputProps,
   "dangerouslySetInnerHTML"
 > {
+  baseColorLabel?: string;
   variant?: InputVariant;
   colorType?: ColorType;
   hasError?: boolean;
@@ -67,6 +68,7 @@ const BaseInput = React.forwardRef<any, BaseInputProps>(
     {
       errorMessage,
       helperText,
+      baseColorLabel = "white",
       label,
       leftIcon,
       rightIcon,
@@ -159,12 +161,14 @@ const BaseInput = React.forwardRef<any, BaseInputProps>(
               style={{
                 position: "absolute",
                 top: 0,
-                left: rightIcon ? 42 : 12,
+                left: rightIcon ? 15 : 12,
                 transform: [{ translateY }, { scale }],
                 zIndex: 15,
-                paddingHorizontal: 4,
+                paddingHorizontal: 5,
                 backgroundColor:
-                  isFloating && variant === "outline" ? "gray" : "transparent",
+                  isFloating && variant === "outline"
+                    ? baseColorLabel
+                    : "transparent",
               }}
               pointerEvents="none"
             >

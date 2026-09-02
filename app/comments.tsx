@@ -232,7 +232,7 @@ const Comments: React.FC<CommentsProps> = ({
       >
         <XStack
           alignItems="center"
-          justifyContent="space-between"
+          justifyContent="center"
           pb={12}
           borderBottomWidth={0.5}
           borderBottomColor="#2c2c2e"
