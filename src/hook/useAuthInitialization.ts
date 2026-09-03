@@ -1,14 +1,14 @@
 import {
-    categoryList,
-    followerList,
-    followingList,
-    profileAttachment,
+  categoryList,
+  followerList,
+  followingList,
+  profileAttachment,
 } from "@/src/services/masterServices";
 import {
-    RsetAllFollowerList,
-    RsetCategory,
-    RsetUserId,
-    RsetUserLogin,
+  RsetAllFollowerList,
+  RsetCategory,
+  RsetUserId,
+  RsetUserLogin,
 } from "@/src/slices/main";
 import { logger } from "@/src/utils/logger";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -108,6 +108,17 @@ export function useAuthInitialization() {
           );
           logger.error("API call failed in loadCurrentUser", apiError);
 
+          // ✨ تغییر مهم اینجاست ✨
+          // اگر ارور 401 (احراز هویت) بود، کاربر نباید لاگین شود
+          if (apiError?.response?.status === 401) {
+            console.log("Token is expired or invalid. Logging out...");
+            await AsyncStorage.removeItem("token");
+            dispatch(RsetUserLogin(null));
+            dispatch(RsetUserId(null));
+            return; // خروج از تابع برای جلوگیری از لاگین اشتباه
+          }
+
+          // اگر ارور دیگری مثل قطعی اینترنت بود، با دیتای لوکال لاگین شود
           dispatch(
             RsetUserLogin({
               token: savedToken,

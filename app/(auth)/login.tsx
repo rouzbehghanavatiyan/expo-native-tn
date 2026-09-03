@@ -2,6 +2,7 @@ import Logo from "@/src/assets/images/logocircle.png";
 import BaseButton from "@/src/components/BaseButtom";
 import BaseInput from "@/src/components/BaseInput";
 import { Icon } from "@/src/components/Icon";
+import { api, chatApi } from "@/src/services/api";
 import { login } from "@/src/services/authService";
 import {
   categoryList,
@@ -70,6 +71,9 @@ const LoginScreen: React.FC<any> = () => {
 
         await saveTokens(token, refreshToken);
 
+        api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+        chatApi.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+
         const decoded: any = jwtDecode(token);
         const userId: any = Number(Object.values(decoded)?.[1]);
 
@@ -77,24 +81,36 @@ const LoginScreen: React.FC<any> = () => {
         dispatch(RsetUserId(userId));
 
         await Promise.all([
-          categoryList().then((res) =>
-            dispatch(RsetCategory(res?.data?.data || [])),
-          ),
-          followingLength(userId).then((res) =>
-            dispatch(RsetFollowingLength(res?.data?.data?.count)),
-          ),
-          followerLength(userId).then((res) =>
-            dispatch(RsetFollowerLength(res?.data?.data?.count)),
-          ),
-          profileAttachment(userId).then((res) => {
-            if (res?.data?.data) {
-              dispatch(RsetUserLogin({ ...res.data.data, token, userId }));
-            }
-          }),
-        ]);
+          categoryList()
+            .then((res) => dispatch(RsetCategory(res?.data?.data || [])))
+            .catch((err) => console.log("Category List Error:", err?.message)),
 
+          followingLength(userId)
+            .then((res) =>
+              dispatch(RsetFollowingLength(res?.data?.data?.count)),
+            )
+            .catch((err) =>
+              console.log("Following Length Error:", err?.message),
+            ),
+
+          followerLength(userId)
+            .then((res) => dispatch(RsetFollowerLength(res?.data?.data?.count)))
+            .catch((err) =>
+              console.log("Follower Length Error:", err?.message),
+            ),
+
+          profileAttachment(userId)
+            .then((res) => {
+              if (res?.data?.data) {
+                dispatch(RsetUserLogin({ ...res.data.data, token, userId }));
+              }
+            })
+            .catch((err) => {
+              console.log("Profile Attachment Error:", err?.message);
+              dispatch(RsetUserLogin({ token, userId }));
+            }),
+        ]);
         router.replace("/(tabs)/watch");
-      } else {
         setLoginAttempts((prev) => prev + 1);
         setModalMessage(
           "User not found or incorrect password. Please try again.",

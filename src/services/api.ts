@@ -1,5 +1,6 @@
 import axios from "axios";
 import { router } from "expo-router";
+import { logger } from "../utils/logger";
 import {
   getAccessToken,
   getRefreshToken,
@@ -56,14 +57,35 @@ const processQueue = (error: any, token: string | null = null) => {
 };
 
 const applyResponseInterceptor = (instance: typeof api) => {
+  api.interceptors.request.use(
+    async (config) => {
+      const token = await getAccessToken();
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      return config;
+    },
+    (error) => {
+      return Promise.reject(error);
+    },
+  );
+
   instance.interceptors.response.use(
     (response) => response,
     async (error) => {
       const originalRequest = error.config;
 
-      // اگر ارور 401 بود و قبلاً تلاشی برای این ریکوئست نشده بود
+      // ۱. اگر خطا ۴۰۱ بود اما مربوط به خود لاگین بود، اصلا رفرش نکن و فقط خطا بده
+      if (
+        error.response?.status === 401 &&
+        originalRequest.url?.includes("/login")
+      ) {
+        return Promise.reject(error);
+      }
+
+      // ۲. اگر ۴۰۱ بود و مربوط به لاگین نبود و قبلا سعی نکرده بودیم رفرش کنیم:
       if (error.response?.status === 401 && !originalRequest._retry) {
-        // اگر در حال حاضر یک درخواست رفرش در جریان است، ریکوئست فعلی را در صف منتظر بگذار
+        // اگر الان یک ریکوئست دیگر در حال رفرش کردن توکن است، این یکی را بفرست تو صف انتظار
         if (isRefreshing) {
           return new Promise(function (resolve, reject) {
             failedQueue.push({ resolve, reject });
@@ -77,35 +99,56 @@ const applyResponseInterceptor = (instance: typeof api) => {
             });
         }
 
+        // اگر در حال رفرش نیستیم، پرچم‌ها را روشن کن تا بقیه بروند تو صف
         originalRequest._retry = true;
         isRefreshing = true;
 
         const accessToken = await getAccessToken();
         const refreshToken = await getRefreshToken();
+        logger.info("refreshToken ", refreshToken);
 
         if (!accessToken || !refreshToken) {
           isRefreshing = false;
           await removeTokens();
-          router.replace("/login");
+          try {
+            router.replace("/login");
+          } catch (e) {
+            console.log(e);
+          }
           return Promise.reject(error);
         }
 
         try {
-          // درخواست مستقیم با axios خام (بدون api) تا وارد لوپ بی‌نهایت اینترسپتورها نشویم
-          // نکته: آدرس دقیق کنترلر لاگین خود را در خط زیر وارد کنید
-          const response = await axios.post(`${baseURL}/Login/refreshToken`, {
+          const response = await axios.post(`${baseURL}/refreshToken`, {
             accessToken: accessToken,
             refreshToken: refreshToken,
           });
 
-          // دریافت توکن‌های جدید (دقت کنید نام پراپرتی‌ها با DTO بک‌اند یکی باشد)
-          const newAccessToken = response.data.token;
-          const newRefreshToken = response.data.refreshToken;
+          console.log("=== SERVER REFRESH RESPONSE ===");
+          console.log(JSON.stringify(response.data, null, 2));
+          console.log("===============================");
 
-          // ذخیره توکن‌های جدید
+          // FIX: Access the nested 'data' object
+          const responseData = response.data?.data;
+
+          const newAccessToken = responseData?.token;
+          const newRefreshToken = responseData?.refreshToken;
+
+          if (!newAccessToken || !newRefreshToken) {
+            console.error("❌ Invalid tokens received from refresh endpoint!");
+            processQueue(new Error("Invalid tokens"), null);
+            await removeTokens();
+            router.replace("/login");
+            return Promise.reject(new Error("Invalid tokens"));
+          }
+
+          console.log("✅ Tokens successfully refreshed and validated.");
           await saveTokens(newAccessToken, newRefreshToken);
 
-          // تنظیم توکن جدید روی هدرها و اجرای مجدد ریکوئست اصلی
+          api.defaults.headers.common["Authorization"] =
+            `Bearer ${newAccessToken}`;
+          chatApi.defaults.headers.common["Authorization"] =
+            `Bearer ${newAccessToken}`;
           instance.defaults.headers.common["Authorization"] =
             `Bearer ${newAccessToken}`;
           originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
@@ -113,7 +156,6 @@ const applyResponseInterceptor = (instance: typeof api) => {
           processQueue(null, newAccessToken);
           return instance(originalRequest);
         } catch (refreshError) {
-          // اگر خود رفرش توکن هم منقضی شده بود یا ارور داد، کاربر باید لاگین کند
           processQueue(refreshError, null);
           await removeTokens();
           router.replace("/login");
@@ -121,6 +163,7 @@ const applyResponseInterceptor = (instance: typeof api) => {
         } finally {
           isRefreshing = false;
         }
+        // ...
       }
 
       return Promise.reject(error);
