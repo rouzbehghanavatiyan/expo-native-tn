@@ -72,7 +72,9 @@ const LoginScreen: React.FC<any> = () => {
         const refreshToken = response?.data?.refreshToken;
 
         await saveTokens(token, refreshToken);
-        await saveTokens(token, refreshToken);
+
+        api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+        chatApi.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
         api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
         chatApi.defaults.headers.common["Authorization"] = `Bearer ${token}`;
@@ -112,9 +114,7 @@ const LoginScreen: React.FC<any> = () => {
               dispatch(RsetUserLogin({ token, userId }));
             }),
         ]);
-
         router.replace("/(tabs)/watch");
-      } else {
         setLoginAttempts((prev) => prev + 1);
         setModalMessage(
           "User not found or incorrect password. Please try again.",

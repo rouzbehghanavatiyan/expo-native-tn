@@ -61,66 +61,102 @@ const processQueue = (error: any, token: string | null = null) => {
   failedQueue = [];
 };
 
-const applyResponseInterceptor = (instance: typeof api, name: string) => {
+const applyResponseInterceptor = (instance: typeof api) => {
+  api.interceptors.request.use(
+    async (config) => {
+      const token = await getAccessToken();
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      return config;
+    },
+    (error) => {
+      return Promise.reject(error);
+    },
+  );
+
   instance.interceptors.response.use(
     (response) => response,
     async (error) => {
       const originalRequest = error.config;
 
+      // ۱. اگر خطا ۴۰۱ بود اما مربوط به خود لاگین بود، اصلا رفرش نکن و فقط خطا بده
       if (
         error.response?.status === 401 &&
-        originalRequest &&
-        !originalRequest.url?.includes("/login")
+        originalRequest.url?.includes("/login")
       ) {
-        console.log(`[401 DETECTED] in ${name} on URL: ${originalRequest.url}`);
+        return Promise.reject(error);
+      }
 
-        if (!originalRequest._retry) {
-          if (isRefreshing) {
-            console.log(
-              `[QUEUEING] Request queued waiting for new token: ${originalRequest.url}`,
-            );
-            return new Promise(function (resolve, reject) {
-              failedQueue.push({ resolve, reject });
+      // ۲. اگر ۴۰۱ بود و مربوط به لاگین نبود و قبلا سعی نکرده بودیم رفرش کنیم:
+      if (error.response?.status === 401 && !originalRequest._retry) {
+        // اگر الان یک ریکوئست دیگر در حال رفرش کردن توکن است، این یکی را بفرست تو صف انتظار
+        if (isRefreshing) {
+          return new Promise(function (resolve, reject) {
+            failedQueue.push({ resolve, reject });
+          })
+            .then((token) => {
+              originalRequest.headers.Authorization = "Bearer " + token;
+              return instance(originalRequest);
             })
-              .then((token) => {
-                originalRequest.headers.Authorization = "Bearer " + token;
-                return instance(originalRequest);
-              })
-              .catch((err) => Promise.reject(err));
+            .catch((err) => {
+              return Promise.reject(err);
+            });
+        }
+
+        // اگر در حال رفرش نیستیم، پرچم‌ها را روشن کن تا بقیه بروند تو صف
+        originalRequest._retry = true;
+        isRefreshing = true;
+
+        const accessToken = await getAccessToken();
+        const refreshToken = await getRefreshToken();
+        logger.info("refreshToken ", refreshToken);
+
+        if (!accessToken || !refreshToken) {
+          isRefreshing = false;
+          await removeTokens();
+          try {
+            router.replace("/login");
+          } catch (e) {
+            console.log(e);
           }
+          return Promise.reject(error);
+        }
 
-          originalRequest._retry = true;
-          isRefreshing = true;
+        try {
+          const response = await axios.post(`${baseURL}/refreshToken`, {
+            accessToken: accessToken,
+            refreshToken: refreshToken,
+          });
 
-          const accessToken = await getAccessToken();
-          const refreshToken = await getRefreshToken();
+          console.log("=== SERVER REFRESH RESPONSE ===");
+          console.log(JSON.stringify(response.data, null, 2));
+          console.log("===============================");
 
-          if (!accessToken || !refreshToken) {
-            console.log(`[REFRESH ABORTED] Missing tokens in storage.`);
-            isRefreshing = false;
+          // FIX: Access the nested 'data' object
+          const responseData = response.data?.data;
+
+          const newAccessToken = responseData?.token;
+          const newRefreshToken = responseData?.refreshToken;
+
+          if (!newAccessToken || !newRefreshToken) {
+            console.error("❌ Invalid tokens received from refresh endpoint!");
+            processQueue(new Error("Invalid tokens"), null);
             await removeTokens();
             router.replace("/login");
-            return Promise.reject(error);
+            return Promise.reject(new Error("Invalid tokens"));
           }
 
-          try {
-            console.log(
-              `[TRYING REFRESH] Sending refresh request to backend...`,
-            );
-            logger.info("refreshToken", refreshToken);
-            logger.info("accessToken", accessToken);
-            const response = await axios.post(`${baseURL}/refreshToken`, {
-              accessToken: accessToken,
-              refreshToken: refreshToken,
-            });
+          console.log("✅ Tokens successfully refreshed and validated.");
+          await saveTokens(newAccessToken, newRefreshToken);
 
-            const newAccessToken = response.data.token;
-            const newRefreshToken = response.data.refreshToken;
-
-            console.log(`[REFRESH SUCCESS] New token generated.`);
-            await saveTokens(newAccessToken, newRefreshToken);
-
-            originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+          api.defaults.headers.common["Authorization"] =
+            `Bearer ${newAccessToken}`;
+          chatApi.defaults.headers.common["Authorization"] =
+            `Bearer ${newAccessToken}`;
+          instance.defaults.headers.common["Authorization"] =
+            `Bearer ${newAccessToken}`;
+          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
 
             processQueue(null, newAccessToken);
             isRefreshing = false;

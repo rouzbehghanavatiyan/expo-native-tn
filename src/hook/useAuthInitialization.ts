@@ -116,6 +116,17 @@ export function useAuthInitialization() {
             return; // خروج از تابع برای جلوگیری از لاگین اشتباه
           }
 
+          // ✨ تغییر مهم اینجاست ✨
+          // اگر ارور 401 (احراز هویت) بود، کاربر نباید لاگین شود
+          if (apiError?.response?.status === 401) {
+            console.log("Token is expired or invalid. Logging out...");
+            await AsyncStorage.removeItem("token");
+            dispatch(RsetUserLogin(null));
+            dispatch(RsetUserId(null));
+            return; // خروج از تابع برای جلوگیری از لاگین اشتباه
+          }
+
+          // اگر ارور دیگری مثل قطعی اینترنت بود، با دیتای لوکال لاگین شود
           dispatch(
             RsetUserLogin({
               token: savedToken,
