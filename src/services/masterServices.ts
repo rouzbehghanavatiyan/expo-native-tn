@@ -33,10 +33,8 @@ export const followerList = async (
   return await api.get(`/followerList?userId=${userId}`);
 };
 
-export const profileAttachment = async (
-  userId: number | string | null | undefined,
-) => {
-  return await api.get(`/profileAttachment?userId=${userId}`);
+export const profileAttachment = (userId: string | number) => {
+  return api.get(`/profileAttachment?userId=${userId}`);
 };
 
 export const followingList = async (
@@ -45,10 +43,8 @@ export const followingList = async (
   return await api.get(`/followingList?userId=${userId}`);
 };
 
-export const followingLength = async (
-  userId: number | string | null | undefined,
-) => {
-  return await api.get(`/followingLength?userId=${userId}`);
+export const followingLength = (userId: string | number) => {
+  return api.get(`/followingLength?userId=${userId}`);
 };
 
 export const followerLength = async (

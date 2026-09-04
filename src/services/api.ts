@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { type AxiosInstance } from "axios";
 import { router } from "expo-router";
 import { logger } from "../utils/logger";
 import {
@@ -11,164 +11,129 @@ import {
 const baseURL = process.env.EXPO_PUBLIC_VITE_URL;
 const chatBaseURL = process.env.EXPO_PUBLIC_SOCKET;
 
+// 1. Create Axios instances
 export const api = axios.create({
   baseURL,
-  headers: {
-    "Content-Type": "application/json",
-  },
+  headers: { "Content-Type": "application/json" },
 });
 
 export const chatApi = axios.create({
   baseURL: chatBaseURL,
-  headers: {
-    "Content-Type": "application/json",
-  },
+  headers: { "Content-Type": "application/json" },
 });
 
-let navigationRef: any = null;
-export const setNavigationRef = (ref: any) => {
-  navigationRef = ref;
-};
-
-const applyRequestInterceptor = (instance: typeof api, name: string) => {
-  instance.interceptors.request.use(
-    async (config) => {
-      const token = await getAccessToken();
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-
-      console.log(
-        `[REQUEST OUT] ${name} -> ${config.url} | Token attached: ${!!token}`,
-      );
-      return config;
-    },
-    (error) => Promise.reject(error),
-  );
-};
-
+// 2. Define state for token refresh process
 let isRefreshing = false;
-let failedQueue: any[] = [];
+let failedQueue: {
+  resolve: (token: string) => void;
+  reject: (error: any) => void;
+}[] = [];
 
 const processQueue = (error: any, token: string | null = null) => {
   failedQueue.forEach((prom) => {
     if (error) {
       prom.reject(error);
-    } else {
+    } else if (token) {
       prom.resolve(token);
     }
   });
   failedQueue = [];
 };
 
-const applyResponseInterceptor = (instance: typeof api) => {
-  api.interceptors.request.use(
+// 3. Define a single, reusable interceptor logic
+const setupInterceptors = (instance: AxiosInstance, name: string) => {
+  // === REQUEST INTERCEPTOR ===
+  // Attaches the token to every outgoing request
+  instance.interceptors.request.use(
     async (config) => {
       const token = await getAccessToken();
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
+      logger.debug(
+        `[REQUEST] ${name} to ${config.url} | Token Attached: ${!!token}`,
+      );
       return config;
     },
-    (error) => {
-      return Promise.reject(error);
-    },
+    (error) => Promise.reject(error),
   );
 
+  // === RESPONSE INTERCEPTOR ===
+  // Handles 401 errors and token refresh logic
   instance.interceptors.response.use(
-    (response) => response,
+    (response) => response, // Directly return successful responses
     async (error) => {
       const originalRequest = error.config;
 
-      if (
-        error.response?.status === 401 &&
-        originalRequest.url?.includes("/login")
-      ) {
+      // Don't refresh on login failure & avoid retry loops
+      if (error.response?.status !== 401 || originalRequest._retry) {
         return Promise.reject(error);
       }
 
-      if (error.response?.status === 401 && !originalRequest._retry) {
-        if (isRefreshing) {
-          return new Promise(function (resolve, reject) {
-            failedQueue.push({ resolve, reject });
-          })
-            .then((token) => {
-              originalRequest.headers.Authorization = "Bearer " + token;
-              return instance(originalRequest);
-            })
-            .catch((err) => {
-              return Promise.reject(err);
-            });
-        }
+      // If a refresh is already in progress, queue the request
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        }).then((token) => {
+          originalRequest.headers.Authorization = `Bearer ${token}`;
+          return instance(originalRequest); // Retry with the new token
+        });
+      }
 
-        originalRequest._retry = true;
-        isRefreshing = true;
+      originalRequest._retry = true;
+      isRefreshing = true;
 
+      const refreshToken = await getRefreshToken();
+
+      if (!refreshToken) {
+        logger.warn("No refresh token found. Redirecting to login.");
+        await removeTokens();
+        router.replace("/login");
+        isRefreshing = false;
+        processQueue(error, null);
+        return Promise.reject(error);
+      }
+
+      try {
         const accessToken = await getAccessToken();
-        const refreshToken = await getRefreshToken();
-        logger.info("refreshToken ", refreshToken);
+        const response = await axios.post(`${baseURL}/refreshToken`, {
+          accessToken: accessToken, // Send current (expired) access token
+          refreshToken: refreshToken,
+        });
 
-        if (!accessToken || !refreshToken) {
-          isRefreshing = false;
-          await removeTokens();
-          try {
-            router.replace("/login");
-          } catch (e) {
-            console.log(e);
-          }
-          return Promise.reject(error);
+        const responseData = response.data?.data;
+        const newAccessToken = responseData?.token;
+        const newRefreshToken = responseData?.refreshToken;
+
+        if (!newAccessToken || !newRefreshToken) {
+          throw new Error("Invalid new tokens received from server.");
         }
 
-        try {
-          const response = await axios.post(`${baseURL}/refreshToken`, {
-            accessToken: accessToken,
-            refreshToken: refreshToken,
-          });
+        await saveTokens(newAccessToken, newRefreshToken);
+        logger.info("✅ Tokens successfully refreshed.");
 
-          console.log("=== SERVER REFRESH RESPONSE ===");
-          console.log(JSON.stringify(response.data, null, 2));
-          console.log("===============================");
+        // Update the header for the current retried request
+        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
 
-          // FIX: Access the nested 'data' object
-          const responseData = response.data?.data;
+        // Process the queue of failed requests with the new token
+        processQueue(null, newAccessToken);
 
-          const newAccessToken = responseData?.token;
-          const newRefreshToken = responseData?.refreshToken;
-
-          if (!newAccessToken || !newRefreshToken) {
-            console.error("❌ Invalid tokens received from refresh endpoint!");
-            processQueue(new Error("Invalid tokens"), null);
-            await removeTokens();
-            router.replace("/login");
-            return Promise.reject(new Error("Invalid tokens"));
-          }
-
-          console.log("✅ Tokens successfully refreshed and validated.");
-          await saveTokens(newAccessToken, newRefreshToken);
-
-          api.defaults.headers.common["Authorization"] =
-            `Bearer ${newAccessToken}`;
-          chatApi.defaults.headers.common["Authorization"] =
-            `Bearer ${newAccessToken}`;
-          instance.defaults.headers.common["Authorization"] =
-            `Bearer ${newAccessToken}`;
-          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-
-          processQueue(null, newAccessToken);
-          isRefreshing = false;
-
-          return instance(originalRequest);
-        } catch (refreshError: any) {
-          console.log(
-            `[REFRESH FAILED] Status: ${refreshError.response?.status} - Data: ${JSON.stringify(refreshError.response?.data)}`,
-          );
-          processQueue(refreshError, null);
-          isRefreshing = false;
-          await removeTokens();
-          router.replace("/login");
-          return Promise.reject(refreshError);
-        }
+        // Retry the original request
+        return instance(originalRequest);
+      } catch (refreshError) {
+        logger.error("❌ Token refresh failed. Logging out.", refreshError);
+        await removeTokens();
+        processQueue(refreshError, null);
+        router.replace("/login"); // Redirect to login on refresh failure
+        return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
       }
     },
   );
 };
+
+// --- MAIN FIX ---
+// 4. Apply the interceptors to BOTH axios instances
+setupInterceptors(api, "API");
+setupInterceptors(chatApi, "ChatAPI");

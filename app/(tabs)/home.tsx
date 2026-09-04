@@ -11,7 +11,14 @@ import { useAppDispatch, useAppSelector } from "@/src/store/reduxHookType";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { FlashList } from "@shopify/flash-list";
 import React, { useCallback, useRef, useState } from "react";
-import { StyleSheet, Text, useWindowDimensions, View } from "react-native";
+// ✅ Platform را به ایمپورت اضافه کنید
+import {
+  Platform,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import Comments from "../comments";
 
 const HomeScreen: React.FC = () => {
@@ -23,8 +30,8 @@ const HomeScreen: React.FC = () => {
   const { width, height } = useWindowDimensions();
   const headerHeight = useHeaderHeight();
 
-  // ارتفاع قابل استفاده دقیقاً تا کف صفحه بدون کم کردن ارتفاع تب‌بار
-  const usableHeight = height - headerHeight;
+  const usableHeight =
+    height - headerHeight - (Platform.OS === "android" ? 32 : 0);
 
   const [refreshing, setRefreshing] = useState(false);
   const [showComments, setShowComments] = useState(false);
