@@ -1,5 +1,6 @@
 import axios from "axios";
 import { router } from "expo-router";
+import { logger } from "../utils/logger";
 import {
   getAccessToken,
   getRefreshToken,
@@ -29,18 +30,23 @@ export const setNavigationRef = (ref: any) => {
   navigationRef = ref;
 };
 
-// اضافه کردن اکسس توکن به تمامی ریکوئست‌ها
-const applyRequestInterceptor = (instance: typeof api) => {
-  instance.interceptors.request.use(async (config) => {
-    const token = await getAccessToken();
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  });
+const applyRequestInterceptor = (instance: typeof api, name: string) => {
+  instance.interceptors.request.use(
+    async (config) => {
+      const token = await getAccessToken();
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+
+      console.log(
+        `[REQUEST OUT] ${name} -> ${config.url} | Token attached: ${!!token}`,
+      );
+      return config;
+    },
+    (error) => Promise.reject(error),
+  );
 };
 
-// متغیرهایی برای جلوگیری از ارسال چندباره درخواست Refresh
 let isRefreshing = false;
 let failedQueue: any[] = [];
 
@@ -55,72 +61,88 @@ const processQueue = (error: any, token: string | null = null) => {
   failedQueue = [];
 };
 
-const applyResponseInterceptor = (instance: typeof api) => {
+const applyResponseInterceptor = (instance: typeof api, name: string) => {
   instance.interceptors.response.use(
     (response) => response,
     async (error) => {
       const originalRequest = error.config;
 
-      // اگر ارور 401 بود و قبلاً تلاشی برای این ریکوئست نشده بود
-      if (error.response?.status === 401 && !originalRequest._retry) {
-        // اگر در حال حاضر یک درخواست رفرش در جریان است، ریکوئست فعلی را در صف منتظر بگذار
-        if (isRefreshing) {
-          return new Promise(function (resolve, reject) {
-            failedQueue.push({ resolve, reject });
-          })
-            .then((token) => {
-              originalRequest.headers.Authorization = "Bearer " + token;
-              return instance(originalRequest);
+      if (
+        error.response?.status === 401 &&
+        originalRequest &&
+        !originalRequest.url?.includes("/login")
+      ) {
+        console.log(`[401 DETECTED] in ${name} on URL: ${originalRequest.url}`);
+
+        if (!originalRequest._retry) {
+          if (isRefreshing) {
+            console.log(
+              `[QUEUEING] Request queued waiting for new token: ${originalRequest.url}`,
+            );
+            return new Promise(function (resolve, reject) {
+              failedQueue.push({ resolve, reject });
             })
-            .catch((err) => {
-              return Promise.reject(err);
+              .then((token) => {
+                originalRequest.headers.Authorization = "Bearer " + token;
+                return instance(originalRequest);
+              })
+              .catch((err) => Promise.reject(err));
+          }
+
+          originalRequest._retry = true;
+          isRefreshing = true;
+
+          const accessToken = await getAccessToken();
+          const refreshToken = await getRefreshToken();
+
+          if (!accessToken || !refreshToken) {
+            console.log(`[REFRESH ABORTED] Missing tokens in storage.`);
+            isRefreshing = false;
+            await removeTokens();
+            router.replace("/login");
+            return Promise.reject(error);
+          }
+
+          try {
+            console.log(
+              `[TRYING REFRESH] Sending refresh request to backend...`,
+            );
+            logger.info("refreshToken", refreshToken);
+            logger.info("accessToken", accessToken);
+            const response = await axios.post(`${baseURL}/refreshToken`, {
+              accessToken: accessToken,
+              refreshToken: refreshToken,
             });
+
+            const newAccessToken = response.data.token;
+            const newRefreshToken = response.data.refreshToken;
+
+            console.log(`[REFRESH SUCCESS] New token generated.`);
+            await saveTokens(newAccessToken, newRefreshToken);
+
+            originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+
+            processQueue(null, newAccessToken);
+            isRefreshing = false;
+
+            return instance(originalRequest);
+          } catch (refreshError: any) {
+            console.log(
+              `[REFRESH FAILED] Status: ${refreshError.response?.status} - Data: ${JSON.stringify(refreshError.response?.data)}`,
+            );
+            processQueue(refreshError, null);
+            isRefreshing = false;
+            await removeTokens();
+            router.replace("/login");
+            return Promise.reject(refreshError);
+          }
         }
+      }
 
-        originalRequest._retry = true;
-        isRefreshing = true;
-
-        const accessToken = await getAccessToken();
-        const refreshToken = await getRefreshToken();
-
-        if (!accessToken || !refreshToken) {
-          isRefreshing = false;
-          await removeTokens();
-          router.replace("/login");
-          return Promise.reject(error);
-        }
-
-        try {
-          // درخواست مستقیم با axios خام (بدون api) تا وارد لوپ بی‌نهایت اینترسپتورها نشویم
-          // نکته: آدرس دقیق کنترلر لاگین خود را در خط زیر وارد کنید
-          const response = await axios.post(`${baseURL}/Login/refreshToken`, {
-            accessToken: accessToken,
-            refreshToken: refreshToken,
-          });
-
-          // دریافت توکن‌های جدید (دقت کنید نام پراپرتی‌ها با DTO بک‌اند یکی باشد)
-          const newAccessToken = response.data.token;
-          const newRefreshToken = response.data.refreshToken;
-
-          // ذخیره توکن‌های جدید
-          await saveTokens(newAccessToken, newRefreshToken);
-
-          // تنظیم توکن جدید روی هدرها و اجرای مجدد ریکوئست اصلی
-          instance.defaults.headers.common["Authorization"] =
-            `Bearer ${newAccessToken}`;
-          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-
-          processQueue(null, newAccessToken);
-          return instance(originalRequest);
-        } catch (refreshError) {
-          // اگر خود رفرش توکن هم منقضی شده بود یا ارور داد، کاربر باید لاگین کند
-          processQueue(refreshError, null);
-          await removeTokens();
-          router.replace("/login");
-          return Promise.reject(refreshError);
-        } finally {
-          isRefreshing = false;
-        }
+      if (error.response?.status !== 401) {
+        console.log(
+          `[API ERROR] Status: ${error.response?.status} on URL: ${originalRequest?.url}`,
+        );
       }
 
       return Promise.reject(error);
@@ -128,8 +150,8 @@ const applyResponseInterceptor = (instance: typeof api) => {
   );
 };
 
-applyRequestInterceptor(api);
-applyRequestInterceptor(chatApi);
+applyRequestInterceptor(api, "MainAPI");
+applyRequestInterceptor(chatApi, "ChatAPI");
 
-applyResponseInterceptor(api);
-applyResponseInterceptor(chatApi);
+applyResponseInterceptor(api, "MainAPI");
+applyResponseInterceptor(chatApi, "ChatAPI");

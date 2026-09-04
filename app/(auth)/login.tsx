@@ -2,6 +2,7 @@ import Logo from "@/src/assets/images/logocircle.png";
 import BaseButton from "@/src/components/BaseButtom";
 import BaseInput from "@/src/components/BaseInput";
 import { Icon } from "@/src/components/Icon";
+import { api, chatApi } from "@/src/services/api";
 import { login } from "@/src/services/authService";
 import {
   categoryList,
@@ -20,6 +21,7 @@ import {
 import { useAppDispatch } from "@/src/store/reduxHookType";
 import { validateFormLogin } from "@/src/utils/errorValidation";
 import { FormErrors, FormValues } from "@/src/utils/GlobalType";
+import { logger } from "@/src/utils/logger";
 import { Link, useRouter } from "expo-router";
 import { jwtDecode } from "jwt-decode";
 import { useState } from "react";
@@ -63,34 +65,52 @@ const LoginScreen: React.FC<any> = () => {
         userName: formState.username,
         password: formState.password,
       });
+      logger.info("response Login", response);
 
-      if (response?.status === 0 || response?.status === 200) {
+      if (response?.status === 0 || response?.statusCode === 200) {
         const token = response?.data?.token;
         const refreshToken = response?.data?.refreshToken;
 
         await saveTokens(token, refreshToken);
+        await saveTokens(token, refreshToken);
 
+        api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+        chatApi.defaults.headers.common["Authorization"] = `Bearer ${token}`;
         const decoded: any = jwtDecode(token);
-        const userId: any = Number(Object.values(decoded)?.[1]);
+        const userId: any = Object.values(decoded)?.[1];
 
         dispatch(RsetUserLogin({ token, userId }));
         dispatch(RsetUserId(userId));
 
         await Promise.all([
-          categoryList().then((res) =>
-            dispatch(RsetCategory(res?.data?.data || [])),
-          ),
-          followingLength(userId).then((res) =>
-            dispatch(RsetFollowingLength(res?.data?.data?.count)),
-          ),
-          followerLength(userId).then((res) =>
-            dispatch(RsetFollowerLength(res?.data?.data?.count)),
-          ),
-          profileAttachment(userId).then((res) => {
-            if (res?.data?.data) {
-              dispatch(RsetUserLogin({ ...res.data.data, token, userId }));
-            }
-          }),
+          categoryList()
+            .then((res) => dispatch(RsetCategory(res?.data?.data || [])))
+            .catch((err) => console.log("Category List Error:", err?.message)),
+
+          followingLength(userId)
+            .then((res) =>
+              dispatch(RsetFollowingLength(res?.data?.data?.count)),
+            )
+            .catch((err) =>
+              console.log("Following Length Error:", err?.message),
+            ),
+
+          followerLength(userId)
+            .then((res) => dispatch(RsetFollowerLength(res?.data?.data?.count)))
+            .catch((err) =>
+              console.log("Follower Length Error:", err?.message),
+            ),
+
+          profileAttachment(userId)
+            .then((res) => {
+              if (res?.data?.data) {
+                dispatch(RsetUserLogin({ ...res.data.data, token, userId }));
+              }
+            })
+            .catch((err) => {
+              console.log("Profile Attachment Error:", err?.message);
+              dispatch(RsetUserLogin({ token, userId }));
+            }),
         ]);
 
         router.replace("/(tabs)/watch");

@@ -173,8 +173,6 @@ export default function PrivateChat() {
 
   const handleReciveMessage = useCallback(
     (data: any) => {
-      logger.debug("Received Message:", data);
-
       const sender = String(data.senderId ?? data.sender);
       const receiver = String(data.receiveId ?? data.recieveId);
       const currentLogin = String(userIdLogin);

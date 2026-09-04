@@ -1,24 +1,40 @@
-import * as SecureStore from "expo-secure-store";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const ACCESS_TOKEN_KEY = "accessToken";
 const REFRESH_TOKEN_KEY = "refreshToken";
 
-// ذخیره هر دو توکن هنگام لاگین
 export const saveTokens = async (accessToken: string, refreshToken: string) => {
-  await SecureStore.setItemAsync(ACCESS_TOKEN_KEY, accessToken);
-  await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, refreshToken);
+  try {
+    await AsyncStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
+    await AsyncStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+  } catch (error) {
+    console.error("Error saving tokens to AsyncStorage:", error);
+  }
 };
 
 export const getAccessToken = async () => {
-  return await SecureStore.getItemAsync(ACCESS_TOKEN_KEY);
+  try {
+    return await AsyncStorage.getItem(ACCESS_TOKEN_KEY);
+  } catch (error) {
+    console.error("Error getting access token from AsyncStorage:", error);
+    return null;
+  }
 };
 
 export const getRefreshToken = async () => {
-  return await SecureStore.getItemAsync(REFRESH_TOKEN_KEY);
+  try {
+    return await AsyncStorage.getItem(REFRESH_TOKEN_KEY);
+  } catch (error) {
+    console.error("Error getting refresh token from AsyncStorage:", error);
+    return null;
+  }
 };
 
-// پاک کردن توکن‌ها هنگام خروج یا انقضای کامل
 export const removeTokens = async () => {
-  await SecureStore.deleteItemAsync(ACCESS_TOKEN_KEY);
-  await SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY);
+  try {
+    await AsyncStorage.removeItem(ACCESS_TOKEN_KEY);
+    await AsyncStorage.removeItem(REFRESH_TOKEN_KEY);
+  } catch (error) {
+    console.error("Error removing tokens from AsyncStorage:", error);
+  }
 };
