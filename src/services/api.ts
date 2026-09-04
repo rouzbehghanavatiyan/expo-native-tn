@@ -80,7 +80,6 @@ const applyResponseInterceptor = (instance: typeof api) => {
     async (error) => {
       const originalRequest = error.config;
 
-      // ۱. اگر خطا ۴۰۱ بود اما مربوط به خود لاگین بود، اصلا رفرش نکن و فقط خطا بده
       if (
         error.response?.status === 401 &&
         originalRequest.url?.includes("/login")
@@ -88,9 +87,7 @@ const applyResponseInterceptor = (instance: typeof api) => {
         return Promise.reject(error);
       }
 
-      // ۲. اگر ۴۰۱ بود و مربوط به لاگین نبود و قبلا سعی نکرده بودیم رفرش کنیم:
       if (error.response?.status === 401 && !originalRequest._retry) {
-        // اگر الان یک ریکوئست دیگر در حال رفرش کردن توکن است، این یکی را بفرست تو صف انتظار
         if (isRefreshing) {
           return new Promise(function (resolve, reject) {
             failedQueue.push({ resolve, reject });
@@ -104,7 +101,6 @@ const applyResponseInterceptor = (instance: typeof api) => {
             });
         }
 
-        // اگر در حال رفرش نیستیم، پرچم‌ها را روشن کن تا بقیه بروند تو صف
         originalRequest._retry = true;
         isRefreshing = true;
 
@@ -158,36 +154,21 @@ const applyResponseInterceptor = (instance: typeof api) => {
             `Bearer ${newAccessToken}`;
           originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
 
-            processQueue(null, newAccessToken);
-            isRefreshing = false;
+          processQueue(null, newAccessToken);
+          isRefreshing = false;
 
-            return instance(originalRequest);
-          } catch (refreshError: any) {
-            console.log(
-              `[REFRESH FAILED] Status: ${refreshError.response?.status} - Data: ${JSON.stringify(refreshError.response?.data)}`,
-            );
-            processQueue(refreshError, null);
-            isRefreshing = false;
-            await removeTokens();
-            router.replace("/login");
-            return Promise.reject(refreshError);
-          }
+          return instance(originalRequest);
+        } catch (refreshError: any) {
+          console.log(
+            `[REFRESH FAILED] Status: ${refreshError.response?.status} - Data: ${JSON.stringify(refreshError.response?.data)}`,
+          );
+          processQueue(refreshError, null);
+          isRefreshing = false;
+          await removeTokens();
+          router.replace("/login");
+          return Promise.reject(refreshError);
         }
       }
-
-      if (error.response?.status !== 401) {
-        console.log(
-          `[API ERROR] Status: ${error.response?.status} on URL: ${originalRequest?.url}`,
-        );
-      }
-
-      return Promise.reject(error);
     },
   );
 };
-
-applyRequestInterceptor(api, "MainAPI");
-applyRequestInterceptor(chatApi, "ChatAPI");
-
-applyResponseInterceptor(api, "MainAPI");
-applyResponseInterceptor(chatApi, "ChatAPI");
