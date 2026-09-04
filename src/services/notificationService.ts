@@ -3,7 +3,7 @@ import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
 import { api } from "./api";
 
-const notifBaseURL = process.env.EXPO_PUBLIC_NOTIF;
+const notifBaseURL = process.env.EXPO_PUBLIC_VITE_URL;
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
