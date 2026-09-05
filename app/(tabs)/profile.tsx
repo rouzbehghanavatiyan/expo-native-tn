@@ -1,20 +1,4 @@
-import ProfileAchievements from "@/src/components/ProfileAchievements";
-import ProfileBio from "@/src/components/ProfileBio";
-import ProfileHeader from "@/src/components/ProfileHeader";
-import { stopMatchTimer } from "@/src/components/TimerForFindMatch";
-import { useLoadMore } from "@/src/components/useLoadMore";
-import { useShowWatch } from "@/src/hook/useShowWatch";
-import {
-  profileAttachment,
-  userAttachmentList,
-} from "@/src/services/masterServices";
-import { RsetProfileVideo } from "@/src/slices/main";
-import { setNeedProfileRefresh } from "@/src/slices/video";
-import { useAppDispatch, useAppSelector } from "@/src/store/reduxHookType";
-import { getImageUrl } from "@/src/utils/fileHelper";
-import { logger } from "@/src/utils/logger";
-import { socketClient } from "@/src/utils/socketClient";
-import { useRoute } from "@react-navigation/native";
+import { useLocalSearchParams } from "expo-router";
 import React, {
   useCallback,
   useEffect,
@@ -29,11 +13,48 @@ import {
   StyleSheet,
 } from "react-native";
 import { View, YStack } from "tamagui";
+
+import ProfileAchievements from "@/src/components/ProfileAchievements";
+import ProfileBio from "@/src/components/ProfileBio";
+import ProfileHeader from "@/src/components/ProfileHeader";
+import { stopMatchTimer } from "@/src/components/TimerForFindMatch";
+import { useLoadMore } from "@/src/components/useLoadMore";
+import { useShowWatch } from "@/src/hook/useShowWatch";
+import {
+  followerLength,
+  followingLength,
+  profileAttachment,
+  userAttachmentList,
+} from "@/src/services/masterServices";
+import {
+  RsetFollowerLength,
+  RsetFollowingLength,
+  RsetProfileVideo,
+} from "@/src/slices/main";
+import { setNeedProfileRefresh } from "@/src/slices/video";
+import { useAppDispatch, useAppSelector } from "@/src/store/reduxHookType";
+import { getImageUrl } from "@/src/utils/fileHelper";
+import { logger } from "@/src/utils/logger";
+import { socketClient } from "@/src/utils/socketClient";
+
 import Comments from "../comments";
 import VideosProfileItem from "../profile/VideosProfileItem";
 
 const Profile: React.FC = () => {
-  const route = useRoute<any>();
+  const params = useLocalSearchParams<{ userData?: string }>();
+  const userIdWhantToShow = useMemo(() => {
+    try {
+      return typeof params.userData === "string"
+        ? JSON.parse(params.userData)
+        : params.userData;
+    } catch (e) {
+      logger.error("Failed to parse userData param in Profile", e);
+      return null;
+    }
+  }, [params.userData]);
+
+  logger.info("params", userIdWhantToShow);
+
   const myVideosInRedux =
     useAppSelector((state) => state?.main?.profileVideo) || [];
   const userLogin = useAppSelector((state) => state?.main?.userLogin);
@@ -46,25 +67,23 @@ const Profile: React.FC = () => {
   const followingCountRedux = useAppSelector(
     (state) => state?.main?.followingLength,
   );
-  const [showComments, setShowComments] = useState(false);
 
-  const userIdWhantToShow = route.params?.userData;
+  const [showComments, setShowComments] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [percentage, setPercentage] = useState<number>(0);
   const [videoLikes, setVideoLikes] = useState<Record<string, number>>({});
   const [newProfile, setNewProfile] = useState<Record<string, number>>({});
   const [selectedVideo, setSelectedVideo] = useState<any>(null);
   const [commentPosition, setCommentPosition] = useState(0);
-
+  const [otherUserVideos, setOtherUserVideos] = useState<any[]>([]);
   const flatListRef = useRef<FlatList<any>>(null);
   const dispatch = useAppDispatch();
-  const isMyProfile =
-    !userIdWhantToShow || userIdWhantToShow?.user?.id === userLogin?.user?.id;
-  const [otherUserVideos, setOtherUserVideos] = useState<any[]>([]);
+
+  const targetUserId = userIdWhantToShow?.user?.id || userLogin?.user?.id;
+  const isMyProfile = targetUserId === userLogin?.user?.id;
   const allVideoData = isMyProfile ? myVideosInRedux : otherUserVideos;
 
-  const targetUserId = userIdWhantToShow?.user?.id ?? userLogin?.user?.id;
-  const findImg: any = !!userIdWhantToShow?.user
+  const findImg = userIdWhantToShow?.user
     ? getImageUrl(userIdWhantToShow?.profile)
     : getImageUrl(userLogin?.profile);
 
@@ -81,11 +100,18 @@ const Profile: React.FC = () => {
   }, []);
 
   const fetchVideos = useCallback(
-    async (params: { skip: number; take: number }) => {
-      if (params.skip === 0 && isMyProfile && myVideosInRedux.length > 0) {
+    async (paginationParams: { skip: number; take: number }) => {
+      if (
+        paginationParams.skip === 0 &&
+        isMyProfile &&
+        myVideosInRedux.length > 0
+      ) {
         return null;
       }
-      return await userAttachmentList({ ...params, id: targetUserId });
+      return await userAttachmentList({
+        ...paginationParams,
+        id: targetUserId,
+      });
     },
     [targetUserId, isMyProfile, myVideosInRedux.length],
   );
@@ -136,19 +162,43 @@ const Profile: React.FC = () => {
   });
 
   const onRefresh = async () => {
+    if (!targetUserId) return;
     setRefreshing(true);
     try {
-      const profileRes = await profileAttachment(userLogin?.user?.id);
-      const userData = profileRes?.data;
-      if (userData?.status === 0) {
-        setNewProfile(userData?.data);
+      const promises: Promise<any>[] = [
+        userAttachmentList({
+          skip: 0,
+          take: 10,
+          id: targetUserId,
+        }),
+        followingLength(targetUserId)
+          .then((res) => {
+            dispatch(RsetFollowingLength(res?.data?.data));
+          })
+          .catch((err) =>
+            console.error("❌ Following Length Error:", err?.message),
+          ),
+        followerLength(targetUserId)
+          .then((res) => {
+            dispatch(RsetFollowerLength(res?.data?.data));
+          })
+          .catch((err) =>
+            console.error("❌ Follower Length Error:", err?.message),
+          ),
+      ];
+
+      if (isMyProfile) {
+        promises.push(
+          profileAttachment(userLogin?.user?.id).then((profileRes) => {
+            const userData = profileRes?.data;
+            if (userData?.status === 0) {
+              setNewProfile(userData?.data);
+            }
+          }),
+        );
       }
 
-      const videosRes = await userAttachmentList({
-        skip: 0,
-        take: 10,
-        id: targetUserId,
-      });
+      const [videosRes] = await Promise.all(promises);
 
       const freshVideos = videosRes?.data?.data || videosRes?.data || videosRes;
 
@@ -160,11 +210,21 @@ const Profile: React.FC = () => {
         }
       }
     } catch (error) {
-      console.log(error);
+      console.error("Profile refresh error:", error);
     } finally {
       setRefreshing(false);
     }
   };
+
+  useEffect(() => {
+    if (!isMyProfile) {
+      setOtherUserVideos([]);
+    }
+
+    if (targetUserId) {
+      onRefresh();
+    }
+  }, [targetUserId]);
 
   const itsMatchingWithTimer = useMemo(() => {
     return allVideoData?.some(
@@ -183,10 +243,19 @@ const Profile: React.FC = () => {
 
   useEffect(() => {
     if (!itsMatchingWithTimer) return;
+
+    let isMounted = true;
+
     const timer = setTimeout(() => {
-      flatListRef.current?.scrollToOffset({ offset: 230, animated: true });
+      if (isMounted && flatListRef.current) {
+        flatListRef.current.scrollToOffset({ offset: 230, animated: true });
+      }
     }, 300);
-    return () => clearTimeout(timer);
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timer);
+    };
   }, [itsMatchingWithTimer]);
 
   useEffect(() => {
@@ -216,7 +285,7 @@ const Profile: React.FC = () => {
         socketClient.off("remove_liked_response", handleGetRemoveLike);
       }
     };
-  }, [socketClient]);
+  }, []);
 
   useEffect(() => {
     const score = userIdWhantToShow?.score || userLogin?.score || 0;
@@ -224,28 +293,41 @@ const Profile: React.FC = () => {
     setPercentage(Math.min(Math.max(calc, 1), 100));
   }, [userLogin?.score, userIdWhantToShow]);
 
-  const renderHeader = () => (
-    <YStack bg="$grey100" gap="$4" p="$2">
-      <ProfileHeader
-        userImage={getImageUrl(newProfile?.profile) || findImg}
-        userName={
-          userIdWhantToShow?.user?.userName || userLogin?.user?.userName
-        }
-        score={userIdWhantToShow?.score || userLogin?.score}
-        followersCount={
-          userIdWhantToShow?.followersCount ?? followerCountRedux?.count
-        }
-        followingCount={
-          userIdWhantToShow?.followingCount ?? followingCountRedux?.count
-        }
-      />
-      <ProfileBio
-        userLogin={userLogin}
-        rankScore={userIdWhantToShow?.score ?? userLogin?.userLogin?.score}
-        rankPercentage={percentage}
-      />
-      <ProfileAchievements />
-    </YStack>
+  // اضافه کردن useCallback و مقادیر پیش‌فرض (?? 0)
+  const renderHeader = useCallback(
+    () => (
+      <YStack bg="$grey100" gap="$4" p="$2">
+        <ProfileHeader
+          userImage={getImageUrl(userIdWhantToShow?.profile) || findImg}
+          userName={
+            userIdWhantToShow?.user?.userName || userLogin?.user?.userName
+          }
+          isMyProfile={isMyProfile}
+          score={userIdWhantToShow?.score || userLogin?.score}
+          followersCount={
+            userIdWhantToShow?.followersCount ?? followerCountRedux?.count ?? 0
+          }
+          followingCount={
+            userIdWhantToShow?.followingCount ?? followingCountRedux?.count ?? 0
+          }
+        />
+        <ProfileBio
+          userLogin={isMyProfile ? userLogin : userIdWhantToShow}
+          rankScore={userIdWhantToShow?.score ?? userLogin?.score}
+          rankPercentage={percentage}
+        />
+        <ProfileAchievements />
+      </YStack>
+    ),
+    [
+      userIdWhantToShow,
+      userLogin,
+      isMyProfile,
+      percentage,
+      followerCountRedux?.count,
+      followingCountRedux?.count,
+      findImg,
+    ],
   );
 
   return (

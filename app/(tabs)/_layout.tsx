@@ -2,7 +2,7 @@ import BlackTalent from "@/src/assets/images/black.png";
 import WhiteTalent from "@/src/assets/images/white.png";
 import AppHeader from "@/src/header/AppHeader";
 import { useAppSelector } from "@/src/store/reduxHookType";
-import { Tabs, usePathname } from "expo-router";
+import { Tabs, usePathname, useRouter } from "expo-router";
 import React from "react";
 import { Image, View } from "react-native";
 import {
@@ -14,9 +14,7 @@ import { YStack } from "tamagui";
 export default function TabLayout() {
   const userInfo = useAppSelector((state) => state.main?.userLogin);
   const pathname = usePathname();
-  // این خط دیگر استفاده نمی‌شود چون آیکون پروفایل به نقطه تبدیل شده است
-  // const userProfile = getImageUrl(userInfo?.profile);
-
+  const router = useRouter();
   const insets = useSafeAreaInsets();
 
   const isWatchTab =
@@ -119,6 +117,11 @@ export default function TabLayout() {
             name="profile"
             options={{
               tabBarIcon: ({ color }) => <DotIcon color={color} />,
+            }}
+            listeners={{
+              tabPress: () => {
+                router.setParams({ userData: undefined });
+              },
             }}
           />
         </Tabs>

@@ -52,6 +52,15 @@ const OptionTop: React.FC<OptionTopProps> = ({
     positionVideo === 0 ? video?.scoreInserted : video?.scoreMatched;
 
   useEffect(() => {
+    console.log(
+      "ISFOLLOWED:",
+      video?.userInserted?.userName,
+      video?.isFollowedMeInserted,
+      " bott:",
+      video?.userMatched?.userName,
+      video?.isFollowedMeMatched,
+    );
+
     const isFollowed =
       positionVideo === 0
         ? video?.isFollowedMeInserted
@@ -112,6 +121,8 @@ const OptionTop: React.FC<OptionTopProps> = ({
   };
 
   const isTopPosition = positionVideo === 0;
+
+  // logger.debug("video video video", video);
 
   return (
     <View position="absolute" top={0} left={0} right={0} zIndex={1}>

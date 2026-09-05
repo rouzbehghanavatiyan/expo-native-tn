@@ -14,13 +14,14 @@ interface ProfileHeaderProps {
   followersCount?: number;
   followingCount?: number;
   score?: number;
-
+  isMyProfile: any;
   setProfileImage?: (image: string) => void;
 }
 
 const ProfileHeader = forwardRef(
   (
     {
+      isMyProfile,
       userImage,
       userName,
       score,
@@ -116,37 +117,39 @@ const ProfileHeader = forwardRef(
             <Text fontSize="$6" fontWeight="bold" color="$textPrimary">
               {userName}
             </Text>
-            <XStack gap="$4">
-              <View
-                onPress={() => router.push("/(social)/followers")}
-                alignItems="center"
-                px="$2"
-                py="$1"
-                cursor="pointer"
-              >
-                <Text fontWeight="bold" color="$textPrimary" fontSize="$3">
-                  {followersCount || 0}
-                </Text>
-                <Text fontWeight="bold" color="$textSecondary" fontSize="$3">
-                  Followers
-                </Text>
-              </View>
+            {isMyProfile && (
+              <XStack gap="$4">
+                <View
+                  onPress={() => router.push("/(social)/followers")}
+                  alignItems="center"
+                  px="$2"
+                  py="$1"
+                  cursor="pointer"
+                >
+                  <Text fontWeight="bold" color="$textPrimary" fontSize="$3">
+                    {followersCount || 0}
+                  </Text>
+                  <Text fontWeight="bold" color="$textSecondary" fontSize="$3">
+                    Followers
+                  </Text>
+                </View>
 
-              <View
-                onPress={() => router.push("/(social)/following")}
-                alignItems="center"
-                px="$2"
-                py="$1"
-                cursor="pointer"
-              >
-                <Text fontWeight="bold" color="$textPrimary" fontSize="$3">
-                  {followingCount || 0}
-                </Text>
-                <Text fontWeight="bold" color="$textSecondary" fontSize="$3">
-                  Following
-                </Text>
-              </View>
-            </XStack>
+                <View
+                  onPress={() => router.push("/(social)/following")}
+                  alignItems="center"
+                  px="$2"
+                  py="$1"
+                  cursor="pointer"
+                >
+                  <Text fontWeight="bold" color="$textPrimary" fontSize="$3">
+                    {followingCount || 0}
+                  </Text>
+                  <Text fontWeight="bold" color="$textSecondary" fontSize="$3">
+                    Following
+                  </Text>
+                </View>
+              </XStack>
+            )}
           </YStack>
         </XStack>
       </View>

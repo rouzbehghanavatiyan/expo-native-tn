@@ -11,7 +11,6 @@ import { useAppDispatch, useAppSelector } from "@/src/store/reduxHookType";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { FlashList } from "@shopify/flash-list";
 import React, { useCallback, useRef, useState } from "react";
-// ✅ Platform را به ایمپورت اضافه کنید
 import {
   Platform,
   StyleSheet,

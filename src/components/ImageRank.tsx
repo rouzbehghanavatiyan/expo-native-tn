@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
+import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { Image, Text as RNText, StyleSheet } from "react-native";
 import { Text, View } from "tamagui";
@@ -61,7 +61,7 @@ const ImageRank: React.FC<ProfileWithRankProps> = ({
     displayNumber?: number;
   }>({ base: Started, stars: 0, starType: "" });
   const rankSize = Math.floor(imgSize * 0.6);
-  const navigation = useNavigation();
+  const router = useRouter();
   const [imageError, setImageError] = useState(false);
 
   const determineRank = () => {
@@ -170,7 +170,7 @@ const ImageRank: React.FC<ProfileWithRankProps> = ({
   const handleClick = () => {
     if (!showProfile) return;
 
-    const userData = {
+    const targetData = {
       profile:
         positionVideo === 0
           ? userInfo?.profileInserted
@@ -190,9 +190,12 @@ const ImageRank: React.FC<ProfileWithRankProps> = ({
             ? userInfo?.scoreMatched
             : userInfo?.score,
     };
-    // @ts-ignore - navigation types may vary
-    navigation.navigate("profile", {
-      userData,
+
+    router.push({
+      pathname: "/profile",
+      params: {
+        userData: JSON.stringify(targetData),
+      },
     });
   };
 

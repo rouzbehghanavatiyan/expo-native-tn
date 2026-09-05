@@ -194,19 +194,20 @@ const ProfileBio: React.FC<ProfileBioProps> = ({
                 ✕
               </Text>
             </Pressable>
-
-            {/* بخش اسکرول‌شونده */}
             <ScrollView
               showsVerticalScrollIndicator={false}
               contentContainerStyle={{ paddingBottom: 8 }}
             >
               <YStack gap={8} alignItems="center" pb="$4">
-                <Text fontSize="$5" fontWeight="700" color="$primaryMain">
-                  All Ranks (Score: {rankScore})
+                <Text fontSize="$4" color="$primaryMain" textAlign="center">
+                  All medals are as follows based on{" "}
+                  <Text fontWeight="bold" fontSize="$5">
+                    your promotion
+                  </Text>{" "}
+                  (Score: {rankScore})
                 </Text>
               </YStack>
 
-              {/* رنک استارتر */}
               <Pressable
                 onPress={() => setZoomedRank(starterRank)}
                 style={{ alignSelf: "center", marginBottom: 16 }}
