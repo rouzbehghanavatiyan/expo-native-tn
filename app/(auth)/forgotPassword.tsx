@@ -1,6 +1,7 @@
 import Logo from "@/src/assets/images/logocircle.png";
 import BaseButton from "@/src/components/BaseButtom";
 import BaseInput from "@/src/components/BaseInput";
+import { forgotPassword } from "@/src/services/masterServices";
 import { Link, useRouter } from "expo-router";
 import React, { useState } from "react";
 import { Modal } from "react-native";
@@ -24,7 +25,6 @@ export default function ForgotPasswordScreen() {
   }>({});
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  // استیت مدیریت مودال اختصاصی
   const [modalState, setModalState] = useState<ModalState>({
     visible: false,
     type: "success",
@@ -37,7 +37,6 @@ export default function ForgotPasswordScreen() {
     setErrors({ identifier: undefined, general: undefined });
   };
 
-  // بستن مودال و اجرای تابع تایید در صورت وجود
   const handleCloseModal = () => {
     setModalState((prev) => ({ ...prev, visible: false }));
     if (modalState.onConfirm) {
@@ -48,7 +47,6 @@ export default function ForgotPasswordScreen() {
   const handleResetPassword = async () => {
     if (isLoading) return;
 
-    // اعتبارسنجی اولیه فرم
     if (!identifier.trim()) {
       setErrors({ identifier: "Email or Username is required" });
       return;
@@ -58,14 +56,12 @@ export default function ForgotPasswordScreen() {
       setIsLoading(true);
 
       const postData = {
-        UserNameOrEmail: identifier,
+        email: identifier,
       };
 
-      // در اینجا باید API مربوط به بازیابی رمز را فراخوانی کنید
-      // const res: any = await forgotPassword(postData);
+      const res: any = await forgotPassword(postData);
+      console.log(res);
       // const { status, message: apiMessage } = res?.data || {};
-
-      // شبیه‌سازی ریکوئست موفق برای تست (کدهای بالا را جایگزین این بخش کنید)
       const status = 0;
 
       if (status === 0 || status === 2) {
@@ -76,13 +72,12 @@ export default function ForgotPasswordScreen() {
           description:
             "If an account matches that email or username, a password reset link has been sent.",
           onConfirm: () => {
-            router.replace("/");
+            router.replace("/login");
           },
         });
       } else {
         setErrors((prev) => ({
           ...prev,
-          // general: apiMessage || "Failed to process request. Please try again.",
           general: "Failed to process request. Please try again.",
         }));
       }
