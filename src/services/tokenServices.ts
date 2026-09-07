@@ -21,6 +21,8 @@ export const getAccessToken = async () => {
   }
 };
 
+export const getToken = getAccessToken;
+
 export const getRefreshToken = async () => {
   try {
     return await AsyncStorage.getItem(REFRESH_TOKEN_KEY);

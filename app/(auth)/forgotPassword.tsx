@@ -48,7 +48,7 @@ export default function ForgotPasswordScreen() {
     if (isLoading) return;
 
     if (!identifier.trim()) {
-      setErrors({ identifier: "Email or Username is required" });
+      setErrors({ identifier: "Email is required" });
       return;
     }
 
@@ -61,7 +61,6 @@ export default function ForgotPasswordScreen() {
 
       const res: any = await forgotPassword(postData);
       console.log(res);
-      // const { status, message: apiMessage } = res?.data || {};
       const status = 0;
 
       if (status === 0 || status === 2) {
@@ -70,7 +69,7 @@ export default function ForgotPasswordScreen() {
           type: "success",
           title: "Email Sent",
           description:
-            "If an account matches that email or username, a password reset link has been sent.",
+            "If an account matches that email, a password reset link has been sent.",
           onConfirm: () => {
             router.replace("/login");
           },
@@ -124,14 +123,14 @@ export default function ForgotPasswordScreen() {
           </Text>
 
           <Text color="$textSecondary" mt="$2" textAlign="center">
-            Enter your email or username to receive a password reset link.
+            Enter your email to receive a password reset link.
           </Text>
         </YStack>
 
         <YStack gap="$3">
           <YStack gap="$2">
             <BaseInput
-              label="Email or Username"
+              label="Email"
               value={identifier}
               onChangeText={handleInputChange}
               placeholder="e.g., user@example.com or john_doe"
@@ -229,7 +228,6 @@ export default function ForgotPasswordScreen() {
                 {modalState.type === "success" ? "✓" : "✕"}
               </Text>
             </View>
-
             <Text
               fontSize="$6"
               fontWeight="bold"

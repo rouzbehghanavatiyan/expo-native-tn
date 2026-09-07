@@ -68,7 +68,7 @@ const BaseInput = React.forwardRef<any, BaseInputProps>(
     {
       errorMessage,
       helperText,
-      baseColorLabel = "white",
+      baseColorLabel = "rgb(244, 244, 244)",
       label,
       leftIcon,
       rightIcon,

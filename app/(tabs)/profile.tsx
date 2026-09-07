@@ -12,7 +12,7 @@ import {
   SafeAreaView,
   StyleSheet,
 } from "react-native";
-import { View, YStack } from "tamagui";
+import { Text, View, YStack } from "tamagui";
 
 import ProfileAchievements from "@/src/components/ProfileAchievements";
 import ProfileBio from "@/src/components/ProfileBio";
@@ -346,6 +346,24 @@ const Profile: React.FC = () => {
           refreshing={refreshing}
           onRefresh={onRefresh}
           ListHeaderComponent={renderHeader}
+          ListEmptyComponent={
+            !loading ? (
+              <View
+                style={{
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginTop: 50,
+                  padding: 20,
+                }}
+              >
+                <Text
+                  style={{ color: "white", fontSize: 16, fontWeight: "600" }}
+                >
+                  No matches to display.
+                </Text>
+              </View>
+            ) : null
+          }
           renderItem={({ item }) => (
             <VideosProfileItem
               profileWatch={true}

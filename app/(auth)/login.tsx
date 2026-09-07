@@ -191,6 +191,7 @@ const LoginScreen: React.FC<any> = () => {
         <YStack gap="$8">
           <YStack gap="$2">
             <BaseInput
+              baseColorLabel="rgb(244, 244, 244)"
               label="Username"
               value={formState.username}
               onChangeText={(text) => handleInputChange("username", text)}
@@ -203,6 +204,7 @@ const LoginScreen: React.FC<any> = () => {
           <YStack gap="$2">
             <View position="relative">
               <BaseInput
+                baseColorLabel="rgb(244, 244, 244)"
                 label="Password"
                 secureTextEntry={!showPassword}
                 value={formState.password}
@@ -232,13 +234,11 @@ const LoginScreen: React.FC<any> = () => {
           >
             {loading ? "Signing in..." : "Sign in"}
           </BaseButton>
-
           <Link href="/forgotPassword" asChild>
             <BaseButton appearance="ghost" colorType="primary">
               Forgot password?
             </BaseButton>
           </Link>
-
           <XStack justifyContent="center" mt="$2" gap="$2" flexWrap="wrap">
             <Text fontSize="$3" color="$textPrimary">
               {`Dont't have an account?`}

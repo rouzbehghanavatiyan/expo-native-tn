@@ -161,13 +161,11 @@ export default function SignUpScreen() {
             </YStack>
 
             <YStack gap="$3">
-              {/* -- Username Input -- */}
               <YStack gap="$2">
                 <BaseInput
                   label="Username"
                   value={inputs.username}
                   onChangeText={(text) => handleInputChange("username", text)}
-                  placeholder="username"
                   colorType="primary"
                   variant="outline"
                 />
@@ -189,7 +187,6 @@ export default function SignUpScreen() {
                   label="Email"
                   value={inputs.email}
                   onChangeText={(text) => handleInputChange("email", text)}
-                  placeholder="email"
                   colorType="primary"
                   variant="outline"
                   keyboardType="email-address"
@@ -213,7 +210,6 @@ export default function SignUpScreen() {
                   secureTextEntry={!showPassword}
                   value={inputs.password}
                   onChangeText={(text) => handleInputChange("password", text)}
-                  placeholder="password"
                   colorType="primary"
                   variant="outline"
                   rightIcon={
@@ -249,7 +245,6 @@ export default function SignUpScreen() {
                   onChangeText={(text) =>
                     handleInputChange("passwordConfirmation", text)
                   }
-                  placeholder="Confirm your password"
                   colorType="primary"
                   variant="outline"
                   rightIcon={
