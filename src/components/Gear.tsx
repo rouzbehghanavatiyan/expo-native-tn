@@ -18,7 +18,7 @@ const Gear: React.FC<any> = ({
 }) => {
   const navigation = useNavigation<any>();
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [allSubSubCategory, setAllSubSubCategory] = useState<any>();
+  const [allSubSubCategory, setAllSubSubCategory] = useState<any[]>([]);
   const [selectedGearMode, setSelectedGearMode] = useState<any>({
     show: false,
     typeMode: null,
@@ -44,16 +44,14 @@ const Gear: React.FC<any> = ({
 
       if (res?.data?.status === 0) {
         const fetchedData = res.data.data || [];
-        logger.info("fetchedData fetchedData fetchedData", fetchedData);
+        logger.info("fetchedData", fetchedData);
         setAllSubSubCategory(fetchedData);
-        dispatch(RsetCategory({ parentId: skillId, data: fetchedData }));
+        dispatch(RsetCategory({ skillId: skillId, gearData: fetchedData }));
       }
     });
 
-    if (skillId) {
-      handleGetCategory();
-    }
-  }, [skillId, dispatch, main.categoryCache]);
+    handleGetCategory();
+  }, [skillId, dispatch]);
 
   const handleAcceptCategory = async (data: any) => {
     const arenaId = currentStep?.arena?.id;

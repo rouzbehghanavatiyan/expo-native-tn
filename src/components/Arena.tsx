@@ -17,10 +17,6 @@ const Arena: React.FC<any> = ({ updateStepData }) => {
       id: data.id,
       icon: data.icon,
     });
-
-    if (data.icon === "robot") {
-      return;
-    }
   };
 
   const arenaIconMap = main?.category?.reduce((acc: any, category: any) => {

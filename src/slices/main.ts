@@ -128,10 +128,6 @@ const mainSlice = createSlice({
       }
       state.selectedSteps[step] = id;
     },
-
-    resetSelectedSteps: (state) => {
-      state.selectedSteps = { arenaId: null, skillId: null, gearId: null };
-    },
     RsetUserLogin: (state, action: PayloadAction<any>) => {
       state.userLogin = action.payload;
     },
@@ -265,7 +261,6 @@ export const {
   incrementUnreadCount, // 🟢 اضافه شد
   clearUnreadCount, // 🟢 اضافه شد
   setSelectedStep,
-  resetSelectedSteps,
   setLastMatch,
   setShowTimerButton,
   RsetHomeMatch,
