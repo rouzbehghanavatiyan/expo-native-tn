@@ -7,6 +7,7 @@ import { RsetAllFollowingList } from "@/src/slices/main";
 import { useAppDispatch, useAppSelector } from "@/src/store/reduxHookType";
 import asyncWrapper from "@/src/utils/asyncWrapper";
 import { getImageUrl } from "@/src/utils/fileHelper";
+import { logger } from "@/src/utils/logger";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -47,6 +48,8 @@ const Following = () => {
     handleAllFollowing();
   }, []);
 
+  logger.info("followin", following);
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
       <View f={1} bg="$background">
@@ -82,7 +85,8 @@ const Following = () => {
               >
                 <ImageRank
                   score={0}
-                  imgSize={50}
+                  userNameStyle={{ color: "rgb(108, 111, 112)" }}
+                  imgSize={70}
                   userName={user?.userName || "Unknown User"}
                   imgSrc={image}
                 />

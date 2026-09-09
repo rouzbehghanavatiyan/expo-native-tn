@@ -17,11 +17,8 @@ const FollowerScreen = () => {
   const followers = main?.allFollowerList || [];
   const router = useRouter();
   const params = useLocalSearchParams();
-  const [followState, setFollowState] = useState<{ [key: string]: boolean }>(
-    {},
-  );
+
   const [isLoading, setIsLoading] = useState(false);
-  const [isLoadingFollow, setIsLoadingFollow] = useState(false);
   const userIdLogin = main?.userLogin?.user?.id;
   const { isFollowed, toggleFollow, loadingId } = useFollow(userIdLogin);
   const userIdFromLocation = params?.id;
@@ -71,21 +68,21 @@ const FollowerScreen = () => {
               follower?.userId ||
               follower?.id;
             const image = getImageUrl(follower?.attachment);
-
             const followed = isFollowed(followerId);
-            const isLoadingThisButton = loadingId === followerId;
 
             return (
               <XStack
                 key={index}
                 p="$4"
                 bc="$grey100"
+                my={1}
                 ai="center"
                 jc="space-between"
                 bg="$white"
               >
                 <ImageRank
                   score={0}
+                  userNameStyle={{ color: "rgb(108, 111, 112)" }}
                   imgSize={60}
                   userName={follower?.userName || "Unknown User"}
                   imgSrc={image}

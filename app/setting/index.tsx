@@ -36,7 +36,7 @@ export default function SettingLayout() {
         router.push("/setting/editProfile");
         break;
       case "Learning":
-        router.push("/learning"); // هدایت به پوشه learning که بالا ساختیم
+        router.push("/learning");
         break;
       case "Support":
         router.push("/support");
@@ -44,9 +44,9 @@ export default function SettingLayout() {
       case "About us":
         router.push("/about");
         break;
-      case "Mark":
-        router.push("/mark");
-        break;
+      // case "Mark":
+      //   router.push("/mark");
+      //   break;
       default:
         break;
     }
@@ -64,7 +64,7 @@ export default function SettingLayout() {
             { name: "Profile", id: 2, icon: "person" },
             { name: "Support", id: 3, icon: "support-agent" },
             { name: "About us", id: 4, icon: "info" },
-            { name: "Mark", id: 5, icon: "star" },
+            { name: "Theme", id: 5, icon: "star" },
             { name: "Learning", id: 6, icon: "school" },
           ]}
           isLoading={false}
