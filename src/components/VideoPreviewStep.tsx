@@ -180,7 +180,6 @@ const VideoPreviewStep: React.FC<VideoPreviewStepProps> = ({
             )}
           </View>
         </View>
-
         <View padding={20} paddingBottom={22} backgroundColor="#1f2937">
           <XStack
             justifyContent="center"
@@ -211,7 +210,6 @@ const VideoPreviewStep: React.FC<VideoPreviewStepProps> = ({
               <Icon size={45} name="AspectRatio" color="white" />
             </Pressable>
           </XStack>
-
           <XStack justifyContent="space-between" alignItems="center" gap="$2">
             <BaseButton
               flex={1}

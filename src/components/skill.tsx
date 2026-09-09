@@ -8,13 +8,9 @@ import { Icon } from "./Icon";
 import MainTitle from "./MainTitle";
 import SoftLink from "./SoftLink";
 
-const Skill: React.FC<any> = ({
-  setAllSubCategory,
-  allSubCategory,
-  currentStep,
-  updateStepData,
-}) => {
+const Skill: React.FC<any> = ({ currentStep, updateStepData }) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [subCategories, setSubCategories] = useState<any[]>([]);
   const dispatch = useAppDispatch();
   const main = useAppSelector((state) => state.main);
   const arenaId = currentStep?.arena?.id;
@@ -24,7 +20,7 @@ const Skill: React.FC<any> = ({
       if (!arenaId) return;
 
       if (main.categoryCache?.[arenaId]) {
-        setAllSubCategory(main.categoryCache[arenaId]);
+        setSubCategories(main.categoryCache[arenaId]);
         return;
       }
 
@@ -34,16 +30,13 @@ const Skill: React.FC<any> = ({
 
       if (res?.data?.status === 0) {
         const fetchedData = res.data.data || [];
-        setAllSubCategory(fetchedData);
-        dispatch(RsetCategory({ parentId: arenaId, data: fetchedData }));
+        setSubCategories(fetchedData);
+        dispatch(RsetCategory({ arenaId: arenaId, skillData: fetchedData }));
       }
     });
 
-    // فراخوانی در صورت وجود arenaId
-    if (arenaId) {
-      handleGetCategory();
-    }
-  }, [arenaId, dispatch, main.categoryCache, setAllSubCategory]); // وابستگی‌ها اضافه شدند
+    handleGetCategory();
+  }, [arenaId, dispatch]);
 
   const handleAcceptCategory = async (data: any) => {
     dispatch(setSelectedStep({ step: "skillId", id: data.id }));
@@ -55,12 +48,12 @@ const Skill: React.FC<any> = ({
     });
   };
 
-  const categoriesWithIcons = allSubCategory?.map((category: any) => ({
+  const categoriesWithIcons = subCategories?.map((category: any) => ({
     ...category,
     icon: category.icon || category.name.toLowerCase(),
   }));
 
-  const arenaIconMap = allSubCategory?.reduce((acc: any, category: any) => {
+  const arenaIconMap = subCategories?.reduce((acc: any, category: any) => {
     if (category.icon) {
       acc[category.name.toLowerCase()] = (
         <Icon

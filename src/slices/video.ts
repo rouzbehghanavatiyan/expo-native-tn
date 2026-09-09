@@ -24,6 +24,7 @@ const initialState: VideoState = {
   isLoading: false,
   selectedResize: 1,
   error: null,
+  gearId: 0,
   needProfileRefresh: false,
   showDeactivatedModal: false,
   currentStep: 1,
@@ -68,26 +69,20 @@ export const removeInviteThunk = createAsyncThunk(
 export const uploadFullProcessThunk = createAsyncThunk(
   "video/uploadFullProcess",
   async (
-    { userId, gearId, segments, mode, allFormData, movieMeta, router }: any,
+    { userId, segments, mode, allFormData, movieMeta, router }: any,
     { rejectWithValue, dispatch, getState },
   ) => {
     try {
       const state = getState() as any;
       const gearIdStorage = await AsyncStorage.getItem("gearId");
-      console.log(
-        "gearIdgearIdgearIdgearIdgearIdgearIdgearIdgearIdgearId",
-        gearId,
-      );
+      const reduxGearId = state.video.gearId;
       const currentResizeMode = state.video.selectedResize || 1;
       const postData = {
         userId: Number(userId),
         resizeMode: currentResizeMode,
         description: allFormData?.description || movieMeta?.desc || "",
         title: allFormData?.title || movieMeta?.title || "",
-        // subSubCategoryId: Number(
-        //   allFormData?.subSubCategoryId || gearId || gearIdStorage,
-        // ),
-        subSubCategoryId: 1,
+        subSubCategoryId: reduxGearId || gearIdStorage,
         modeId: 3,
       };
 
@@ -257,6 +252,9 @@ const videoSlice = createSlice({
     setNeedProfileRefresh: (state, action) => {
       state.needProfileRefresh = action.payload;
     },
+    setGearId: (state, action) => {
+      state.gearId = action.payload;
+    },
     updateMovieData(
       state,
       action: PayloadAction<Partial<VideoState["movieData"]>>,
@@ -276,11 +274,9 @@ const videoSlice = createSlice({
       state.isWaitingForMatch = action.payload;
     },
     setShowTimeout(state, action: PayloadAction<boolean>) {
-      // 👈 اضافه شد
       state.showTimeout = action.payload;
     },
     setShowDeactivatedModal(state, action: PayloadAction<boolean>) {
-      // 👈 ردیوسر جدید اضافه شد
       state.showDeactivatedModal = action.payload;
     },
   },
@@ -323,6 +319,7 @@ export const {
   setMovieData,
   setMovieMeta,
   goToStep,
+  setGearId,
   RsetIsLoading,
   updateMovieData,
   setVideoSrc,

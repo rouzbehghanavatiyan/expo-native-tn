@@ -2,7 +2,6 @@ import Arena from "@/src/components/Arena";
 import Gear from "@/src/components/Gear";
 import { Icon } from "@/src/components/Icon";
 import Skill from "@/src/components/skill";
-import { logger } from "@/src/utils/logger";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useEffect, useState } from "react";
 import {
@@ -32,7 +31,6 @@ const STEP_LABELS = ["Arena", "Skill", "Gear"];
 const Sot: React.FC = () => {
   const [stepsData, setStepsData] = useState(initialSteps);
   const [rememberMe, setRememberMe] = useState<boolean>(false);
-  const [allSubCategory, setAllSubCategory] = useState<any>();
   const [currentStep, setCurrentStep] = useState<any>(initialCurrentStep);
 
   const updateStepData = async (stepNumber: number, data: any) => {
@@ -87,7 +85,6 @@ const Sot: React.FC = () => {
   const resetSot = () => {
     setStepsData(initialSteps);
     setCurrentStep(initialCurrentStep);
-    setAllSubCategory([]);
   };
 
   const checkChoiceSot = async () => {
@@ -120,8 +117,8 @@ const Sot: React.FC = () => {
       const skillName = await AsyncStorage.getItem("skillName");
 
       let currentStepNum = 1;
-      let newCurrentStep = { ...initialCurrentStep };
-      let newStepsData = [...initialSteps];
+      let newCurrentStep: any = { ...initialCurrentStep };
+      let newStepsData: any = [...initialSteps];
 
       if (arenaId) {
         currentStepNum = 2;
@@ -151,7 +148,6 @@ const Sot: React.FC = () => {
         };
       }
 
-      // آپدیت کردن استیت با دیتاهای لوکال استوریج (باعث میشه کامپوننت های فرزند رندر بشن و خودشون API رو بزنن)
       newCurrentStep.number = currentStepNum;
       setCurrentStep(newCurrentStep);
       setStepsData(newStepsData);
@@ -194,12 +190,7 @@ const Sot: React.FC = () => {
         return <Arena updateStepData={updateStepData} />;
       case 2:
         return (
-          <Skill
-            allSubCategory={allSubCategory}
-            setAllSubCategory={setAllSubCategory}
-            currentStep={currentStep}
-            updateStepData={updateStepData}
-          />
+          <Skill currentStep={currentStep} updateStepData={updateStepData} />
         );
       case 3:
       default:
@@ -212,8 +203,6 @@ const Sot: React.FC = () => {
         );
     }
   };
-
-  logger.info("allSubCategory", allSubCategory);
 
   return (
     <View style={styles.container}>
