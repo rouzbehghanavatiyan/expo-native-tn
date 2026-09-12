@@ -9,9 +9,8 @@ export function usePushNotifications() {
   const main = useAppSelector((state) => state?.main);
 
   useEffect(() => {
-    const userId = main?.userLogin?.user?.id;
+    const userId = main?.userLogin?.user?.id || main?.userLogin?.userId;
 
-    // به محض لاگین کاربر، توکن بررسی و در صورت نیاز سینک می‌شود
     if (userId) {
       syncPushToken(userId);
     }
@@ -31,5 +30,5 @@ export function usePushNotifications() {
       notificationListener.current?.remove();
       responseListener.current?.remove();
     };
-  }, [main?.userLogin?.user?.id]); // وابستگی به userId اضافه شد
+  }, [main?.userLogin?.user?.id, main?.userLogin?.userId]);
 }

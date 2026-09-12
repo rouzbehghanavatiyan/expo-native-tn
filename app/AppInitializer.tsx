@@ -4,6 +4,7 @@ import { useAuthRedirect } from "@/src/hook/useAuthRedirect";
 import { useGlobalChatSocket } from "@/src/hook/useGlobalChatSocket";
 import { usePushNotifications } from "@/src/hook/usePushNotifications";
 import { useSocketInitializer } from "@/src/hook/useSocketInitializer";
+import { logger } from "@/src/utils/logger";
 import { useLocalSearchParams, usePathname } from "expo-router";
 import React, { useMemo } from "react";
 import { useSelector } from "react-redux";
@@ -20,6 +21,8 @@ export default function AppInitializer({
   const userId = main?.userId;
   const userLoginId = main?.userLogin?.user?.id || main?.userLogin?.userId;
   const isChat = pathname?.includes("chat");
+
+  logger.info("main?.userLogin main?.userLogin", main?.userLogin);
 
   const receiveUserId = useMemo(() => {
     if (!isChat) return null;
