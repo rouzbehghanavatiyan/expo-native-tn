@@ -1,4 +1,8 @@
-import { addFollower, removeFollower } from "@/src/services/masterServices";
+import {
+  addFollower,
+  removeFollower,
+  userBlock,
+} from "@/src/services/masterServices";
 import { MaterialIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
@@ -6,6 +10,7 @@ import React, { useEffect, useState } from "react";
 import { Modal, Pressable, StyleSheet } from "react-native";
 import { Text, View, XStack } from "tamagui";
 import { getImageUrl } from "../utils/fileHelper";
+import { logger } from "../utils/logger";
 import Follows from "./Follows";
 import ImageRank from "./ImageRank";
 
@@ -105,6 +110,19 @@ const OptionTop: React.FC<OptionTopProps> = ({
     });
   };
 
+  const handleBlock = async () => {
+    try {
+      const postData = {
+        blockerId: userIdLogin,
+        targetUserId: userInfo.id,
+      };
+      const res = await userBlock(postData);
+      logger.info("res", res);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   const handleReport = () => {
     setMenuOpen(false);
     console.log("Report user:", userInfo?.id);
@@ -114,15 +132,13 @@ const OptionTop: React.FC<OptionTopProps> = ({
     const customItems = [
       { label: "Send Message", icon: "chat", onClick: handleSendMessage },
       { label: "Report", icon: "flag", onClick: handleReport },
-      { label: "Save", icon: "grade", onClick: handleReport },
+      { label: "Block", icon: "block", onClick: handleBlock },
       // { label: "duel", icon: "handshake", onClick: handleReport },
     ];
     return { items: customItems };
   };
 
   const isTopPosition = positionVideo === 0;
-
-  // logger.debug("video video video", video);
 
   return (
     <View position="absolute" top={0} left={0} right={0} zIndex={1}>
@@ -215,11 +231,11 @@ const OptionTop: React.FC<OptionTopProps> = ({
                                 {item.icon && (
                                   <MaterialIcons
                                     name={item.icon}
-                                    size={22}
-                                    color="#4b5563"
+                                    size={18}
+                                    color="#303030"
                                   />
                                 )}
-                                <Text fontSize="$4" color="$textPrimary">
+                                <Text fontSize="$3" color="$textPrimary">
                                   {item.label}
                                 </Text>
                               </XStack>

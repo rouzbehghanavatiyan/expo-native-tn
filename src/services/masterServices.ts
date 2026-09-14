@@ -29,6 +29,10 @@ export const categoryList = async () => {
   return await api.get("/categoryList");
 };
 
+export const userBlock = async (postData: any) => {
+  return await api.post("/userBlock");
+};
+
 export const followerList = async (
   userId: number | string | null | undefined,
 ) => {
