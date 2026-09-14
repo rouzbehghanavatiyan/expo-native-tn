@@ -4,12 +4,14 @@ export const attachmentList = async (postData: {
   skip: number;
   take: number;
   subCatId?: number;
+  seed: any;
 }) => {
   const response = await api.get("/attachmentList", {
     params: {
       skip: postData?.skip,
       take: postData?.take,
       subCatId: postData?.subCatId,
+      seed: postData?.seed,
     },
   });
   return response.data;

@@ -25,6 +25,10 @@ export default function WatchScreen() {
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const showTimeout = useAppSelector((state) => state?.video?.showTimeout);
+  const [seed, setSeed] = useState<number>(() =>
+    Math.floor(Math.random() * 1000000),
+  );
+
   const showDeactivatedModal = useAppSelector(
     (state) => state?.video?.showDeactivatedModal,
   );
@@ -39,8 +43,13 @@ export default function WatchScreen() {
       console.log(err);
     }
   };
+  const generateNewSeed = () => Math.floor(Math.random() * 1000000);
 
-  const handleGetAllMatch = async (skillId: number, reset = false) => {
+  const handleGetAllMatch = async (
+    skillId: number,
+    reset = false,
+    customSeed?: number,
+  ) => {
     if (loading) return;
     if (!reset && !pagination.hasMore) return;
 
@@ -49,11 +58,13 @@ export default function WatchScreen() {
 
       const skip = reset ? 0 : pagination.skip;
       const take = pagination.take || 6;
+      const activeSeed = customSeed ?? seed;
 
       const res = await attachmentList({
         skip,
         take,
         subCatId: skillId,
+        seed: activeSeed,
       });
 
       const newData = res?.data || [];
@@ -80,34 +91,39 @@ export default function WatchScreen() {
 
   const onRefresh = async () => {
     setRefreshing(true);
+    const newSeed = generateNewSeed();
+    setSeed(newSeed);
+
     dispatch(resetWatchState());
     dispatch(
       setPaginationWatch({
-        take: 6,
+        take: 10,
         skip: 0,
         hasMore: true,
       }),
     );
 
-    await handleGetAllMatch(selectFiltered, true);
-
+    await handleGetAllMatch(selectFiltered, true, newSeed);
     setRefreshing(false);
   };
 
   const handleFilterChange = (skillId: number) => {
     setSelectFiltered(skillId);
 
+    const newSeed = generateNewSeed();
+    setSeed(newSeed);
+
     dispatch(resetWatchState());
 
     dispatch(
       setPaginationWatch({
-        take: 6,
+        take: 10,
         skip: 0,
         hasMore: true,
       }),
     );
 
-    handleGetAllMatch(skillId, true);
+    handleGetAllMatch(skillId, true, newSeed);
   };
 
   useEffect(() => {
@@ -152,7 +168,11 @@ export default function WatchScreen() {
           }
           data={data}
           numColumns={2}
-          keyExtractor={(item, index) => index.toString()}
+          keyExtractor={(item, index) =>
+            item?.inviteInserted?.id
+              ? String(item.inviteInserted.id)
+              : index.toString()
+          }
           refreshing={refreshing}
           onRefresh={onRefresh}
           renderItem={({ item, index }) => (
