@@ -1,3 +1,4 @@
+import Comments from "@/app/comments";
 import VideoSkeleton from "@/src/components/VideoSkeleton";
 import ShowWatchSlide from "@/src/components/VideoSlide";
 import { useShowWatch } from "@/src/hook/useShowWatch";
@@ -28,11 +29,16 @@ const BOTTOM_PADDING = Platform.OS === "ios" ? 0 : 2;
 export default function ShowWatchScreen() {
   const { inviteId } = useLocalSearchParams<{ inviteId: string }>();
   const dispatch = useAppDispatch();
+  const main = useAppSelector((state) => state.main);
   const hasFetchedOnce = useRef(false);
-
   const { data: reduxData, pagination } = useAppSelector(
     (state) => state.main.showWatchMatch,
   );
+  const userIdLogin = main?.userLogin?.user?.id || main?.userLogin?.userId;
+
+  const [showComments, setShowComments] = useState(false);
+  const [commentPosition, setCommentPosition] = useState(0);
+  const [selectedVideo, setSelectedVideo] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
   const [containerHeight, setContainerHeight] = useState(
@@ -103,6 +109,18 @@ export default function ShowWatchScreen() {
   useEffect(() => {
     paginationRef.current = pagination;
   }, [pagination]);
+
+  const handleOpenComments = useCallback((video: any, position: number) => {
+    setSelectedVideo(video);
+    setCommentPosition(position ?? 0);
+    setShowComments(true);
+  }, []);
+
+  const handleCloseComments = useCallback(() => {
+    setShowComments(false);
+    setSelectedVideo(null);
+    setCommentPosition(0);
+  }, []);
 
   const {
     data,
@@ -193,6 +211,7 @@ export default function ShowWatchScreen() {
                   setOpenDropdowns={setOpenDropdowns}
                   toggleDropdown={toggleDropdown}
                   dropdownItems={dropdownItems}
+                  handleToggleComments={handleOpenComments}
                 />
               </View>
             )}
@@ -213,6 +232,20 @@ export default function ShowWatchScreen() {
               loading ? <ActivityIndicator size="small" color="#fff" /> : null
             }
           />
+        )}
+        {showComments && (
+          <View
+            style={[StyleSheet.absoluteFillObject, { zIndex: 9999 }]}
+            pointerEvents="auto"
+          >
+            <Comments
+              visible={showComments}
+              onClose={handleCloseComments}
+              video={selectedVideo}
+              positionVideo={commentPosition}
+              userIdLogin={userIdLogin}
+            />
+          </View>
         )}
       </View>
     </SafeAreaView>
