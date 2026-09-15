@@ -1,7 +1,5 @@
 import { DeactivatedModal } from "@/src/common/DeactivatedModal";
 import { MatchTimeoutModal } from "@/src/common/MatchTimeoutModal";
-import FilteredWatch from "@/src/components/FilteredWatch";
-import MainTitle from "@/src/components/MainTitle";
 import { stopMatchTimer } from "@/src/components/TimerForFindMatch";
 import VideoGroup from "@/src/components/VideoGroup";
 import { attachmentList, subCategoryList } from "@/src/services/masterServices";
@@ -151,21 +149,21 @@ export default function WatchScreen() {
     <>
       <View style={styles.container}>
         <FlatList
-          ListHeaderComponent={
-            <>
-              {skills && (
-                <>
-                  <MainTitle title="Filtered" />
-                  <FilteredWatch
-                    skills={skills}
-                    handleGetAllMatch={handleFilterChange}
-                    selectFiltered={selectFiltered}
-                    setSelectFiltered={setSelectFiltered}
-                  />
-                </>
-              )}
-            </>
-          }
+          // ListHeaderComponent={
+          //   <>
+          //     {skills && (
+          //       <>
+          //         <MainTitle title="Filtered" />
+          //         <FilteredWatch
+          //           skills={skills}
+          //           handleGetAllMatch={handleFilterChange}
+          //           selectFiltered={selectFiltered}
+          //           setSelectFiltered={setSelectFiltered}
+          //         />
+          //       </>
+          //     )}
+          //   </>
+          // }
           data={data}
           numColumns={2}
           keyExtractor={(item, index) =>

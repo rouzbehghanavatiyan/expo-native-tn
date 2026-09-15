@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { usePathname, useRouter } from "expo-router";
-import React, { useCallback, useEffect, useMemo } from "react";
-import { StyleSheet, TouchableOpacity, View } from "react-native";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
 import { H1 } from "tamagui";
 import { unreadCount } from "../services/nestServices";
 import { clearUnreadCount, setUnreadMessagesCount } from "../slices/main";
@@ -17,6 +17,8 @@ const AppHeader = () => {
   const unreadMessagesCount = useAppSelector(
     (state) => state?.main?.unreadMessagesCount,
   );
+
+  const [searchQuery, setSearchQuery] = useState("");
 
   const routes = useMemo(
     () => ({
@@ -83,10 +85,6 @@ const AppHeader = () => {
 
   const ActionIcons = () => (
     <View style={styles.iconContainer}>
-      {/* <TouchableOpacity onPress={() => router.push("/store")}>
-        <Ionicons name="ticket-outline" size={22} color="#10153D" />
-      </TouchableOpacity> */}
-
       <TouchableOpacity style={{ marginLeft: 16 }}>
         <View>
           <Ionicons
@@ -110,15 +108,44 @@ const AppHeader = () => {
 
   return (
     <View style={styles.header}>
-      <View style={styles.leftSection}>
-        <H1
-          style={styles.logo}
-          fontFamily="$logo"
-          color="$textPrimary"
-          size="$6"
-        >
-          {headerTitle}
-        </H1>
+      <View
+        style={[
+          styles.leftSection,
+          routes.isWatch && { flex: 1, marginRight: 12 },
+        ]}
+      >
+        {routes.isWatch ? (
+          <View style={styles.searchContainer}>
+            <Ionicons
+              name="search-outline"
+              size={16}
+              color="#64748B"
+              style={styles.searchIcon}
+            />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="جستجو در ویدیوها..."
+              placeholderTextColor="#94A3B8"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              returnKeyType="search"
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity onPress={() => setSearchQuery("")}>
+                <Ionicons name="close-circle" size={16} color="#94A3B8" />
+              </TouchableOpacity>
+            )}
+          </View>
+        ) : (
+          <H1
+            style={styles.logo}
+            fontFamily="$logo"
+            color="$textPrimary"
+            size="$6"
+          >
+            {headerTitle}
+          </H1>
+        )}
       </View>
 
       {routes.isProfile ? (
@@ -136,16 +163,16 @@ export default AppHeader;
 
 const styles = StyleSheet.create({
   header: {
-    height: 40,
+    height: 48,
     backgroundColor: "#fff",
     paddingHorizontal: 16,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
     elevation: 2,
     zIndex: 10,
   },
@@ -160,6 +187,25 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     display: "flex",
     alignItems: "center",
+  },
+  searchContainer: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F1F5F9",
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    height: 34,
+  },
+  searchIcon: {
+    marginRight: 6,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 13,
+    color: "#0F172A",
+    paddingVertical: 0,
+    textAlign: "right",
   },
   iconContainer: {
     flexDirection: "row",
