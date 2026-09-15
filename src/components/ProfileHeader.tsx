@@ -114,7 +114,7 @@ const ProfileHeader = forwardRef(
             </YStack>
           </View>
           <YStack ml="$2" gap="$2" justifyContent="center">
-            <Text fontSize="$6" fontWeight="bold" color="$textPrimary">
+            <Text fontSize="$5" fontWeight="bold" color="$textPrimary">
               {userName}
             </Text>
             {isMyProfile && (

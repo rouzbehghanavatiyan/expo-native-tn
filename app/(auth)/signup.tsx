@@ -51,7 +51,6 @@ export default function SignUpScreen() {
     }));
   };
 
-  // بستن مودال و اجرای تابع تایید در صورت وجود
   const handleCloseModal = () => {
     setModalState((prev) => ({ ...prev, visible: false }));
     if (modalState.onConfirm) {

@@ -1,13 +1,20 @@
 import { Ionicons } from "@expo/vector-icons";
 import { usePathname, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
-import { H1 } from "tamagui";
+import { FlatList, StyleSheet, Text, TouchableOpacity } from "react-native";
+import { H2, View } from "tamagui";
+import AppLoading from "../components/AppLoading";
+import BaseInput from "../components/BaseInput";
+import { Icon } from "../components/Icon";
+import ImageRank from "../components/ImageRank";
+import { searchUser } from "../services/masterServices";
 import { unreadCount } from "../services/nestServices";
 import { clearUnreadCount, setUnreadMessagesCount } from "../slices/main";
 import { useAppDispatch, useAppSelector } from "../store/reduxHookType";
+import { getImageUrl } from "../utils/fileHelper";
 import { logger } from "../utils/logger";
 import { socketClient } from "../utils/socketClient";
+import SearchingBox from "./SearchingBox";
 
 const AppHeader = () => {
   const router = useRouter();
@@ -19,6 +26,9 @@ const AppHeader = () => {
   );
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
 
   const routes = useMemo(
     () => ({
@@ -37,6 +47,47 @@ const AppHeader = () => {
     "/notification": "Notifications",
   };
   const headerTitle = titleMap[pathname] || "Clash Talent";
+
+  // لاجیک Debounce ۲ ثانیه‌ای برای جستجو
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      setShowDropdown(false);
+      setIsLoading(false);
+      return;
+    }
+
+    setIsLoading(true);
+    setShowDropdown(true);
+
+    const timer = setTimeout(async () => {
+      try {
+        const response: any = await searchUser({
+          userNameReq: searchQuery.trim(),
+          pageNumber: 1,
+          pageSize: 10,
+        });
+
+        logger?.info("fdfdfdfdfdf", response);
+
+        const items = response?.data?.data?.items || [];
+        setSearchResults(items);
+      } catch (error) {
+        logger.error("خطا در سرچ کاربر:", error);
+        setSearchResults([]);
+      } finally {
+        setIsLoading(false);
+      }
+    }, 2000); // ۲ ثانیه تأخیر
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const handleSelectUser = (user: any) => {
+    setShowDropdown(false);
+    setSearchQuery("");
+    router.push(`/profile/${user?.id || user?.userId}`);
+  };
 
   const handleReadConfirmation = useCallback(
     (data: any) => {
@@ -96,7 +147,7 @@ const AppHeader = () => {
               router.push("/chat");
             }}
             size={22}
-            color="#10153D"
+            color="#64748B"
           />
           {unreadMessagesCount > 0 && <View style={styles.badge} />}
         </View>
@@ -107,53 +158,90 @@ const AppHeader = () => {
   if (routes.isShowWatch) return null;
 
   return (
-    <View style={styles.header}>
-      <View
-        style={[
-          styles.leftSection,
-          routes.isWatch && { flex: 1, marginRight: 12 },
-        ]}
-      >
-        {routes.isWatch ? (
-          <View style={styles.searchContainer}>
-            <Ionicons
-              name="search-outline"
-              size={16}
-              color="#64748B"
-              style={styles.searchIcon}
-            />
-            <TextInput
-              style={styles.searchInput}
-              placeholder="جستجو در ویدیوها..."
-              placeholderTextColor="#94A3B8"
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <View
+          style={[
+            styles.leftSection,
+            routes.isWatch && { flex: 1, marginRight: 12 },
+          ]}
+        >
+          {routes.isWatch ? (
+            <BaseInput
+              height={36}
+              variant="filled"
+              placeholder="Search by username"
               value={searchQuery}
               onChangeText={setSearchQuery}
               returnKeyType="search"
+              fontSize={13}
+              rightIcon={
+                <TouchableOpacity
+                  onPress={() => {
+                    setShowDropdown(false);
+                    router.push({
+                      pathname: "/searchListUser",
+                      params: { query: searchQuery.trim() },
+                    });
+                  }}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <Icon name="search" size={16} color="#64748B" />
+                </TouchableOpacity>
+              }
             />
-            {searchQuery.length > 0 && (
-              <TouchableOpacity onPress={() => setSearchQuery("")}>
-                <Ionicons name="close-circle" size={16} color="#94A3B8" />
-              </TouchableOpacity>
-            )}
-          </View>
+          ) : (
+            <H2 style={styles.logo} fontFamily="$logo" color="$textPrimary">
+              {headerTitle}
+            </H2>
+          )}
+        </View>
+
+        {routes.isProfile ? (
+          <TouchableOpacity onPress={() => router.push("/setting")}>
+            <Ionicons name="settings-outline" size={22} color="#10153D" />
+          </TouchableOpacity>
         ) : (
-          <H1
-            style={styles.logo}
-            fontFamily="$logo"
-            color="$textPrimary"
-            size="$6"
-          >
-            {headerTitle}
-          </H1>
+          <ActionIcons />
         )}
+        <SearchingBox />
       </View>
 
-      {routes.isProfile ? (
-        <TouchableOpacity onPress={() => router.push("/setting")}>
-          <Ionicons name="settings-outline" size={22} color="#10153D" />
-        </TouchableOpacity>
-      ) : (
-        <ActionIcons />
+      {routes.isWatch && showDropdown && (
+        <View style={styles.dropdownContainer}>
+          {isLoading ? (
+            <View style={styles.dropdownLoading}>
+              <AppLoading />
+            </View>
+          ) : searchResults.length > 0 ? (
+            <FlatList
+              data={searchResults}
+              keyExtractor={(item, index) =>
+                item?.id?.toString() || index.toString()
+              }
+              keyboardShouldPersistTaps="handled"
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={styles.resultItem}
+                  onPress={() => handleSelectUser(item)}
+                >
+                  <ImageRank
+                    iconClass="text-gray-200"
+                    imgSrc={getImageUrl(item?.profile)}
+                    imgSize={35}
+                  />
+                  <Text style={styles.resultText}>
+                    {item?.userName || item?.fullName || item?.title || "کاربر"}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            />
+          ) : (
+            <View style={styles.dropdownEmpty}>
+              <Text style={styles.dropdownEmptyText}>Not found</Text>
+            </View>
+          )}
+        </View>
       )}
     </View>
   );
@@ -162,8 +250,12 @@ const AppHeader = () => {
 export default AppHeader;
 
 const styles = StyleSheet.create({
+  container: {
+    position: "relative",
+    zIndex: 999,
+  },
   header: {
-    height: 48,
+    height: 35,
     backgroundColor: "#fff",
     paddingHorizontal: 16,
     flexDirection: "row",
@@ -174,7 +266,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 4,
     elevation: 2,
-    zIndex: 10,
   },
   leftSection: {
     flexDirection: "row",
@@ -188,25 +279,6 @@ const styles = StyleSheet.create({
     display: "flex",
     alignItems: "center",
   },
-  searchContainer: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#F1F5F9",
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    height: 34,
-  },
-  searchIcon: {
-    marginRight: 6,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 13,
-    color: "#0F172A",
-    paddingVertical: 0,
-    textAlign: "right",
-  },
   iconContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -219,5 +291,53 @@ const styles = StyleSheet.create({
     height: 8,
     borderRadius: 4,
     backgroundColor: "red",
+  },
+  dropdownContainer: {
+    position: "absolute",
+    top: 53,
+    left: 16,
+    right: 16,
+    backgroundColor: "#fff",
+    borderBottomLeftRadius: 10,
+    borderBottomRightRadius: 10,
+    maxHeight: 220,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 5,
+    zIndex: 1000,
+    borderColor: "#F1F5F9",
+    overflow: "hidden",
+  },
+  resultItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F1F5F9",
+    gap: 8,
+  },
+  resultText: {
+    fontSize: 14,
+    color: "#1E293B",
+  },
+  dropdownLoading: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 16,
+    gap: 8,
+  },
+  dropdownLoadingText: {
+    fontSize: 13,
+    color: "#64748B",
+  },
+  dropdownEmpty: {
+    padding: 16,
+    alignItems: "center",
+  },
+  dropdownEmptyText: {
+    fontSize: 13,
+    color: "#94A3B8",
   },
 });

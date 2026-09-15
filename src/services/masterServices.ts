@@ -71,6 +71,12 @@ export const userAttachmentList = async (postData: any) => {
   );
 };
 
+export const searchUser = async (postData: any) => {
+  return await api.get(
+    `/searchUser?SearchUserDto=${postData?.userNameReq}&PageNumber=${postData?.pageNumber}&PageSize=${postData?.pageSize}`,
+  );
+};
+
 export const attachmentListByInviteId = async (postData: {
   skip: number;
   take: number;
