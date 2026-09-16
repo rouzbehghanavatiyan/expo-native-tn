@@ -30,7 +30,7 @@ export const categoryList = async () => {
 };
 
 export const userBlock = async (postData: any) => {
-  return await api.post("/userBlock");
+  return await api.post("/userBlock", postData);
 };
 
 export const followerList = async (
