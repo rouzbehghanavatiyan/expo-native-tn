@@ -2,9 +2,10 @@ import BlackTalent from "@/src/assets/images/black.png";
 import WhiteTalent from "@/src/assets/images/white.png";
 import AppHeader from "@/src/header/AppHeader";
 import { useAppSelector } from "@/src/store/reduxHookType";
+import * as ImagePicker from "expo-image-picker";
 import { Tabs, usePathname, useRouter } from "expo-router";
 import React from "react";
-import { Image, View } from "react-native";
+import { Alert, Image, View } from "react-native";
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -22,9 +23,8 @@ export default function TabLayout() {
     pathname.includes("/home") ||
     pathname.includes("/watch/show");
 
-  // ✅ کامپوننت جدید برای نمایش آیکون نقطه
   const DotIcon = ({ color }: { color: string }) => {
-    const dotSize = 8; // اندازه ثابت برای همه نقاط
+    const dotSize = 8;
     return (
       <View
         style={{
@@ -37,6 +37,42 @@ export default function TabLayout() {
     );
   };
 
+  // ✅ تابع باز کردن گالری برای انتخاب ویدیو یا عکس
+  const handlePickMedia = async () => {
+    try {
+      const permission =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permission.granted) {
+        Alert.alert("دسترسی لازم است", "لطفاً دسترسی به گالری را تایید کنید.");
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images", "videos"],
+        allowsEditing: false,
+        quality: 1,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const selectedAsset = result.assets[0];
+
+        // هدایت به تب clashTalent همراه با پارامترهای فایل انتخابی
+        router.push({
+          pathname: "/(tabs)/clashTalent",
+          params: {
+            mediaUri: selectedAsset.uri,
+            mediaType:
+              selectedAsset.type ??
+              (selectedAsset.uri.endsWith(".mp4") ? "video" : "image"),
+            duration: selectedAsset.duration ?? 0,
+          },
+        });
+      }
+    } catch (error) {
+      console.error("Error picking media: ", error);
+    }
+  };
+
   return (
     <SafeAreaView style={{ flex: 1 }} edges={["top", "left", "right"]}>
       <YStack f={1}>
@@ -45,7 +81,7 @@ export default function TabLayout() {
           screenOptions={{
             headerShown: false,
             tabBarShowLabel: false,
-            tabBarActiveTintColor: "black", // رنگ نقطه فعال
+            tabBarActiveTintColor: "black",
             tabBarStyle: {
               height: 24 + insets.bottom,
               paddingTop: 0,
@@ -60,7 +96,6 @@ export default function TabLayout() {
             },
           }}
         >
-          {/* ✅ همه آیکون‌ها به جز clashTalent به DotIcon تبدیل شدند */}
           <Tabs.Screen
             name="home"
             options={{
@@ -74,12 +109,20 @@ export default function TabLayout() {
               tabBarIcon: ({ color }) => <DotIcon color={color} />,
             }}
           />
+
+          {/* ✅ تب clashTalent با رویداد انتخاب مدیا */}
           <Tabs.Screen
             name="clashTalent"
+            listeners={{
+              tabPress: (e) => {
+                e.preventDefault(); // جلوگیری از باز شدن پیش‌فرض تب
+                handlePickMedia(); // باز کردن گالری
+              },
+            }}
             options={{
               tabBarIcon: ({ color, size, focused }) => {
                 const containerSize = 19;
-                const imageSize = focused ? 20 : 20;
+                const imageSize = 20;
                 return (
                   <YStack
                     width={containerSize}

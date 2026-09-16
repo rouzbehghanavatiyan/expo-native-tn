@@ -49,7 +49,6 @@ const Gear: React.FC<any> = ({
         dispatch(RsetCategory({ skillId: skillId, gearData: fetchedData }));
       }
     });
-
     handleGetCategory();
   }, [skillId, dispatch]);
 

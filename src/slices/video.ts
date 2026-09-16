@@ -82,7 +82,7 @@ export const uploadFullProcessThunk = createAsyncThunk(
         resizeMode: currentResizeMode,
         description: allFormData?.description || movieMeta?.desc || "",
         title: allFormData?.title || movieMeta?.title || "",
-        subSubCategoryId: reduxGearId || gearIdStorage,
+        subSubCategoryId: 1004,
         modeId: 3,
       };
 

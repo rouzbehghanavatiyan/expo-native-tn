@@ -1,15 +1,14 @@
 import { useRouter } from "expo-router";
 import React, { useRef, useState } from "react";
-import { Dimensions, Image, ImageStyle, Pressable } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { Dimensions, Image, StyleSheet } from "react-native";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { OnLoadData, OnProgressData, VideoRef } from "react-native-video";
 import { Spinner, View, XStack } from "tamagui";
 import { RsetShowTimerButtn } from "../slices/main";
-import {
-  goToStep,
-  removeInviteThunk,
-  RsetSelectedResize,
-} from "../slices/video";
+import { goToStep, removeInviteThunk } from "../slices/video";
 import { useAppDispatch, useAppSelector } from "../store/reduxHookType";
 import BaseButton from "./BaseButtom";
 import { Icon } from "./Icon";
@@ -18,7 +17,7 @@ import { ButtonTimer } from "./ui/ButtonTimer";
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 interface VideoPreviewStepProps {
-  videoSrc: string;
+  videoSrc: any;
   movieData: any;
   onMovieDataChange: (data: any) => void;
   coverImage?: string;
@@ -37,13 +36,12 @@ const VideoPreviewStep: React.FC<VideoPreviewStepProps> = ({
   handleNextStep,
   onAccept,
 }) => {
+  const insets = useSafeAreaInsets();
   const videoRef = useRef<VideoRef>(null);
   const [isPlaying, setIsPlaying] = useState(true);
   const [duration, setDuration] = useState(0);
   const [trimRange, setTrimRange] = useState([0, 0]);
   const showTimerButtn = useAppSelector((state) => state.main.showTimerButtn);
-  const videoSlice = useAppSelector((state) => state.video);
-  const selectedResize = videoSlice.selectedResize;
   const [videoLayout, setVideoLayout] = useState({
     width: SCREEN_WIDTH - 32,
     height: 300,
@@ -135,81 +133,70 @@ const VideoPreviewStep: React.FC<VideoPreviewStepProps> = ({
     return `${m}:${s.toString().padStart(2, "0")}`;
   };
 
-  const imageStyle: ImageStyle = {
-    width: selectedResize === 1 ? SCREEN_WIDTH : SCREEN_WIDTH - 32,
-    height: SCREEN_HEIGHT * 0.5,
-    resizeMode: selectedResize === 1 ? "stretch" : "contain",
-    backgroundColor: "black",
-    borderRadius: selectedResize === 1 ? 0 : 12,
-  };
-
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <View flex={1}>
-        <View flex={1} justifyContent="center" alignItems="center">
-          <View
-            flex={1}
-            justifyContent="flex-start"
-            alignItems="center"
-            width="100%"
-          >
-            {!!coverImage && (
-              <View width="100%" alignItems="center">
-                <View width="100%" alignItems="center" backgroundColor="black">
-                  <Image
-                    source={{ uri: coverImage }}
-                    alt="Video Cover"
-                    style={imageStyle}
-                  />
-                </View>
-                <View
-                  width={SCREEN_WIDTH - 32}
-                  height={1}
-                  backgroundColor="#374151"
-                  marginTop="$1"
-                  marginBottom="$5"
+    <SafeAreaView
+      style={{ flex: 1, backgroundColor: "#1f2937" }}
+      edges={["left", "right"]}
+    >
+      <View flex={1} justifyContent="space-between">
+        <View flex={1} width="100%" alignItems="center">
+          {!!coverImage && (
+            <View width="100%" alignItems="center">
+              <View
+                width={SCREEN_WIDTH}
+                height={SCREEN_HEIGHT * 0.5}
+                backgroundColor="black"
+                overflow="hidden"
+                justifyContent="center"
+                alignItems="center"
+              >
+                <Image
+                  style={StyleSheet.absoluteFillObject}
+                  source={{ uri: coverImage }}
+                  alt="Video Cover"
+                  resizeMode="contain"
                 />
-                {showTimerButtn ? (
-                  <View marginTop={60}>
-                    <ButtonTimer show={showTimerButtn} startTime={120} />
-                  </View>
-                ) : (
-                  <Icon size={110} name="Question" color="white" />
-                )}
               </View>
-            )}
-          </View>
+              <View
+                width={SCREEN_WIDTH - 32}
+                height={1}
+                backgroundColor="#374151"
+                marginTop="$2"
+                marginBottom="$5"
+              />
+
+              {showTimerButtn ? (
+                <View marginTop={90}>
+                  <ButtonTimer show={showTimerButtn} startTime={120} />
+                </View>
+              ) : (
+                <View
+                  shadowColor="#000000"
+                  shadowOffset={{ width: 0, height: 2 }}
+                  shadowOpacity={0.15}
+                  shadowRadius={4}
+                  style={{ elevation: 2 }}
+                >
+                  <Icon size={110} name="Question" color="white" />
+                </View>
+              )}
+            </View>
+          )}
         </View>
-        <View padding={20} paddingBottom={22} backgroundColor="#1f2937">
-          <XStack
-            justifyContent="center"
-            alignItems="center"
-            gap="$6"
-            marginBottom="$4"
-          >
-            <Pressable
-              onPress={() => dispatch(RsetSelectedResize(1))}
-              style={{
-                borderWidth: selectedResize === 1 ? 1 : 0,
-                borderColor: selectedResize === 1 ? "#22c55e" : "transparent",
-                borderRadius: 12,
-                padding: 4,
-              }}
-            >
-              <Icon size={45} name="CheckBoxOutlineBlank" color="white" />
-            </Pressable>
-            <Pressable
-              onPress={() => dispatch(RsetSelectedResize(2))}
-              style={{
-                borderWidth: selectedResize === 2 ? 1 : 0,
-                borderColor: selectedResize === 2 ? "#22c55e" : "transparent",
-                borderRadius: 12,
-                padding: 4,
-              }}
-            >
-              <Icon size={45} name="AspectRatio" color="white" />
-            </Pressable>
-          </XStack>
+
+        <View
+          shadowColor="#000000"
+          shadowOffset={{ width: 0, height: -8 }}
+          shadowOpacity={0.25}
+          shadowRadius={12}
+          borderTopWidth={0.5}
+          borderTopColor="rgba(255, 255, 255, 0.08)"
+          paddingHorizontal={20}
+          paddingTop={16}
+          paddingBottom={insets.bottom > 13 ? insets.bottom - 30 : 3}
+          backgroundColor="#1f2937"
+          width="100%"
+        >
           <XStack justifyContent="space-between" alignItems="center" gap="$2">
             <BaseButton
               flex={1}
@@ -229,7 +216,8 @@ const VideoPreviewStep: React.FC<VideoPreviewStepProps> = ({
             <BaseButton
               flex={1}
               size="$3"
-              bg="transparent"
+              variant="outlined"
+              bg="$primaryLight"
               chromeless
               onPress={handleCanceled}
             >

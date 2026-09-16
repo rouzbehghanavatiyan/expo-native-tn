@@ -1,297 +1,458 @@
-import Arena from "@/src/components/Arena";
-import Gear from "@/src/components/Gear";
-import { Icon } from "@/src/components/Icon";
-import Skill from "@/src/components/skill";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+// import Arena from "@/src/components/Arena";
+// import Gear from "@/src/components/Gear";
+// import { Icon } from "@/src/components/Icon";
+// import Skill from "@/src/components/skill";
+// import AsyncStorage from "@react-native-async-storage/async-storage";
+// import React, { useEffect, useState } from "react";
+// import {
+//   ScrollView,
+//   StyleSheet,
+//   Switch,
+//   Text,
+//   TouchableOpacity,
+//   View,
+// } from "react-native";
+
+// const initialSteps = [
+//   { title: "", icon: "", session: "Arena" },
+//   { title: "", icon: "", session: "Skill" },
+//   { title: "", icon: "", session: "Gear" },
+// ];
+
+// const initialCurrentStep = {
+//   number: 1,
+//   arena: null,
+//   skill: null,
+//   gear: null,
+// };
+
+// const STEP_LABELS = ["Arena", "Skill", "Gear"];
+
+// const Sot: React.FC = () => {
+//   const [stepsData, setStepsData] = useState(initialSteps);
+//   const [rememberMe, setRememberMe] = useState<boolean>(false);
+//   const [currentStep, setCurrentStep] = useState<any>(initialCurrentStep);
+
+//   const updateStepData = async (stepNumber: number, data: any) => {
+//     const updatedSteps: any = stepsData?.map((step, index) =>
+//       index === stepNumber - 1 ? { title: data.name, icon: data.icon } : step,
+//     );
+//     setStepsData(updatedSteps);
+
+//     if (rememberMe) {
+//       try {
+//         if (stepNumber === 1) {
+//           await AsyncStorage.multiSet([
+//             ["arenaId", String(data.id)],
+//             ["arenaName", data.name || ""],
+//             ["arenaIconName", data.icon || ""],
+//           ]);
+//         }
+
+//         if (stepNumber === 2) {
+//           await AsyncStorage.multiSet([
+//             ["skillId", String(data.subCategoryId || data.id)],
+//             ["skillName", data.name || ""],
+//             ["skillIconName", data.icon || ""],
+//           ]);
+//         }
+
+//         if (stepNumber === 3) {
+//           await AsyncStorage.multiSet([
+//             ["gearId", String(data.id)],
+//             ["gearName", data.name || ""],
+//             ["gearIconName", data.icon || ""],
+//           ]);
+//         }
+//       } catch (error) {
+//         console.log("Storage save error:", error);
+//       }
+//     }
+
+//     setCurrentStep((prev: any) => ({
+//       ...prev,
+//       [stepNumber === 1
+//         ? "arena"
+//         : stepNumber === 2
+//           ? "skill"
+//           : stepNumber === 3
+//             ? "gear"
+//             : ""]: data,
+//       number: stepNumber + 1,
+//     }));
+//   };
+
+//   const resetSot = () => {
+//     setStepsData(initialSteps);
+//     setCurrentStep(initialCurrentStep);
+//   };
+
+//   const checkChoiceSot = async () => {
+//     try {
+//       const rememberStr = await AsyncStorage.getItem("rememberMe");
+//       const isRemember = rememberStr === "true";
+//       setRememberMe(isRemember);
+
+//       if (!isRemember) {
+//         await AsyncStorage.multiRemove([
+//           "arenaId",
+//           "skillId",
+//           "gearId",
+//           "arenaIconName",
+//           "skillIconName",
+//           "gearIconName",
+//           "arenaName",
+//           "skillName",
+//           "gearName",
+//         ]);
+//         resetSot();
+//         return;
+//       }
+
+//       const arenaId = await AsyncStorage.getItem("arenaId");
+//       const skillId = await AsyncStorage.getItem("skillId");
+//       const arenaIconName = await AsyncStorage.getItem("arenaIconName");
+//       const skillIconName = await AsyncStorage.getItem("skillIconName");
+//       const arenaName = await AsyncStorage.getItem("arenaName");
+//       const skillName = await AsyncStorage.getItem("skillName");
+
+//       let currentStepNum = 1;
+//       let newCurrentStep: any = { ...initialCurrentStep };
+//       let newStepsData: any = [...initialSteps];
+
+//       if (arenaId) {
+//         currentStepNum = 2;
+//         newCurrentStep.arena = {
+//           id: parseInt(arenaId),
+//           name: arenaName,
+//           icon: arenaIconName,
+//         };
+//         newStepsData[0] = {
+//           title: arenaName,
+//           icon: arenaIconName,
+//           session: "Arena",
+//         };
+//       }
+
+//       if (arenaId && skillId) {
+//         currentStepNum = 3;
+//         newCurrentStep.skill = {
+//           id: parseInt(skillId),
+//           name: skillName,
+//           icon: skillIconName,
+//         };
+//         newStepsData[1] = {
+//           title: skillName,
+//           icon: skillIconName,
+//           session: "Skill",
+//         };
+//       }
+
+//       newCurrentStep.number = currentStepNum;
+//       setCurrentStep(newCurrentStep);
+//       setStepsData(newStepsData);
+//     } catch (error) {
+//       console.error("Storage fetch error:", error);
+//     }
+//   };
+
+//   useEffect(() => {
+//     checkChoiceSot();
+//   }, []);
+
+//   const handleRememberMeChange = async (val: boolean) => {
+//     setRememberMe(val);
+//     await AsyncStorage.setItem("rememberMe", String(val));
+
+//     if (!val) {
+//       await AsyncStorage.multiRemove([
+//         "arenaId",
+//         "skillId",
+//         "gearId",
+//         "arenaIconName",
+//         "skillIconName",
+//         "gearIconName",
+//         "arenaName",
+//         "skillName",
+//         "gearName",
+//       ]);
+//       resetSot();
+//     } else {
+//       if (currentStep.arena) updateStepData(1, currentStep.arena);
+//       if (currentStep.skill) updateStepData(2, currentStep.skill);
+//       if (currentStep.gear) updateStepData(3, currentStep.gear);
+//     }
+//   };
+
+//   const renderCurrentStep = () => {
+//     switch (currentStep.number) {
+//       case 1:
+//         return <Arena updateStepData={updateStepData} />;
+//       case 2:
+//         return (
+//           <Skill currentStep={currentStep} updateStepData={updateStepData} />
+//         );
+//       case 3:
+//       default:
+//         return (
+//           <Gear
+//             currentStep={currentStep}
+//             setCurrentStep={setCurrentStep}
+//             updateStepData={updateStepData}
+//           />
+//         );
+//     }
+//   };
+
+//   return (
+//     <View style={styles.container}>
+//       <View style={styles.rememberRow}>
+//         <Switch
+//           value={rememberMe}
+//           onValueChange={handleRememberMeChange}
+//           trackColor={{ false: "#d1d5db", true: "#2563eb" }}
+//           thumbColor="#ffffff"
+//         />
+//         <Text style={styles.rememberLabel}>Remember talent</Text>
+//       </View>
+
+//       <View style={styles.stepsSection}>
+//         <ScrollView
+//           horizontal
+//           showsHorizontalScrollIndicator={false}
+//           contentContainerStyle={styles.stepsRow}
+//         >
+//           {stepsData.map((step, index) => (
+//             <TouchableOpacity
+//               key={index}
+//               style={styles.stepItem}
+//               onPress={() =>
+//                 setCurrentStep({ ...currentStep, number: index + 1 })
+//               }
+//             >
+//               <View
+//                 style={[
+//                   styles.stepCircle,
+//                   index < currentStep.number
+//                     ? styles.stepCircleActive
+//                     : styles.stepCircleInactive,
+//                 ]}
+//               >
+//                 <Icon name={step?.icon} size={20} color="white" />
+//                 {step?.title ? (
+//                   <Text style={styles.stepTitle} numberOfLines={1}>
+//                     {step.title}
+//                   </Text>
+//                 ) : null}
+//               </View>
+//               <Text style={styles.stepLabel}>{STEP_LABELS[index]}</Text>
+//             </TouchableOpacity>
+//           ))}
+//         </ScrollView>
+//       </View>
+//       <View style={styles.content}>{renderCurrentStep()}</View>
+//     </View>
+//   );
+// };
+
+// const styles = StyleSheet.create({
+//   container: { flex: 1 },
+//   rememberRow: {
+//     flexDirection: "row",
+//     alignItems: "center",
+//     justifyContent: "center",
+//     gap: 8,
+//     marginTop: 12,
+//     marginBottom: 4,
+//   },
+//   rememberLabel: { fontSize: 14, fontWeight: "bold" },
+//   stepsSection: { marginTop: 12, marginBottom: 8, alignItems: "center" },
+//   stepsRow: {
+//     flexDirection: "row",
+//     gap: 16,
+//     paddingHorizontal: 16,
+//     alignItems: "flex-start",
+//   },
+//   stepItem: { alignItems: "center" },
+//   stepCircle: {
+//     width: 80,
+//     height: 80,
+//     borderRadius: 40,
+//     alignItems: "center",
+//     justifyContent: "center",
+//     padding: 4,
+//   },
+//   stepCircleActive: { backgroundColor: "#22c55e" },
+//   stepCircleInactive: { backgroundColor: "#e5e7eb" },
+//   stepTitle: {
+//     color: "white",
+//     fontSize: 11,
+//     marginTop: 2,
+//     textAlign: "center",
+//   },
+//   stepLabel: { fontSize: 12, color: "#4b5563", marginTop: 8 },
+//   content: { flex: 1 },
+// });
+
+// export default Sot;
+
+import VideoPreviewStep from "@/src/components/VideoPreviewStep";
+import { useEditVideo } from "@/src/hook/useEditVideo";
+import { setVideoSrc, updateMovieData } from "@/src/slices/video";
+import { useAppDispatch } from "@/src/store/reduxHookType";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import * as VideoThumbnails from "expo-video-thumbnails";
 import React, { useEffect, useState } from "react";
-import {
-  ScrollView,
-  StyleSheet,
-  Switch,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Platform } from "react-native";
+import { Spinner, YStack } from "tamagui";
 
-const initialSteps = [
-  { title: "", icon: "", session: "Arena" },
-  { title: "", icon: "", session: "Skill" },
-  { title: "", icon: "", session: "Gear" },
-];
+export default function ClashTalentScreen() {
+  const router = useRouter();
+  const dispatch = useAppDispatch();
 
-const initialCurrentStep = {
-  number: 1,
-  arena: null,
-  skill: null,
-  gear: null,
-};
+  const params = useLocalSearchParams<{
+    mediaUri?: string;
+    mediaType?: "image" | "video";
+    duration?: string;
+    mode?: string;
+  }>();
 
-const STEP_LABELS = ["Arena", "Skill", "Gear"];
+  const mediaUri = params.mediaUri || "";
+  const mediaType =
+    params.mediaType || (mediaUri.endsWith(".mp4") ? "video" : "image");
+  const mode = params.mode ? JSON.parse(params.mode) : { typeMode: 3 };
 
-const Sot: React.FC = () => {
-  const [stepsData, setStepsData] = useState(initialSteps);
-  const [rememberMe, setRememberMe] = useState<boolean>(false);
-  const [currentStep, setCurrentStep] = useState<any>(initialCurrentStep);
+  const [coverImage, setCoverImage] = useState<string>("");
+  const [allFormData, setAllFormData] = useState<any>(null);
+  const [isProcessingMedia, setIsProcessingMedia] = useState<boolean>(true);
 
-  const updateStepData = async (stepNumber: number, data: any) => {
-    const updatedSteps: any = stepsData?.map((step, index) =>
-      index === stepNumber - 1 ? { title: data.name, icon: data.icon } : step,
-    );
-    setStepsData(updatedSteps);
+  useEffect(() => {
+    let isMounted = true;
 
-    if (rememberMe) {
-      try {
-        if (stepNumber === 1) {
-          await AsyncStorage.multiSet([
-            ["arenaId", String(data.id)],
-            ["arenaName", data.name || ""],
-            ["arenaIconName", data.icon || ""],
-          ]);
-        }
-
-        if (stepNumber === 2) {
-          await AsyncStorage.multiSet([
-            ["skillId", String(data.subCategoryId || data.id)],
-            ["skillName", data.name || ""],
-            ["skillIconName", data.icon || ""],
-          ]);
-        }
-
-        if (stepNumber === 3) {
-          await AsyncStorage.multiSet([
-            ["gearId", String(data.id)],
-            ["gearName", data.name || ""],
-            ["gearIconName", data.icon || ""],
-          ]);
-        }
-      } catch (error) {
-        console.log("Storage save error:", error);
-      }
-    }
-
-    setCurrentStep((prev: any) => ({
-      ...prev,
-      [stepNumber === 1
-        ? "arena"
-        : stepNumber === 2
-          ? "skill"
-          : stepNumber === 3
-            ? "gear"
-            : ""]: data,
-      number: stepNumber + 1,
-    }));
-  };
-
-  const resetSot = () => {
-    setStepsData(initialSteps);
-    setCurrentStep(initialCurrentStep);
-  };
-
-  const checkChoiceSot = async () => {
-    try {
-      const rememberStr = await AsyncStorage.getItem("rememberMe");
-      const isRemember = rememberStr === "true";
-      setRememberMe(isRemember);
-
-      if (!isRemember) {
-        await AsyncStorage.multiRemove([
-          "arenaId",
-          "skillId",
-          "gearId",
-          "arenaIconName",
-          "skillIconName",
-          "gearIconName",
-          "arenaName",
-          "skillName",
-          "gearName",
-        ]);
-        resetSot();
+    const prepareMedia = async () => {
+      if (!mediaUri) {
+        setIsProcessingMedia(false);
         return;
       }
 
-      const arenaId = await AsyncStorage.getItem("arenaId");
-      const skillId = await AsyncStorage.getItem("skillId");
-      const arenaIconName = await AsyncStorage.getItem("arenaIconName");
-      const skillIconName = await AsyncStorage.getItem("skillIconName");
-      const arenaName = await AsyncStorage.getItem("arenaName");
-      const skillName = await AsyncStorage.getItem("skillName");
+      try {
+        setIsProcessingMedia(true);
+        let thumbnailUri = mediaUri;
 
-      let currentStepNum = 1;
-      let newCurrentStep: any = { ...initialCurrentStep };
-      let newStepsData: any = [...initialSteps];
+        if (mediaType === "video") {
+          dispatch(setVideoSrc(mediaUri));
 
-      if (arenaId) {
-        currentStepNum = 2;
-        newCurrentStep.arena = {
-          id: parseInt(arenaId),
-          name: arenaName,
-          icon: arenaIconName,
-        };
-        newStepsData[0] = {
-          title: arenaName,
-          icon: arenaIconName,
-          session: "Arena",
-        };
+          if (Platform.OS !== "web") {
+            const durationSec = params.duration ? Number(params.duration) : 2;
+            const timeMs = Math.max(1000, Math.floor((durationSec * 1000) / 2));
+
+            const thumbnailResult = await VideoThumbnails.getThumbnailAsync(
+              mediaUri,
+              { time: timeMs },
+            );
+
+            thumbnailUri = thumbnailResult.uri.startsWith("file://")
+              ? thumbnailResult.uri
+              : `file://${thumbnailResult.uri}`;
+          }
+        }
+        console.log(
+          "isMounted, thumbnailUri isMounted, thumbnailUri",
+          isMounted,
+          thumbnailUri,
+        );
+
+        if (isMounted) {
+          setCoverImage(thumbnailUri);
+
+          const formData = {
+            imageCover: {
+              uri: thumbnailUri,
+              name: `cover_${Date.now()}.png`,
+              type: "image/png",
+            },
+            ...(mediaType === "video"
+              ? {
+                  video: {
+                    uri: mediaUri,
+                    name: `video_${Date.now()}.mp4`,
+                    type: "video/mp4",
+                  },
+                }
+              : {
+                  image: {
+                    uri: mediaUri,
+                    name: `image_${Date.now()}.jpg`,
+                    type: "image/jpeg",
+                  },
+                }),
+          };
+
+          setAllFormData(formData);
+        }
+      } catch (error) {
+        console.error("Error preparing media/thumbnail in ClashTalent:", error);
+      } finally {
+        if (isMounted) {
+          setIsProcessingMedia(false);
+        }
       }
+    };
 
-      if (arenaId && skillId) {
-        currentStepNum = 3;
-        newCurrentStep.skill = {
-          id: parseInt(skillId),
-          name: skillName,
-          icon: skillIconName,
-        };
-        newStepsData[1] = {
-          title: skillName,
-          icon: skillIconName,
-          session: "Skill",
-        };
-      }
+    prepareMedia();
 
-      newCurrentStep.number = currentStepNum;
-      setCurrentStep(newCurrentStep);
-      setStepsData(newStepsData);
-    } catch (error) {
-      console.error("Storage fetch error:", error);
-    }
-  };
+    return () => {
+      isMounted = false;
+    };
+  }, [mediaUri, mediaType, dispatch]);
 
-  useEffect(() => {
-    checkChoiceSot();
-  }, []);
-
-  const handleRememberMeChange = async (val: boolean) => {
-    setRememberMe(val);
-    await AsyncStorage.setItem("rememberMe", String(val));
-
-    if (!val) {
-      await AsyncStorage.multiRemove([
-        "arenaId",
-        "skillId",
-        "gearId",
-        "arenaIconName",
-        "skillIconName",
-        "gearIconName",
-        "arenaName",
-        "skillName",
-        "gearName",
-      ]);
-      resetSot();
+  const handleCancelAndExit = () => {
+    if (router.canGoBack()) {
+      router.back();
     } else {
-      if (currentStep.arena) updateStepData(1, currentStep.arena);
-      if (currentStep.skill) updateStepData(2, currentStep.skill);
-      if (currentStep.gear) updateStepData(3, currentStep.gear);
+      router.replace("/(tabs)/watch");
     }
   };
 
-  const renderCurrentStep = () => {
-    switch (currentStep.number) {
-      case 1:
-        return <Arena updateStepData={updateStepData} />;
-      case 2:
-        return (
-          <Skill currentStep={currentStep} updateStepData={updateStepData} />
-        );
-      case 3:
-      default:
-        return (
-          <Gear
-            currentStep={currentStep}
-            setCurrentStep={setCurrentStep}
-            updateStepData={updateStepData}
-          />
-        );
-    }
+  const {
+    videoSrc,
+    isLoadingBtn,
+    movieData,
+    handleUploadVideo,
+    handleBack,
+    handleNextStep,
+  } = useEditVideo({
+    showEditMovie: Boolean(allFormData),
+    setShowEditMovie: handleCancelAndExit,
+    allFormData,
+    mode,
+  });
+
+  const handleCancel = () => {
+    handleBack();
+    handleCancelAndExit();
   };
+
+  if (isProcessingMedia) {
+    return (
+      <YStack flex={1} bg="#000" justifyContent="center" alignItems="center">
+        <Spinner size="large" color="$greenMain" />
+      </YStack>
+    );
+  }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.rememberRow}>
-        <Switch
-          value={rememberMe}
-          onValueChange={handleRememberMeChange}
-          trackColor={{ false: "#d1d5db", true: "#2563eb" }}
-          thumbColor="#ffffff"
-        />
-        <Text style={styles.rememberLabel}>Remember talent</Text>
-      </View>
-
-      <View style={styles.stepsSection}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.stepsRow}
-        >
-          {stepsData.map((step, index) => (
-            <TouchableOpacity
-              key={index}
-              style={styles.stepItem}
-              onPress={() =>
-                setCurrentStep({ ...currentStep, number: index + 1 })
-              }
-            >
-              <View
-                style={[
-                  styles.stepCircle,
-                  index < currentStep.number
-                    ? styles.stepCircleActive
-                    : styles.stepCircleInactive,
-                ]}
-              >
-                <Icon name={step?.icon} size={20} color="white" />
-                {step?.title ? (
-                  <Text style={styles.stepTitle} numberOfLines={1}>
-                    {step.title}
-                  </Text>
-                ) : null}
-              </View>
-              <Text style={styles.stepLabel}>{STEP_LABELS[index]}</Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </View>
-      <View style={styles.content}>{renderCurrentStep()}</View>
-    </View>
+    <YStack flex={1} bg="#000">
+      <VideoPreviewStep
+        videoSrc={mediaType === "video" ? videoSrc || mediaUri : undefined}
+        coverImage={coverImage || mediaUri}
+        movieData={movieData}
+        onMovieDataChange={(data) => dispatch(updateMovieData(data))}
+        onAccept={handleUploadVideo}
+        isLoading={isLoadingBtn}
+        onCancel={handleCancel}
+        handleNextStep={handleNextStep}
+      />
+    </YStack>
   );
-};
-
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  rememberRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    marginTop: 12,
-    marginBottom: 4,
-  },
-  rememberLabel: { fontSize: 14, fontWeight: "bold" },
-  stepsSection: { marginTop: 12, marginBottom: 8, alignItems: "center" },
-  stepsRow: {
-    flexDirection: "row",
-    gap: 16,
-    paddingHorizontal: 16,
-    alignItems: "flex-start",
-  },
-  stepItem: { alignItems: "center" },
-  stepCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 4,
-  },
-  stepCircleActive: { backgroundColor: "#22c55e" },
-  stepCircleInactive: { backgroundColor: "#e5e7eb" },
-  stepTitle: {
-    color: "white",
-    fontSize: 11,
-    marginTop: 2,
-    textAlign: "center",
-  },
-  stepLabel: { fontSize: 12, color: "#4b5563", marginTop: 8 },
-  content: { flex: 1 },
-});
-
-export default Sot;
+}
