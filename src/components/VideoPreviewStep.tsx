@@ -161,7 +161,7 @@ const VideoPreviewStep: React.FC<VideoPreviewStepProps> = ({
                 width={SCREEN_WIDTH - 32}
                 height={1}
                 backgroundColor="#374151"
-                marginTop="$2"
+                marginTop="$1"
                 marginBottom="$5"
               />
 
@@ -217,7 +217,6 @@ const VideoPreviewStep: React.FC<VideoPreviewStepProps> = ({
               flex={1}
               size="$3"
               variant="outlined"
-              bg="$primaryLight"
               chromeless
               onPress={handleCanceled}
             >

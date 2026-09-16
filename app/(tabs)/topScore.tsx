@@ -1,15 +1,11 @@
+import MainTitle from "@/src/components/MainTitle";
 import Notification from "@/src/components/Notification";
 import TopScoreItem from "@/src/components/TopScoreItem";
 import { topScoreList } from "@/src/services/masterServices";
 import { FontAwesome5, MaterialIcons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
-import {
-  ActivityIndicator,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-} from "react-native";
-import { ScrollView, XStack, YStack } from "tamagui";
+import { ActivityIndicator, StyleSheet } from "react-native";
+import { ScrollView, YStack } from "tamagui";
 
 interface Category {
   id: string;
@@ -68,12 +64,7 @@ export default function TopScoreScreen() {
 
   return (
     <YStack flex={1} bg="$background">
-      {/* <MainTitle
-        title={activeTab === "topScore" ? "Top Score" : "Notification"}
-        showBack={false}
-      /> */}
-
-      <XStack style={styles.tabContainer}>
+      {/* <XStack style={styles.tabContainer}>
         <TouchableOpacity
           style={[
             styles.tabButton,
@@ -110,11 +101,12 @@ export default function TopScoreScreen() {
             </Text>
           </XStack>
         </TouchableOpacity>
-      </XStack>
+      </XStack> */}
 
       <ScrollView flex={1} showsVerticalScrollIndicator={false}>
         {activeTab === "topScore" ? (
           <YStack>
+            <MainTitle title="Top score" />
             <TopScoreItem categories={categories} />
             {isLoading && (
               <YStack ai="center" py="$4">
@@ -145,7 +137,7 @@ const styles = StyleSheet.create({
   },
   activeTab: {
     borderBottomWidth: 2,
-    borderBottomColor: "#333", // رنگ زیرخط تب فعال
+    borderBottomColor: "#333",
   },
   redDot: {
     width: 10,

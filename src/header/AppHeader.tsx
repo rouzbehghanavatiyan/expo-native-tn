@@ -48,7 +48,6 @@ const AppHeader = () => {
   };
   const headerTitle = titleMap[pathname] || "Clash Talent";
 
-  // لاجیک Debounce ۲ ثانیه‌ای برای جستجو
   useEffect(() => {
     if (!searchQuery.trim()) {
       setSearchResults([]);
@@ -168,7 +167,7 @@ const AppHeader = () => {
         >
           {routes.isWatch ? (
             <BaseInput
-              height={36}
+              height={30}
               variant="filled"
               placeholder="Search by username"
               value={searchQuery}
@@ -255,7 +254,7 @@ const styles = StyleSheet.create({
     zIndex: 999,
   },
   header: {
-    height: 35,
+    height: 40,
     backgroundColor: "#fff",
     paddingHorizontal: 16,
     flexDirection: "row",
@@ -294,7 +293,7 @@ const styles = StyleSheet.create({
   },
   dropdownContainer: {
     position: "absolute",
-    top: 53,
+    top: 38,
     left: 16,
     right: 16,
     backgroundColor: "#fff",

@@ -2,7 +2,7 @@ import { DeactivatedModal } from "@/src/common/DeactivatedModal";
 import { MatchTimeoutModal } from "@/src/common/MatchTimeoutModal";
 import { stopMatchTimer } from "@/src/components/TimerForFindMatch";
 import VideoGroup from "@/src/components/VideoGroup";
-import { attachmentList, subCategoryList } from "@/src/services/masterServices";
+import { attachmentList } from "@/src/services/masterServices";
 import {
   appendWatchData,
   resetWatchState,
@@ -18,8 +18,6 @@ export default function WatchScreen() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const { pagination, data } = useAppSelector((state) => state.main.watchVideo);
-  const [skills, setSkills] = useState<any[]>([]);
-  const [selectFiltered, setSelectFiltered] = useState<number>(0);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const showTimeout = useAppSelector((state) => state?.video?.showTimeout);
@@ -31,23 +29,9 @@ export default function WatchScreen() {
     (state) => state?.video?.showDeactivatedModal,
   );
 
-  const handleGetFiltered = async () => {
-    try {
-      const res = await subCategoryList(1);
-      const { data: skillData } = res?.data;
-      const temp = [{ id: 0, name: "All" }, ...skillData];
-      setSkills(temp);
-    } catch (err) {
-      console.log(err);
-    }
-  };
   const generateNewSeed = () => Math.floor(Math.random() * 1000000);
 
-  const handleGetAllMatch = async (
-    skillId: number,
-    reset = false,
-    customSeed?: number,
-  ) => {
+  const handleGetAllMatch = async (reset = false, customSeed?: number) => {
     if (loading) return;
     if (!reset && !pagination.hasMore) return;
 
@@ -61,7 +45,7 @@ export default function WatchScreen() {
       const res = await attachmentList({
         skip,
         take,
-        subCatId: skillId,
+        subCatId: 0,
         seed: activeSeed,
       });
 
@@ -101,32 +85,13 @@ export default function WatchScreen() {
       }),
     );
 
-    await handleGetAllMatch(selectFiltered, true, newSeed);
+    await handleGetAllMatch(true, newSeed);
     setRefreshing(false);
-  };
-
-  const handleFilterChange = (skillId: number) => {
-    setSelectFiltered(skillId);
-
-    const newSeed = generateNewSeed();
-    setSeed(newSeed);
-
-    dispatch(resetWatchState());
-
-    dispatch(
-      setPaginationWatch({
-        take: 10,
-        skip: 0,
-        hasMore: true,
-      }),
-    );
-
-    handleGetAllMatch(skillId, true, newSeed);
   };
 
   useEffect(() => {
     stopMatchTimer();
-    handleGetFiltered();
+    handleGetAllMatch(true);
   }, []);
 
   const handleShowMatch = (item: any) => {
@@ -149,21 +114,6 @@ export default function WatchScreen() {
     <>
       <View style={styles.container}>
         <FlatList
-          // ListHeaderComponent={
-          //   <>
-          //     {skills && (
-          //       <>
-          //         <MainTitle title="Filtered" />
-          //         <FilteredWatch
-          //           skills={skills}
-          //           handleGetAllMatch={handleFilterChange}
-          //           selectFiltered={selectFiltered}
-          //           setSelectFiltered={setSelectFiltered}
-          //         />
-          //       </>
-          //     )}
-          //   </>
-          // }
           data={data}
           numColumns={2}
           keyExtractor={(item, index) =>
@@ -180,7 +130,7 @@ export default function WatchScreen() {
               onPress={() => handleShowMatch(item)}
             />
           )}
-          onEndReached={() => handleGetAllMatch(selectFiltered, false)}
+          onEndReached={() => handleGetAllMatch(false)}
           onEndReachedThreshold={0.5}
           ListFooterComponent={
             loading && !refreshing ? <ActivityIndicator size="large" /> : null

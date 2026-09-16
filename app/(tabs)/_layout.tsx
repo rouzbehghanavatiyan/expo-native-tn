@@ -37,7 +37,6 @@ export default function TabLayout() {
     );
   };
 
-  // ✅ تابع باز کردن گالری برای انتخاب ویدیو یا عکس
   const handlePickMedia = async () => {
     try {
       const permission =
@@ -56,7 +55,6 @@ export default function TabLayout() {
       if (!result.canceled && result.assets && result.assets.length > 0) {
         const selectedAsset = result.assets[0];
 
-        // هدایت به تب clashTalent همراه با پارامترهای فایل انتخابی
         router.push({
           pathname: "/(tabs)/clashTalent",
           params: {
@@ -110,13 +108,12 @@ export default function TabLayout() {
             }}
           />
 
-          {/* ✅ تب clashTalent با رویداد انتخاب مدیا */}
           <Tabs.Screen
             name="clashTalent"
             listeners={{
               tabPress: (e) => {
-                e.preventDefault(); // جلوگیری از باز شدن پیش‌فرض تب
-                handlePickMedia(); // باز کردن گالری
+                e.preventDefault();
+                handlePickMedia();
               },
             }}
             options={{
