@@ -14,7 +14,6 @@ import { useAppDispatch, useAppSelector } from "../store/reduxHookType";
 import { getImageUrl } from "../utils/fileHelper";
 import { logger } from "../utils/logger";
 import { socketClient } from "../utils/socketClient";
-import SearchingBox from "./SearchingBox";
 
 const AppHeader = () => {
   const router = useRouter();
@@ -203,7 +202,6 @@ const AppHeader = () => {
         ) : (
           <ActionIcons />
         )}
-        <SearchingBox />
       </View>
 
       {routes.isWatch && showDropdown && (

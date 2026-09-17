@@ -2,7 +2,8 @@ import { StyleSheet } from "react-native";
 import { View } from "tamagui";
 
 const SearchingBox = () => {
-  return <View>dsfsdf</View>;
+  return <View>
+    dsfsdf</View>;
 };
 export default SearchingBox;
 

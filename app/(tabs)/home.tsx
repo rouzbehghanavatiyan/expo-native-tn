@@ -1,3 +1,4 @@
+import { Icon } from "@/src/components/Icon";
 import VideoSkeleton from "@/src/components/VideoSkeleton";
 import ShowWatchSlide from "@/src/components/VideoSlide";
 import { useShowWatch } from "@/src/hook/useShowWatch";
@@ -10,11 +11,13 @@ import {
 import { useAppDispatch, useAppSelector } from "@/src/store/reduxHookType";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { FlashList } from "@shopify/flash-list";
+import { useRouter } from "expo-router";
 import React, { useCallback, useRef, useState } from "react";
 import {
   Platform,
   StyleSheet,
   Text,
+  TouchableOpacity,
   useWindowDimensions,
   View,
 } from "react-native";
@@ -28,6 +31,7 @@ const HomeScreen: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const { width, height } = useWindowDimensions();
   const headerHeight = useHeaderHeight();
+  const router = useRouter();
 
   const usableHeight =
     height - headerHeight - (Platform.OS === "android" ? 32 : 0);
@@ -147,6 +151,10 @@ const HomeScreen: React.FC = () => {
   const showEmptyState =
     hasFetchedOnce.current && !isLoading && (!data || data.length === 0);
 
+  const handleRedirectWatch = () => {
+    router.replace("/(tabs)/watch");
+  };
+
   return (
     <View style={styles.container}>
       {showInitialLoader ? (
@@ -154,11 +162,27 @@ const HomeScreen: React.FC = () => {
       ) : showEmptyState ? (
         <View style={styles.emptyWrapper}>
           <View style={styles.emptyCard}>
+            <View style={styles.iconContainer}>
+              <View style={styles.iconInner}>
+                <Icon name="locationSearching" size={32} color="#4F46E5" />
+              </View>
+            </View>
+
             <Text style={styles.emptyTitle}>No Content Available</Text>
+
             <Text style={styles.emptyText}>
-              Dear user, there are no followers available to view at the moment.
-              Please visit the Watch page to connect with more users!
+              There are no posts from your followers right now. Visit the Watch
+              page to discover new content and creators!
             </Text>
+
+            <TouchableOpacity
+              style={styles.emptyButton}
+              activeOpacity={0.8}
+              onPress={handleRedirectWatch}
+            >
+              <Icon name="start" color="white" />
+              <Text style={styles.emptyButtonText}>Watch</Text>
+            </TouchableOpacity>
           </View>
         </View>
       ) : (
@@ -220,43 +244,82 @@ const HomeScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "white",
+    backgroundColor: "#F3F4F6", // پس‌زمینه خنثی و تمیزتر
   },
   emptyWrapper: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    padding: 16,
+    paddingHorizontal: 24,
   },
   emptyCard: {
     width: "100%",
-    maxWidth: 420,
+    maxWidth: 360,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 24,
+    paddingVertical: 32,
+    paddingHorizontal: 24,
+    alignItems: "center",
     borderWidth: 1,
-    borderColor: "#E5E7EB",
-    borderRadius: 12,
-    padding: 20,
-    backgroundColor: "#fff",
-    shadowColor: "#000",
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    shadowOffset: {
-      width: 0,
-      height: 3,
-    },
-    elevation: 3,
+    borderColor: "#EEF2F6",
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.07,
+    shadowRadius: 20,
+    elevation: 4,
+  },
+  iconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: "#EEF2FF", // رنگ پس‌زمینه بنفش/آبی ملایم
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 20,
+  },
+  iconInner: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: "#E0E7FF",
+    alignItems: "center",
+    justifyContent: "center",
   },
   emptyTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: "700",
-    color: "#111827",
-    marginBottom: 12,
+    color: "#0F172A",
+    marginBottom: 8,
     textAlign: "center",
+    letterSpacing: -0.3,
   },
   emptyText: {
     fontSize: 14,
-    lineHeight: 21,
-    color: "#9CA3AF",
+    lineHeight: 22,
+    color: "#64748B", // کنتراست بهتر برای خوانایی نسبت به رنگ قبلی
     textAlign: "center",
+    marginBottom: 24,
+  },
+  emptyButton: {
+    width: "100%",
+    flexDirection: "row",
+    gap: 8,
+    backgroundColor: "#4F46E5",
+    paddingVertical: 13,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#4F46E5",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+
+  emptyButtonText: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#FFFFFF",
   },
 });
 

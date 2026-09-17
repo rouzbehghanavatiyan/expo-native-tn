@@ -64,10 +64,6 @@ const LoginScreen: React.FC<any> = () => {
         password: formState.password,
       });
 
-      // Log the main login response
-      logger.info("Login API Response:", response);
-
-      // Check for successful response
       if (response?.status === 0 || response?.statusCode === 200) {
         const token = response?.data?.token;
         const refreshToken = response?.data?.refreshToken;
@@ -85,10 +81,6 @@ const LoginScreen: React.FC<any> = () => {
         await Promise.all([
           categoryList()
             .then((res) => {
-              console.log(
-                "✅ Category List Response:",
-                JSON.stringify(res.data, null, 2),
-              );
               dispatch(RsetCategory(res?.data?.data || []));
             })
             .catch((err) =>

@@ -11,39 +11,14 @@ import {
   RsetUserLogin,
 } from "@/src/slices/main";
 import { logger } from "@/src/utils/logger";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { jwtDecode } from "jwt-decode";
 import { useCallback, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
-
-type JwtPayload = {
-  [key: string]: any;
-};
+import { getAccessToken, removeTokens } from "../services/tokenServices";
+import { decodeJwtPayload } from "../utils/jwt";
 
 export function useAuthInitialization() {
   const dispatch = useDispatch();
   const [isInitializing, setIsInitializing] = useState(true);
-
-  const getUserIdFromToken = useCallback((savedToken: string) => {
-    try {
-      const decoded: JwtPayload = jwtDecode(savedToken);
-
-      return (
-        decoded?.userId ||
-        decoded?.UserId ||
-        decoded?.id ||
-        decoded?.nameid ||
-        decoded?.sub ||
-        decoded?.[
-          "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"
-        ] ||
-        null
-      );
-    } catch (error) {
-      logger.error("jwtDecode error", error);
-      return null;
-    }
-  }, []);
 
   const loadUserMasterData = useCallback(
     async (targetUserId: number) => {
@@ -66,6 +41,26 @@ export function useAuthInitialization() {
     },
     [dispatch],
   );
+
+  const getUserIdFromToken = useCallback((savedToken: string) => {
+    const decoded = decodeJwtPayload(savedToken);
+    if (!decoded) {
+      logger.error("jwtDecode error", "Invalid or malformed token");
+      return null;
+    }
+
+    return (
+      decoded?.userId ||
+      decoded?.UserId ||
+      decoded?.id ||
+      decoded?.nameid ||
+      decoded?.sub ||
+      decoded?.[
+        "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"
+      ] ||
+      null
+    );
+  }, []);
 
   const loadCurrentUser = useCallback(
     async (savedToken: string) => {
@@ -110,23 +105,12 @@ export function useAuthInitialization() {
 
           if (apiError?.response?.status === 401) {
             console.log("Token is expired or invalid. Logging out...");
-            await AsyncStorage.removeItem("token");
+            await removeTokens();
             dispatch(RsetUserLogin(null));
             dispatch(RsetUserId(null));
-            return; // خروج از تابع برای جلوگیری از لاگین اشتباه
+            return;
           }
 
-          // ✨ تغییر مهم اینجاست ✨
-          // اگر ارور 401 (احراز هویت) بود، کاربر نباید لاگین شود
-          if (apiError?.response?.status === 401) {
-            console.log("Token is expired or invalid. Logging out...");
-            await AsyncStorage.removeItem("token");
-            dispatch(RsetUserLogin(null));
-            dispatch(RsetUserId(null));
-            return; // خروج از تابع برای جلوگیری از لاگین اشتباه
-          }
-
-          // اگر ارور دیگری مثل قطعی اینترنت بود، با دیتای لوکال لاگین شود
           dispatch(
             RsetUserLogin({
               token: savedToken,
@@ -138,7 +122,7 @@ export function useAuthInitialization() {
         console.log("❌ Token/Auth Error:", error?.message);
         logger.error("loadCurrentUser error", error);
 
-        await AsyncStorage.removeItem("token");
+        await removeTokens();
 
         dispatch(RsetUserLogin(null));
         dispatch(RsetUserId(null));
@@ -149,14 +133,12 @@ export function useAuthInitialization() {
 
   const initializeAuth = useCallback(async () => {
     try {
-      const savedToken = await AsyncStorage.getItem("token");
-
+      const savedToken = await getAccessToken();
       if (!savedToken) {
         dispatch(RsetUserLogin(null));
         dispatch(RsetUserId(null));
         return;
       }
-
       await loadCurrentUser(savedToken);
     } catch (error) {
       logger.error("initializeAuth error", error);

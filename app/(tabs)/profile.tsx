@@ -1,4 +1,4 @@
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, {
   useCallback,
   useEffect,
@@ -37,6 +37,7 @@ import { getImageUrl } from "@/src/utils/fileHelper";
 import { logger } from "@/src/utils/logger";
 import { socketClient } from "@/src/utils/socketClient";
 
+import { Icon } from "@/src/components/Icon";
 import Comments from "../comments";
 import VideosProfileItem from "../profile/VideosProfileItem";
 
@@ -78,7 +79,7 @@ const Profile: React.FC = () => {
   const [otherUserVideos, setOtherUserVideos] = useState<any[]>([]);
   const flatListRef = useRef<FlatList<any>>(null);
   const dispatch = useAppDispatch();
-
+  const router = useRouter();
   const targetUserId = userIdWhantToShow?.user?.id || userLogin?.user?.id;
   const isMyProfile = targetUserId === userLogin?.user?.id;
   const allVideoData = isMyProfile ? myVideosInRedux : otherUserVideos;
@@ -348,20 +349,68 @@ const Profile: React.FC = () => {
           ListHeaderComponent={renderHeader}
           ListEmptyComponent={
             !loading ? (
-              <View
-                style={{
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginTop: 50,
-                  padding: 20,
-                }}
+              <YStack
+                alignItems="center"
+                justifyContent="center"
+                mt={60}
+                mx={20}
+                px={24}
+                py={36}
+                borderRadius={24}
+                backgroundColor="rgba(255, 255, 255, 0.03)"
+                borderWidth={1}
+                borderColor="#4F46E5"
+                shadowColor="#000"
+                shadowOffset={{ width: 0, height: 12 }}
+                shadowOpacity={0.35}
+                shadowRadius={24}
+                gap={20}
+                pressStyle={{ opacity: 0.85, scale: 0.98 }}
+                cursor="pointer"
+                // onPress={(e: any) => {
+                //   if (!isMyProfile) return;
+                //   e.preventDefault();
+                //   handlePickMedia();
+                // }}
               >
-                <Text
-                  style={{ color: "white", fontSize: 16, fontWeight: "600" }}
+                <View
+                  width={76}
+                  height={76}
+                  borderRadius={38}
+                  backgroundColor="#81818125"
+                  borderWidth={1}
+                  borderColor="#4F46E5"
+                  alignItems="center"
+                  justifyContent="center"
+                  shadowColor="#8B5CF6"
+                  shadowOffset={{ width: 0, height: 0 }}
+                  shadowOpacity={0.4}
+                  shadowRadius={14}
                 >
-                  No matches to display.
-                </Text>
-              </View>
+                  <Icon name="locationSearching" size={32} color="#4F46E5" />
+                </View>
+
+                <YStack alignItems="center" gap={8} px={8}>
+                  <Text
+                    fontSize={18}
+                    fontWeight="700"
+                    color="white"
+                    letterSpacing={0.3}
+                  >
+                    No Matches Yet
+                  </Text>
+                  <Text
+                    fontSize={13.5}
+                    color="#9CA3AF"
+                    textAlign="center"
+                    lineHeight={22}
+                  >
+                    {isMyProfile
+                      ? "You haven't matched with any users yet. Start exploring and create your first match!"
+                      : "This user doesn't have any video matches right now."}
+                  </Text>
+                </YStack>
+              </YStack>
             ) : null
           }
           renderItem={({ item }) => (

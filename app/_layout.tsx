@@ -4,15 +4,13 @@ import { PortalProvider as GorhomPortalProvider } from "@gorhom/portal";
 import { useFonts } from "expo-font";
 import { Slot } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { ActivityIndicator, LogBox } from "react-native";
+import { ActivityIndicator } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Provider } from "react-redux";
 import { TamaguiProvider, View } from "tamagui";
 import tamaguiConfig from "../tamagui.config";
 import AppInitializer from "./AppInitializer";
-
-LogBox.ignoreLogs(["Missing setup for zeego", "@tamagui/native/setup-zeego"]);
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({

@@ -22,7 +22,6 @@ export const chatApi = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
-// 2. Define state for token refresh process
 let isRefreshing = false;
 let failedQueue: {
   resolve: (token: string) => void;
@@ -40,13 +39,11 @@ const processQueue = (error: any, token: string | null = null) => {
   failedQueue = [];
 };
 
-// 3. Define a single, reusable interceptor logic
 const setupInterceptors = (instance: AxiosInstance, name: string) => {
-  // === REQUEST INTERCEPTOR ===
-  // Attaches the token to every outgoing request
   instance.interceptors.request.use(
     async (config) => {
       const token = await getAccessToken();
+
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
@@ -58,14 +55,11 @@ const setupInterceptors = (instance: AxiosInstance, name: string) => {
     (error) => Promise.reject(error),
   );
 
-  // === RESPONSE INTERCEPTOR ===
-  // Handles 401 errors and token refresh logic
   instance.interceptors.response.use(
-    (response) => response, // Directly return successful responses
+    (response) => response,
     async (error) => {
       const originalRequest = error.config;
 
-      // Don't refresh on login failure & avoid retry loops
       if (error.response?.status !== 401 || originalRequest._retry) {
         return Promise.reject(error);
       }
@@ -96,11 +90,11 @@ const setupInterceptors = (instance: AxiosInstance, name: string) => {
 
       try {
         const accessToken = await getAccessToken();
+        logger.info("Refresh Endpoint Response:", accessToken);
         const response = await axios.post(`${baseURL}/refreshToken`, {
           accessToken: accessToken, // Send current (expired) access token
           refreshToken: refreshToken,
         });
-
         const responseData = response.data?.data;
         const newAccessToken = responseData?.token;
         const newRefreshToken = responseData?.refreshToken;
@@ -120,8 +114,12 @@ const setupInterceptors = (instance: AxiosInstance, name: string) => {
 
         // Retry the original request
         return instance(originalRequest);
-      } catch (refreshError) {
-        logger.error("❌ Token refresh failed. Logging out.", refreshError);
+      } catch (refreshError: any) {
+        logger.error("❌ Token refresh failed:", {
+          status: refreshError?.response?.status,
+          data: refreshError?.response?.data,
+          message: refreshError?.message,
+        });
         await removeTokens();
         processQueue(refreshError, null);
         router.replace("/login"); // Redirect to login on refresh failure
@@ -133,7 +131,5 @@ const setupInterceptors = (instance: AxiosInstance, name: string) => {
   );
 };
 
-// --- MAIN FIX ---
-// 4. Apply the interceptors to BOTH axios instances
 setupInterceptors(api, "API");
 setupInterceptors(chatApi, "ChatAPI");
