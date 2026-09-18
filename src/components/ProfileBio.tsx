@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Image, Modal, Pressable, StyleSheet } from "react-native";
 import { Progress, ScrollView, Text, View, XStack, YStack } from "tamagui";
+import { logger } from "../utils/logger";
 import { Icon } from "./Icon";
 
 const Started = require("../assets/ranks/starter.png");
@@ -87,7 +88,6 @@ const allRanks = [
   },
 ];
 
-// جدا کردن رنک اول از بقیه
 const starterRank = allRanks[0];
 const otherRanks = allRanks.slice(1);
 
@@ -98,6 +98,8 @@ const ProfileBio: React.FC<ProfileBioProps> = ({
 }) => {
   const [showRanksModal, setShowRanksModal] = useState(false);
   const [zoomedRank, setZoomedRank] = useState<any>(null);
+
+  logger.info("userLogin", userLogin);
 
   return (
     <YStack px="$4" alignItems="center" w="100%">
@@ -292,8 +294,6 @@ const ProfileBio: React.FC<ProfileBioProps> = ({
                 <Text fontSize="$8" mt="$4" color="white" fontWeight="bold">
                   {zoomedRank.name}
                 </Text>
-
-                {/* نمایش متن اختصاصی هر رنک */}
                 <Text fontSize="$4" mt="$2" color="#ccc" textAlign="center">
                   {zoomedRank.description}
                 </Text>

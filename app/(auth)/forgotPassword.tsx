@@ -132,6 +132,7 @@ export default function ForgotPasswordScreen() {
             <BaseInput
               label="Email"
               value={identifier}
+              baseColorLabel="rgb(244, 244, 244)"
               onChangeText={handleInputChange}
               placeholder="e.g., user@example.com or john_doe"
               colorType="primary"

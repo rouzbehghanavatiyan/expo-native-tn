@@ -90,7 +90,25 @@ const AppHeader = () => {
   const handleSelectUser = (user: any) => {
     setShowDropdown(false);
     setSearchQuery("");
-    router.push(`/(tabs)/profile`);
+    const targetData = {
+      profile: user?.profile,
+      user: user?.user ?? {
+        id: user?.id,
+        userName: user?.userName,
+      },
+      score: user?.score ?? 0,
+      mail: user?.mail ?? user?.user?.mail ?? "",
+      location: user?.location ?? user?.user?.location ?? "",
+      bio: user?.bio ?? user?.user?.bio ?? "",
+      isFollowedByMe: user?.isFollowedByMe,
+    };
+    logger.info("HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH", user);
+    router.push({
+      pathname: "/profile",
+      params: {
+        userData: JSON.stringify(targetData),
+      },
+    });
   };
 
   const handleReadConfirmation = useCallback(

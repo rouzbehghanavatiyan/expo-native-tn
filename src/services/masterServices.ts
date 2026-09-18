@@ -160,7 +160,7 @@ export const addScoure = async (data: any) => {
 };
 
 export const addProfile = async (data: any) => {
-  return await api.post(`/addProfile`, data);
+  return await api.put(`/addProfile`, data);
 };
 
 export const forgotPassword = async (data: any) => {

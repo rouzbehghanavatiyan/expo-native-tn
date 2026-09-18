@@ -5,8 +5,8 @@ import { Text, View, XStack, YStack } from "tamagui";
 import { addAttachment, profileAttachment } from "../services/masterServices";
 import { RsetUserLogin } from "../slices/main";
 import { useAppDispatch, useAppSelector } from "../store/reduxHookType";
-import { logger } from "../utils/logger";
 import ImageRank from "./ImageRank";
+import Follows from "./ui/Follows";
 
 interface ProfileHeaderProps {
   userImage?: string;
@@ -14,13 +14,17 @@ interface ProfileHeaderProps {
   followersCount?: number;
   followingCount?: number;
   score?: number;
-  isMyProfile: any;
+  isMyProfile: boolean;
   setProfileImage?: (image: string) => void;
+  currentProfile?: any;
+  onFollowToggle?: () => void;
+  isFollowLoading?: boolean;
 }
 
 const ProfileHeader = forwardRef(
   (
     {
+      currentProfile,
       isMyProfile,
       userImage,
       userName,
@@ -28,6 +32,9 @@ const ProfileHeader = forwardRef(
       followersCount,
       followingCount,
       setProfileImage,
+
+      onFollowToggle,
+      isFollowLoading = false,
     }: ProfileHeaderProps,
     ref: React.ForwardedRef<any>,
   ) => {
@@ -37,7 +44,8 @@ const ProfileHeader = forwardRef(
     const router = useRouter();
 
     const handleImageProfileUpload = useCallback(async () => {
-      logger.info("Hellllllllllllo per");
+      if (!isMyProfile) return; // کاربر فقط مجاز به تغییر عکس پروفایل خودش است
+
       const permissionResult =
         await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permissionResult.granted) {
@@ -55,7 +63,6 @@ const ProfileHeader = forwardRef(
       if (result.canceled || !result.assets?.length) return;
 
       const imageUri = result.assets[0].uri;
-
       setProfileImage?.(imageUri);
 
       try {
@@ -71,7 +78,6 @@ const ProfileHeader = forwardRef(
         formData.append("attachmentType", "pf");
         formData.append("attachmentName", "profile");
         const resAttachment = await addAttachment(formData);
-        logger.info("resAttachment", resAttachment);
         const { status: attachmentStatus } = resAttachment?.data || {};
 
         if (attachmentStatus === 0) {
@@ -85,16 +91,38 @@ const ProfileHeader = forwardRef(
       } catch (error) {
         console.error("Error uploading profile image:", error);
       }
-    }, [userId, dispatch, setProfileImage]);
+    }, [userId, dispatch, setProfileImage, isMyProfile]);
+
+    const handleFallowClick = async () => {
+      // const userIdFollow =
+      //   positionVideo === 0 ? video?.userInserted?.id : video?.userMatched?.id;
+      // const postData = {
+      //   userId: userIdLogin || null,
+      //   followerId: userIdFollow || null,
+      // };
+      // try {
+      //   setIsLoadingFollow(true);
+      //   if (localIsFollowed) {
+      //     await removeFollower(postData);
+      //   } else {
+      //     await addFollower(postData);
+      //   }
+      //   setLocalIsFollowed(!localIsFollowed);
+      // } catch (error) {
+      //   console.error("Error in follow operation:", error);
+      // } finally {
+      //   setIsLoadingFollow(false);
+      // }
+    };
 
     return (
       <View px="$2" ref={ref} position="relative" w="100%">
-        <XStack h={128}>
+        <XStack h={128} alignItems="center">
           <View
-            onPress={handleImageProfileUpload}
-            cursor="pointer"
-            pressStyle={{ opacity: 0.8 }}
-            pointerEvents="box-only"
+            onPress={isMyProfile ? handleImageProfileUpload : undefined}
+            cursor={isMyProfile ? "pointer" : "default"}
+            pressStyle={isMyProfile ? { opacity: 0.8 } : undefined}
+            pointerEvents={isMyProfile ? "box-only" : "none"}
             zIndex={100}
           >
             <YStack
@@ -102,7 +130,6 @@ const ProfileHeader = forwardRef(
               borderColor={"$grey300"}
               borderRadius={"$round"}
               ml="$2"
-              gap="$2"
               justifyContent="center"
             >
               <ImageRank
@@ -113,11 +140,13 @@ const ProfileHeader = forwardRef(
               />
             </YStack>
           </View>
-          <YStack ml="$2" gap="$2" justifyContent="center">
+
+          <YStack ml="$3" gap="$2" justifyContent="center" flex={1}>
             <Text fontSize="$5" fontWeight="bold" color="$textPrimary">
               {userName}
             </Text>
-            {isMyProfile && (
+
+            {isMyProfile ? (
               <XStack gap="$4">
                 <View
                   onPress={() => router.push("/(social)/followers")}
@@ -147,6 +176,29 @@ const ProfileHeader = forwardRef(
                   <Text fontWeight="bold" color="$textSecondary" fontSize="$3">
                     Following
                   </Text>
+                </View>
+              </XStack>
+            ) : (
+              <XStack
+                width="100%"
+                justifyContent="center"
+                alignItems="center"
+                mt="$1"
+              >
+                <View
+                  onPress={onFollowToggle}
+                  cursor="pointer"
+                  borderRadius="$4"
+                  minWidth={100}
+                  alignItems="center"
+                  justifyContent="center"
+                >
+                  <Follows
+                    onFollowClick={handleFallowClick}
+                    title={
+                      currentProfile?.isFollowedByMe ? "Unfollow" : "Follow"
+                    }
+                  />
                 </View>
               </XStack>
             )}

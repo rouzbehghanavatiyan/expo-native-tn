@@ -162,6 +162,7 @@ export default function SignUpScreen() {
             <YStack gap="$3">
               <YStack gap="$2">
                 <BaseInput
+                  baseColorLabel="rgb(244, 244, 244)"
                   label="Username"
                   value={inputs.username}
                   onChangeText={(text) => handleInputChange("username", text)}
@@ -183,6 +184,7 @@ export default function SignUpScreen() {
               {/* -- Email Input -- */}
               <YStack gap="$2">
                 <BaseInput
+                  baseColorLabel="rgb(244, 244, 244)"
                   label="Email"
                   value={inputs.email}
                   onChangeText={(text) => handleInputChange("email", text)}
@@ -205,6 +207,7 @@ export default function SignUpScreen() {
 
               <YStack gap="$2">
                 <BaseInput
+                  baseColorLabel="rgb(244, 244, 244)"
                   label="Password"
                   secureTextEntry={!showPassword}
                   value={inputs.password}
@@ -238,6 +241,7 @@ export default function SignUpScreen() {
 
               <YStack gap="$2">
                 <BaseInput
+                  baseColorLabel="rgb(244, 244, 244)"
                   label="Confirm Password"
                   secureTextEntry={!showConfirmPassword}
                   value={inputs.passwordConfirmation}

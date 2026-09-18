@@ -186,6 +186,7 @@ const LoginScreen: React.FC<any> = () => {
               baseColorLabel="rgb(244, 244, 244)"
               label="Username"
               value={formState.username}
+              borderColor="#E0E0E0"
               onChangeText={(text) => handleInputChange("username", text)}
               colorType="primary"
               hasError={!!errors.username}
@@ -199,6 +200,7 @@ const LoginScreen: React.FC<any> = () => {
                 baseColorLabel="rgb(244, 244, 244)"
                 label="Password"
                 secureTextEntry={!showPassword}
+                borderColor="#E0E0E0"
                 value={formState.password}
                 onChangeText={(text) => handleInputChange("password", text)}
                 errorMessage={errors.password}

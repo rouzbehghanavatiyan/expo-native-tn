@@ -30,6 +30,7 @@ import {
   RsetFollowerLength,
   RsetFollowingLength,
   RsetProfileVideo,
+  RsetUserLogin,
 } from "@/src/slices/main";
 import { setNeedProfileRefresh } from "@/src/slices/video";
 import { useAppDispatch, useAppSelector } from "@/src/store/reduxHookType";
@@ -80,8 +81,14 @@ const Profile: React.FC = () => {
   const flatListRef = useRef<FlatList<any>>(null);
   const dispatch = useAppDispatch();
   const router = useRouter();
+
   const targetUserId = userIdWhantToShow?.user?.id || userLogin?.user?.id;
   const isMyProfile = targetUserId === userLogin?.user?.id;
+
+  const [otherUserData, setOtherUserData] = useState<any>(userIdWhantToShow);
+  const currentProfile = isMyProfile ? userLogin
+    : otherUserData || userIdWhantToShow;
+
   const allVideoData = isMyProfile ? myVideosInRedux : otherUserVideos;
 
   const findImg = userIdWhantToShow?.user
@@ -188,14 +195,32 @@ const Profile: React.FC = () => {
           ),
       ];
 
-      if (isMyProfile) {
+      if (isMyProfile && userLogin?.user?.id) {
         promises.push(
-          profileAttachment(userLogin?.user?.id).then((profileRes) => {
-            const userData = profileRes?.data;
-            if (userData?.status === 0) {
-              setNewProfile(userData?.data);
-            }
-          }),
+          profileAttachment(targetUserId)
+            .then((profileRes) => {
+              console.log("profileRes?.data", profileRes?.data);
+
+              const resData = profileRes?.data;
+              const freshUserData = resData?.data || resData;
+
+              if (freshUserData) {
+                setNewProfile(freshUserData);
+
+                dispatch(
+                  RsetUserLogin({
+                    ...userLogin,
+                    ...freshUserData,
+                  }),
+                );
+              }
+            })
+            .catch((err) =>
+              console.error(
+                "❌ Profile Attachment Error:",
+                err?.message || err,
+              ),
+            ),
         );
       }
 
@@ -292,7 +317,13 @@ const Profile: React.FC = () => {
     const score = userIdWhantToShow?.score || userLogin?.score || 0;
     let calc = score <= 100 ? score : score % 100 || 100;
     setPercentage(Math.min(Math.max(calc, 1), 100));
-  }, [userLogin?.score, userIdWhantToShow]);
+  }, [currentProfile?.score]);
+
+  useEffect(() => {
+    if (!isMyProfile && userIdWhantToShow) {
+      setOtherUserData(userIdWhantToShow);
+    }
+  }, [userIdWhantToShow, isMyProfile]);
 
   const renderHeader = useCallback(
     () => (
@@ -304,6 +335,7 @@ const Profile: React.FC = () => {
           }
           isMyProfile={isMyProfile}
           score={userIdWhantToShow?.score || userLogin?.score}
+          currentProfile={currentProfile}
           followersCount={
             userIdWhantToShow?.followersCount ?? followerCountRedux?.count ?? 0
           }
@@ -312,8 +344,8 @@ const Profile: React.FC = () => {
           }
         />
         <ProfileBio
-          userLogin={isMyProfile ? userLogin : userIdWhantToShow}
-          rankScore={userIdWhantToShow?.score ?? userLogin?.score}
+          userLogin={currentProfile}
+          rankScore={currentProfile?.score}
           rankPercentage={percentage}
         />
         <ProfileAchievements />

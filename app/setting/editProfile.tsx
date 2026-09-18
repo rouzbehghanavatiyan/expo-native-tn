@@ -1,4 +1,5 @@
 import BaseButton from "@/src/components/BaseButtom";
+import BaseInput from "@/src/components/BaseInput";
 import { Icon } from "@/src/components/Icon";
 import MainTitle from "@/src/components/MainTitle";
 import { addProfile } from "@/src/services/masterServices";
@@ -8,7 +9,7 @@ import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { Modal, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Input, Spinner, Text, TextArea, XStack, YStack } from "tamagui";
+import { Spinner, Text, TextArea, XStack, YStack } from "tamagui";
 
 const BASE_URL =
   process.env.EXPO_PUBLIC_BASE_URL || "http://192.168.160.157:4005";
@@ -53,10 +54,9 @@ export default function EditProfile() {
     // }
 
     const postData = {
-      userId: userLogin?.user?.id,
-      Bio: bio || null,
-      Location: location || null,
-      Mail: mail || null,
+      bio: bio || null,
+      location: location || null,
+      mail: mail || null,
     };
 
     try {
@@ -64,8 +64,7 @@ export default function EditProfile() {
       const res = await addProfile(postData);
       logger.info("resProfile", res);
 
-      // بررسی وضعیت موفقیت‌آمیز بودن پاسخ (status === 2)
-      if (res?.data?.status === 2) {
+      if (res?.data?.status === 2 || res?.data?.status === 0) {
         showFeedback(
           "Success",
           res?.data?.message || "Profile updated successfully.",
@@ -107,61 +106,34 @@ export default function EditProfile() {
           <Spinner size="large" color="$primaryMain" />
         </YStack>
       ) : (
-        <YStack flex={1} p="$4" gap="$4" bg="$background">
+        <YStack flex={1} p="$4" gap="$4" bg="$grey100">
           <YStack gap="$2">
-            <XStack alignItems="center" gap="$1.5">
-              <Icon name="mail-outline" size={16} color="#777777" />
-              <Text fontSize="$3" fontWeight="bold" color="$textSecondary">
-                Email Address
-              </Text>
-            </XStack>
-            <Input
-              placeholder="e.g. rouzbeh@example.com"
+            <BaseInput
+              label="Social Link"
               value={mail}
               onChangeText={setMail}
-              bg="$backgroundHover"
-              borderColor="#E0E0E0" // <-- خاکستری بسیار ملایم
-              borderWidth={1} // <-- اطمینان از ظرافت خط
+              borderColor="#E0E0E0"
               keyboardType="email-address"
-              autoCapitalize="none"
-              borderRadius="$3"
-              h={45}
             />
           </YStack>
 
           <YStack gap="$2">
-            <XStack alignItems="center" gap="$1.5">
-              <Icon name="location-on" size={16} color="#777777" />
-              <Text fontSize="$3" fontWeight="bold" color="$textSecondary">
-                Location
-              </Text>
-            </XStack>
-            <Input
-              placeholder="e.g. Tehran, Iran"
+            <BaseInput
+              label="Location"
+              borderColor="#E0E0E0"
               value={location}
               onChangeText={setLocation}
-              bg="$backgroundHover"
-              borderColor="#E0E0E0" // <-- اعمال تغییر
-              borderWidth={1} // <-- اعمال تغییر
-              borderRadius="$3"
-              h={45}
             />
           </YStack>
 
           <YStack gap="$2">
-            <XStack alignItems="center" gap="$1.5">
-              <Icon name="chat-bubble-outline" size={16} color="#777777" />
-              <Text fontSize="$3" fontWeight="bold" color="$textSecondary">
-                Bio
-              </Text>
-            </XStack>
             <TextArea
-              placeholder="Tell others about yourself..."
+              placeholder="Status..."
               value={bio}
               onChangeText={setBio}
-              bg="$backgroundHover"
-              borderColor="#E0E0E0" // <-- اعمال تغییر
-              borderWidth={1} // <-- اعمال تغییر
+              bg="$grey100"
+              borderColor="#E0E0E0"
+              borderWidth={1}
               borderRadius="$3"
               numberOfLines={4}
               h={110}

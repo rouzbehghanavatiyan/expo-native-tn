@@ -66,7 +66,7 @@ export function useAuthInitialization() {
     async (savedToken: string) => {
       try {
         const userIdFromToken = Number(getUserIdFromToken(savedToken));
-
+        logger.info("userIdFromToken", userIdFromToken);
         if (!userIdFromToken || isNaN(userIdFromToken)) {
           throw new Error("Invalid user id from token");
         }
