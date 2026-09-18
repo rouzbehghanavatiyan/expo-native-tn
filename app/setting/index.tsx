@@ -41,6 +41,9 @@ export default function SettingLayout() {
       case "Support":
         router.push("/support");
         break;
+      case "Block List":
+        router.push("/blockList");
+        break;
       case "About us":
         router.push("/about");
         break;
@@ -65,6 +68,7 @@ export default function SettingLayout() {
             { name: "Support", id: 3, icon: "support-agent" },
             { name: "About us", id: 4, icon: "info" },
             { name: "Theme", id: 5, icon: "star" },
+            { name: "Block list", id: 5, icon: "block" },
             { name: "Learning", id: 6, icon: "school" },
           ]}
           isLoading={false}
