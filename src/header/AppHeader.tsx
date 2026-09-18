@@ -63,10 +63,10 @@ const AppHeader = () => {
       return;
     }
 
-    setIsLoading(true);
-    setShowDropdown(true);
-
     const timer = setTimeout(async () => {
+      setIsLoading(true);
+      setShowDropdown(true);
+
       try {
         const response: any = await searchUser({
           userNameReq: searchQuery.trim(),
@@ -82,7 +82,7 @@ const AppHeader = () => {
       } finally {
         setIsLoading(false);
       }
-    }, 2000);
+    }, 1500);
 
     return () => clearTimeout(timer);
   }, [searchQuery]);
@@ -90,7 +90,7 @@ const AppHeader = () => {
   const handleSelectUser = (user: any) => {
     setShowDropdown(false);
     setSearchQuery("");
-    router.push(`/profile/${user?.id || user?.userId}`);
+    router.push(`/(tabs)/profile`);
   };
 
   const handleReadConfirmation = useCallback(
