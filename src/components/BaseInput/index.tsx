@@ -109,18 +109,18 @@ const BaseInput = React.forwardRef<any, BaseInputProps>(
       Animated.timing(floatAnim, {
         toValue: isFloating ? 1 : 0,
         duration: 150, // سرعت انیمیشن مشابه MUI
-        useNativeDriver: true, // برای روانی انیمیشن
+        useNativeDriver: true,
       }).start();
     }, [isFloating]);
 
     const translateY = floatAnim.interpolate({
       inputRange: [0, 1],
-      outputRange: [14, -12], // ۱۴: وسط اینپوت | -۱۲: روی بوردر بالایی
+      outputRange: [14, -12],
     });
 
     const scale = floatAnim.interpolate({
       inputRange: [0, 1],
-      outputRange: [1, 0.85], // لیبل هنگام رفتن روی بوردر کمی کوچک می‌شود
+      outputRange: [1, 0.85],
     });
 
     const handleFocus = (e: any) => {
@@ -139,19 +139,20 @@ const BaseInput = React.forwardRef<any, BaseInputProps>(
     };
 
     const isError = hasError || !!errorMessage;
-    const mainColor = colorMap[colorType];
+
     const baseBorderColor = isError
       ? "$errorMain"
       : variant === "outline"
-        ? "#b4bfcb"
+        ? "$primaryMain"
         : "transparent";
-    const focusBorderColor = isError ? "$errorMain" : mainColor;
+
+    const focusBorderColor = isError ? "$errorMain" : "$grey400";
 
     const labelColor = isError
       ? "$errorMain"
       : isFocused
-        ? mainColor
-        : "$textSecondary";
+        ? "$grey400"
+        : "$grey400";
 
     return (
       <YStack gap="$1" width="100%">
@@ -191,21 +192,19 @@ const BaseInput = React.forwardRef<any, BaseInputProps>(
             disabledState={Boolean(disabled)}
             disabled={disabled}
             width="100%"
-            borderColor={baseBorderColor}
+            borderColor={isFocused ? focusBorderColor : baseBorderColor}
             paddingVertical={0}
             justifyContent="center"
             multiline={false}
             focusStyle={{ borderColor: focusBorderColor, borderWidth: 1 }}
-            hoverStyle={{ borderColor: isError ? "$errorMain" : "#99a2ac" }}
+            hoverStyle={{ borderColor: isError ? "$errorMain" : "$gray800" }}
             paddingLeft={leftIcon ? "$10" : "$4"}
             paddingRight={rightIcon ? "$10" : "$4"}
-            // اتصال مقادیر مدیریت شده برای انیمیشن
             value={value}
             defaultValue={defaultValue}
             onChangeText={handleChangeText}
             onFocus={handleFocus}
             onBlur={handleBlur}
-            // پلیس‌هولدر واقعی را فقط زمانی نشان می‌دهیم که لیبل بالا رفته باشد (مثل MUI)
             placeholder={isFloating ? placeholder : ""}
             {...(props as any)}
           />

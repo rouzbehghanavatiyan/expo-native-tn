@@ -22,7 +22,7 @@ const Follows: React.FC<PropTypes> = ({
         px="$3"
         alignItems="center"
         justifyContent="center"
-        pressStyle={{ opacity: 0.7 }} // افکت ساده هنگام کلیک
+        pressStyle={{ opacity: 0.7 }}
         cursor="pointer"
       >
         <Text fontWeight="bold" fontSize={11} color={textColor as any}>

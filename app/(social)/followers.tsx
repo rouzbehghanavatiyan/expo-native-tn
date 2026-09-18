@@ -1,15 +1,10 @@
-import ImageRank from "@/src/components/ImageRank";
-import MainTitle from "@/src/components/MainTitle";
-import Follows from "@/src/components/ui/Follows";
+import UserListLayout from "@/src/common/UserListLayout";
 import { useFollow } from "@/src/hook/useFollow";
 import { followerList } from "@/src/services/masterServices";
 import { RsetAllFollowerList } from "@/src/slices/main";
 import { useAppDispatch, useAppSelector } from "@/src/store/reduxHookType";
-import { getImageUrl } from "@/src/utils/fileHelper";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { ScrollView, Spinner, Text, View, XStack, YStack } from "tamagui";
 
 const FollowerScreen = () => {
   const main = useAppSelector((state) => state.main);
@@ -20,13 +15,12 @@ const FollowerScreen = () => {
 
   const [isLoading, setIsLoading] = useState(false);
   const userIdLogin = main?.userLogin?.user?.id;
-  const { isFollowed, toggleFollow, loadingId } = useFollow(userIdLogin);
+  const { isFollowed, toggleFollow } = useFollow(userIdLogin);
   const userIdFromLocation = params?.id;
 
   const handleAllFollowers = async () => {
     try {
       setIsLoading(true);
-
       const targetUserId = userIdFromLocation || userIdLogin;
       if (!targetUserId) return;
 
@@ -38,7 +32,6 @@ const FollowerScreen = () => {
       }
     } catch (error: any) {
       console.log("followerList error:", error?.message);
-      console.log("followerList response:", error?.response?.data);
     } finally {
       setIsLoading(false);
     }
@@ -49,54 +42,16 @@ const FollowerScreen = () => {
   }, [userIdFromLocation, userIdLogin]);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
-      <View f={1} bg="$background">
-        <MainTitle handleBack={() => router.back()} title="Followers" />
-
-        {isLoading && <Spinner size="large" color="$orange10" />}
-
-        {!isLoading && followers.length === 0 && (
-          <YStack f={1} ai="center" jc="center">
-            <Text fontSize="$6">There are no followers.</Text>
-          </YStack>
-        )}
-
-        <ScrollView>
-          {followers.map((follower: any, index: number) => {
-            const followerId =
-              follower?.attachment?.attachmentId ||
-              follower?.userId ||
-              follower?.id;
-            const image = getImageUrl(follower?.attachment);
-            const followed = isFollowed(followerId);
-
-            return (
-              <XStack
-                key={index}
-                p="$4"
-                bc="$grey100"
-                my={1}
-                ai="center"
-                jc="space-between"
-                bg="$white"
-              >
-                <ImageRank
-                  score={0}
-                  userNameStyle={{ color: "rgb(108, 111, 112)" }}
-                  imgSize={60}
-                  userName={follower?.userName || "Unknown User"}
-                  imgSrc={image}
-                />
-                <Follows
-                  title={followed ? "Unfollow" : "Follow"}
-                  onFollowClick={() => toggleFollow(followerId)}
-                />
-              </XStack>
-            );
-          })}
-        </ScrollView>
-      </View>
-    </SafeAreaView>
+    <UserListLayout
+      title="Followers"
+      isLoading={isLoading}
+      data={followers}
+      emptyMessage="There are no followers."
+      onBack={() => router.back()}
+      isFollowed={isFollowed}
+      toggleFollow={toggleFollow}
+      imgSize={60}
+    />
   );
 };
 

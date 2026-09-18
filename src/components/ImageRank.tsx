@@ -226,12 +226,22 @@ const ImageRank: React.FC<ProfileWithRankProps> = ({
     >
       <View position="relative" style={{ width: imgSize, height: imgSize }}>
         {!hasValidImage ? (
-          <Ionicons
-            name="person-circle"
-            size={imgSize}
-            color="#e5e7eb"
-            style={styles.iconStyle}
-          />
+          <View
+            style={[
+              styles.iconPlaceholder,
+              {
+                width: imgSize,
+                height: imgSize,
+                borderRadius: imgSize / 2,
+              },
+            ]}
+          >
+            <Ionicons
+              name="person"
+              size={Math.round(imgSize * 0.55)}
+              color="#9ca3af"
+            />
+          </View>
         ) : (
           <Image
             source={{ uri: userImg }}
@@ -302,15 +312,17 @@ const ImageRank: React.FC<ProfileWithRankProps> = ({
 };
 
 const styles = StyleSheet.create({
-  iconStyle: {
-    width: "100%",
-    height: "100%",
-    borderRadius: 9999,
+  iconPlaceholder: {
+    backgroundColor: "#ececec",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1.5,
+    borderColor: "#f0f0f0",
+    overflow: "hidden",
   },
   profileImage: {
-    width: "100%",
-    height: "100%",
-    borderRadius: 9999,
+    borderWidth: 1,
+    borderColor: "#dfdfdf91", // gray-800
   },
   rankContainer: {
     position: "absolute",

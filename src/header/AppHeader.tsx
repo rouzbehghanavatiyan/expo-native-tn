@@ -1,8 +1,16 @@
 import { Ionicons } from "@expo/vector-icons";
 import { usePathname, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { FlatList, StyleSheet, Text, TouchableOpacity } from "react-native";
-import { H2, View } from "tamagui";
+import {
+  FlatList,
+  Modal,
+  Pressable,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { H2 } from "tamagui";
 import AppLoading from "../components/AppLoading";
 import BaseInput from "../components/BaseInput";
 import { Icon } from "../components/Icon";
@@ -66,8 +74,6 @@ const AppHeader = () => {
           pageSize: 10,
         });
 
-        logger?.info("fdfdfdfdfdf", response);
-
         const items = response?.data?.data?.items || [];
         setSearchResults(items);
       } catch (error) {
@@ -76,7 +82,7 @@ const AppHeader = () => {
       } finally {
         setIsLoading(false);
       }
-    }, 2000); // ۲ ثانیه تأخیر
+    }, 2000);
 
     return () => clearTimeout(timer);
   }, [searchQuery]);
@@ -205,40 +211,61 @@ const AppHeader = () => {
       </View>
 
       {routes.isWatch && showDropdown && (
-        <View style={styles.dropdownContainer}>
-          {isLoading ? (
-            <View style={styles.dropdownLoading}>
-              <AppLoading />
-            </View>
-          ) : searchResults.length > 0 ? (
-            <FlatList
-              data={searchResults}
-              keyExtractor={(item, index) =>
-                item?.id?.toString() || index.toString()
-              }
-              keyboardShouldPersistTaps="handled"
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={styles.resultItem}
-                  onPress={() => handleSelectUser(item)}
-                >
-                  <ImageRank
-                    iconClass="text-gray-200"
-                    imgSrc={getImageUrl(item?.profile)}
-                    imgSize={35}
-                  />
-                  <Text style={styles.resultText}>
-                    {item?.userName || item?.fullName || item?.title || "کاربر"}
-                  </Text>
-                </TouchableOpacity>
-              )}
+        <Modal
+          visible={showDropdown}
+          transparent={true}
+          animationType="none"
+          onRequestClose={() => setShowDropdown(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <Pressable
+              style={StyleSheet.absoluteFill}
+              onPress={() => setShowDropdown(false)}
             />
-          ) : (
-            <View style={styles.dropdownEmpty}>
-              <Text style={styles.dropdownEmptyText}>Not found</Text>
+            <View style={styles.dropdownBox}>
+              {isLoading ? (
+                <View style={styles.dropdownLoading}>
+                  <AppLoading />
+                </View>
+              ) : searchResults.length > 0 ? (
+                <FlatList
+                  data={searchResults}
+                  keyExtractor={(item, index) =>
+                    item?.id?.toString() || index.toString()
+                  }
+                  style={styles.dropdownList}
+                  contentContainerStyle={styles.listContentContainer}
+                  keyboardShouldPersistTaps="always"
+                  nestedScrollEnabled={true}
+                  showsVerticalScrollIndicator={true}
+                  renderItem={({ item }) => (
+                    <TouchableOpacity
+                      style={styles.resultItem}
+                      onPress={() => handleSelectUser(item)}
+                      activeOpacity={0.7}
+                    >
+                      <ImageRank
+                        iconClass="text-gray-200"
+                        imgSrc={getImageUrl(item?.profile)}
+                        imgSize={35}
+                      />
+                      <Text style={styles.resultText}>
+                        {item?.userName ||
+                          item?.fullName ||
+                          item?.title ||
+                          "کاربر"}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                />
+              ) : (
+                <View style={styles.dropdownEmpty}>
+                  <Text style={styles.dropdownEmptyText}>Not found</Text>
+                </View>
+              )}
             </View>
-          )}
-        </View>
+          </View>
+        </Modal>
       )}
     </View>
   );
@@ -249,7 +276,7 @@ export default AppHeader;
 const styles = StyleSheet.create({
   container: {
     position: "relative",
-    zIndex: 999,
+    zIndex: 99,
   },
   header: {
     height: 40,
@@ -289,21 +316,31 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: "red",
   },
-  dropdownContainer: {
-    position: "absolute",
-    top: 38,
-    left: 16,
-    right: 16,
+  modalOverlay: {
+    flex: 1,
+    paddingTop: 70,
+    paddingHorizontal: 16,
+  },
+
+  dropdownBox: {
     backgroundColor: "#fff",
+    borderEndEndRadius: 10,
     borderBottomLeftRadius: 10,
-    borderBottomRightRadius: 10,
-    maxHeight: 220,
+    maxHeight: 260,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
-    elevation: 5,
-    zIndex: 1000,
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 12,
+    borderWidth: 1,
     borderColor: "#F1F5F9",
     overflow: "hidden",
+  },
+  dropdownList: {
+    flexGrow: 0,
+  },
+  listContentContainer: {
+    paddingBottom: 10,
   },
   resultItem: {
     flexDirection: "row",
@@ -324,10 +361,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     padding: 16,
     gap: 8,
-  },
-  dropdownLoadingText: {
-    fontSize: 13,
-    color: "#64748B",
   },
   dropdownEmpty: {
     padding: 16,

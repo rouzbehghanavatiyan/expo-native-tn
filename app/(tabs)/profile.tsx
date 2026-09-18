@@ -294,7 +294,6 @@ const Profile: React.FC = () => {
     setPercentage(Math.min(Math.max(calc, 1), 100));
   }, [userLogin?.score, userIdWhantToShow]);
 
-  // اضافه کردن useCallback و مقادیر پیش‌فرض (?? 0)
   const renderHeader = useCallback(
     () => (
       <YStack bg="$grey100" gap="$4" p="$2">

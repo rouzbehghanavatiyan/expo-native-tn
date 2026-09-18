@@ -206,7 +206,6 @@ const OptionTop: React.FC<OptionTopProps> = ({
               <Follows
                 title={localIsFollowed ? "Unfollow" : "Follow"}
                 onFollowClick={handleFallowClick}
-                bgColor="white"
               />
             )}
           </View>

@@ -16,8 +16,18 @@ const Follows: React.FC<PropTypes> = ({
   return (
     <View ai="center" jc="center">
       <Pressable onPress={onFollowClick}>
-        <View px="$3" py="$2" bg="$white">
-          <Text color={bgColor} fontWeight="500" fontSize={13}>
+        <View
+          px="$3"
+          py="$2"
+          bg="$grey100"
+          borderRadius="$2"
+          shadowColor="#0f0f0f"
+          shadowOffset={{ width: 0, height: 4 }}
+          shadowOpacity={0.2}
+          shadowRadius={10}
+          style={{ elevation: 1 }}
+        >
+          <Text color={bgColor} fontWeight="500" fontSize={10}>
             {title}
           </Text>
         </View>

@@ -163,8 +163,6 @@ const ProfileBio: React.FC<ProfileBioProps> = ({
               setZoomedRank(null);
             }}
           />
-
-          {/* محتوای مودال */}
           <YStack
             width="100%"
             maxHeight="90%"
@@ -175,7 +173,6 @@ const ProfileBio: React.FC<ProfileBioProps> = ({
             elevation={6}
             position="relative"
           >
-            {/* دکمه ضربدر گوشه بالا سمت راست */}
             <Pressable
               onPress={() => {
                 setShowRanksModal(false);
@@ -236,8 +233,6 @@ const ProfileBio: React.FC<ProfileBioProps> = ({
                   </Text>
                 </YStack>
               </Pressable>
-
-              {/* بقیه رنک‌ها (Grid) */}
               <XStack flexWrap="wrap" justifyContent="space-between" gap={8}>
                 {otherRanks.map((rank) => (
                   <Pressable
