@@ -10,6 +10,7 @@ import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
+import { useSelector } from "react-redux";
 import { YStack } from "tamagui";
 
 export default function TabLayout() {
@@ -17,6 +18,8 @@ export default function TabLayout() {
   const pathname = usePathname();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const main = useSelector((state: any) => state.main);
+  const userLoginId = main?.userLogin?.user?.id || main?.userLogin?.userId;
 
   const isWatchTab =
     pathname === "/home" ||

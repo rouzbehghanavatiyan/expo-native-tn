@@ -116,17 +116,22 @@ const ProfileHeader = forwardRef(
       // }
     };
 
-    const handleSendMessage = (data: any) => {
-      const senderStr = String(data.sender || data.id);
-      console.log("isMyProfile", currentProfile);
+    const handleSendMessage = () => {
+      const targetUserId = currentProfile?.user?.id || currentProfile?.id;
+
+      if (!targetUserId) {
+        console.warn("User ID not found for chat navigation");
+        return;
+      }
 
       router.push({
         pathname: "/chat/[id]",
         params: {
-          id: senderStr,
-          userName: data.userNameSender ?? data.userName ?? "",
-          profile: getImageUrl(data) ?? "",
-          score: String(data.score ?? 0),
+          id: targetUserId,
+          userName:
+            currentProfile?.user?.userName ?? currentProfile?.userName ?? "",
+          profile: getImageUrl(currentProfile?.profile) ?? "",
+          score: String(currentProfile?.score ?? 0),
         },
       });
     };
@@ -217,7 +222,7 @@ const ProfileHeader = forwardRef(
                   />
                 </View>
                 <View
-                  onPress={onFollowToggle}
+                  onPress={() => handleSendMessage(currentProfile)}
                   cursor="pointer"
                   borderRadius="$4"
                   minWidth={100}
@@ -234,7 +239,6 @@ const ProfileHeader = forwardRef(
                     shadowOpacity={0.2}
                     shadowRadius={10}
                     elevation={1}
-                    onPress={handleSendMessage}
                   >
                     Send message
                   </Text>

@@ -31,7 +31,6 @@ interface MessageType {
 
 const PAGE_SIZE = 10;
 
-/** تبدیل یک تاریخ (ISO یا هر فرمت قابل‌پارس) به ساعت:دقیقه برای نمایش */
 function formatTime(dateInput?: string): string {
   if (!dateInput) return "";
   const d = new Date(dateInput);
@@ -39,12 +38,6 @@ function formatTime(dateInput?: string): string {
   return d.toTimeString().slice(0, 5);
 }
 
-/**
- * چون FlatList به صورت inverted رندر می‌شود (index 0 = پایین صفحه = جدیدترین پیام)،
- * آرایه‌ی پیام‌ها همیشه باید به صورت نزولی (جدید -> قدیم) مرتب باشد.
- * این تابع پیام‌های جدید فچ‌شده را با پیام‌های موجود merge می‌کند،
- * از تکراری‌شدن (بر اساس id) جلوگیری می‌کند و دوباره مرتب‌سازی می‌کند.
- */
 function mergeDescending(
   prev: MessageType[],
   fetched: MessageType[],
@@ -96,7 +89,6 @@ export default function PrivateChat() {
   const paginationRef = useRef({ skip: 0, take: PAGE_SIZE });
 
   const scrollToBottom = (animated = true) => {
-    // در لیست inverted، offset صفر = پایین صفحه (جدیدترین پیام)
     requestAnimationFrame(() => {
       flatListRef.current?.scrollToOffset({ offset: 0, animated });
     });
@@ -228,7 +220,15 @@ export default function PrivateChat() {
 
   const getMessages = useCallback(
     async (isLoadMore = false) => {
-      if (!userIdLogin || !reciveUserId) return;
+      console.log("getMessages called", {
+        userIdLogin,
+        reciveUserId,
+        isLoadMore,
+      });
+      if (!userIdLogin || !reciveUserId) {
+        console.log("getMessages bailed early");
+        return;
+      }
       if (isLoadMore && (!hasMoreRef.current || isLoadingMoreRef.current))
         return;
 
@@ -327,6 +327,7 @@ export default function PrivateChat() {
   // ]);
 
   useEffect(() => {
+    console.log("chat mount", { userIdLogin, reciveUserId });
     if (!userIdLogin || !reciveUserId) return;
     paginationRef.current = { skip: 0, take: PAGE_SIZE };
     isInitialLoadRef.current = true;

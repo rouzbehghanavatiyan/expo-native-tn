@@ -1,4 +1,4 @@
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import React, {
   useCallback,
   useEffect,
@@ -173,6 +173,7 @@ const Profile: React.FC = () => {
   const onRefresh = async () => {
     if (!targetUserId) return;
     setRefreshing(true);
+
     try {
       const promises: Promise<any>[] = [
         userAttachmentList({
@@ -197,32 +198,7 @@ const Profile: React.FC = () => {
       ];
 
       if (isMyProfile && userLogin?.user?.id) {
-        promises.push(
-          profileAttachment(targetUserId)
-            .then((profileRes) => {
-              console.log("profileRes?.data", profileRes?.data);
-
-              const resData = profileRes?.data;
-              const freshUserData = resData?.data || resData;
-
-              if (freshUserData) {
-                setNewProfile(freshUserData);
-
-                dispatch(
-                  RsetUserLogin({
-                    ...userLogin,
-                    ...freshUserData,
-                  }),
-                );
-              }
-            })
-            .catch((err) =>
-              console.error(
-                "❌ Profile Attachment Error:",
-                err?.message || err,
-              ),
-            ),
-        );
+        promises.push(refreshMyProfileAttachment());
       }
 
       const [videosRes] = await Promise.all(promises);
@@ -242,6 +218,26 @@ const Profile: React.FC = () => {
       setRefreshing(false);
     }
   };
+
+  const refreshMyProfileAttachment = useCallback(async () => {
+    if (!isMyProfile || !userLogin?.user?.id) return;
+    try {
+      const profileRes = await profileAttachment(userLogin.user.id);
+      const resData = profileRes?.data;
+      const freshUserData = resData?.data || resData;
+      if (freshUserData) {
+        dispatch(RsetUserLogin({ ...userLogin, ...freshUserData }));
+      }
+    } catch (err) {
+      logger.error("profileAttachment refresh error:", err);
+    }
+  }, [isMyProfile, userLogin, dispatch]);
+
+  useFocusEffect(
+    useCallback(() => {
+      refreshMyProfileAttachment();
+    }, [refreshMyProfileAttachment]),
+  );
 
   useEffect(() => {
     if (!isMyProfile) {
