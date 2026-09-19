@@ -1,4 +1,5 @@
 import { FontAwesome5 } from "@expo/vector-icons";
+import { useRouter } from "expo-router"; // اضافه شدن ایمپورت روتر
 import React, { useEffect, useState } from "react";
 import { Spinner, Text, XStack, YStack } from "tamagui";
 import { topScoreList } from "../services/masterServices";
@@ -28,11 +29,8 @@ interface Category {
   users: TopUser[];
 }
 
-interface TopScoreItemProps {
-  onUserPress?: (user: TopUser) => void;
-}
-
-const TopScoreItem: React.FC<TopScoreItemProps> = ({ onUserPress }) => {
+const TopScoreItem: React.FC<any> = () => {
+  const router = useRouter(); // تعریف روتر
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const [categories, setCategories] = useState<Category[]>([
@@ -73,6 +71,26 @@ const TopScoreItem: React.FC<TopScoreItemProps> = ({ onUserPress }) => {
     handleGetAllScore();
   }, []);
 
+  // تابع جدید برای ریدایرکت به صفحه پروفایل
+  const handleProfileNavigation = (userTop: TopUser) => {
+    const targetUserId = userTop?.userId;
+
+    if (!targetUserId) {
+      console.warn("User ID not found for profile navigation");
+      return;
+    }
+
+    router.push({
+      pathname: "/(tabs)/profile",
+      params: {
+        id: String(targetUserId),
+        userName: userTop?.userName ?? "",
+        profile: getImageUrl(userTop?.profile) ?? "",
+        score: String(userTop?.score ?? 0),
+      },
+    });
+  };
+
   if (isLoading) {
     return (
       <YStack py="$4" ai="center" jc="center">
@@ -107,7 +125,8 @@ const TopScoreItem: React.FC<TopScoreItemProps> = ({ onUserPress }) => {
             ai="center"
             gap="$3"
             pressStyle={{ opacity: 0.8, scale: 0.98 }}
-            onPress={() => onUserPress && onUserPress(userTop)}
+            // جایگزینی OnPress قبلی با تابع جدید ناوبری
+            onPress={() => handleProfileNavigation(userTop)}
             cursor="pointer"
           >
             <ImageRank
