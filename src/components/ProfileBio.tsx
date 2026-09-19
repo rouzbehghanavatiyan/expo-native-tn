@@ -199,11 +199,7 @@ const ProfileBio: React.FC<ProfileBioProps> = ({
             >
               <YStack gap={8} alignItems="center" pb="$4">
                 <Text fontSize="$4" color="$primaryMain" textAlign="center">
-                  All medals are as follows based on{" "}
-                  <Text fontWeight="bold" fontSize="$5">
-                    your promotion
-                  </Text>{" "}
-                  (Score: {rankScore})
+                  Score: {rankScore}
                 </Text>
               </YStack>
 
@@ -303,26 +299,54 @@ const ProfileBio: React.FC<ProfileBioProps> = ({
         </View>
       </Modal>
       <YStack w="100%" mt="$5" alignItems="flex-start" gap="$3">
-        {userLogin?.bio && (
-          <Text color="$textPrimary" fontSize="$3" lineHeight={20} mb="$1">
-            {userLogin?.bio}
-          </Text>
-        )}
-        {userLogin?.location && (
-          <XStack alignItems="center" gap="$2">
-            <Icon name="location-on" size={16} color="#777777" />
-            <Text color="$textSecondary" fontSize="$3">
-              {userLogin?.location}
-            </Text>
-          </XStack>
-        )}
-        {userLogin?.mail && (
-          <XStack alignItems="center" gap="$2">
-            <Icon name="language" size={16} color="#007aff" />
-            <Text fontWeight="600" color="$infoMain" fontSize="$3">
-              {userLogin?.mail}
-            </Text>
-          </XStack>
+        {userLogin?.bio || userLogin?.location || userLogin?.mail ? (
+          <>
+            {userLogin?.bio && (
+              <Text color="$textPrimary" fontSize="$3" lineHeight={20} mb="$1">
+                {userLogin?.bio}
+              </Text>
+            )}
+            {userLogin?.location && (
+              <XStack alignItems="center" gap="$2">
+                <Icon name="location-on" size={16} color="#777777" />
+                <Text color="$textSecondary" fontSize="$3">
+                  {userLogin?.location}
+                </Text>
+              </XStack>
+            )}
+            {userLogin?.mail && (
+              <XStack alignItems="center" gap="$2">
+                <Icon name="language" size={16} color="#007aff" />
+                <Text fontWeight="600" color="$infoMain" fontSize="$3">
+                  {userLogin?.mail}
+                </Text>
+              </XStack>
+            )}
+          </>
+        ) : (
+          <>
+            <YStack w="100%" alignItems="center">
+              {/* استایل‌های مربوط به ظاهر (Box) روی ظرف (Container) */}
+              <YStack
+                bg="$errorMain" // رنگ پس‌زمینه را اینجا قرار دهید
+                borderBottomWidth={1}
+                borderColor="#b4b4b4"
+                borderRadius="$4"
+                shadowColor="#000000"
+                shadowOffset={{ width: 0, height: 4 }}
+                shadowOpacity={0.2}
+                shadowRadius={10}
+                elevation={1}
+                px="$4" // استفاده از Tokenهای تاماگوی به جای عدد ثابت (مثلاً 5)
+                py="$2"
+              >
+                {/* استایل‌های مربوط به متن فقط روی Text */}
+                <Text color="$white" fontWeight="600">
+                  Edit Profile
+                </Text>
+              </YStack>
+            </YStack>
+          </>
         )}
       </YStack>
     </YStack>

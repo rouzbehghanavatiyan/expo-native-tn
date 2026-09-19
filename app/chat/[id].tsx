@@ -446,6 +446,7 @@ export default function PrivateChat() {
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 33 : 33}
       >
         <YStack flex={1} bg="$background">
           <ChatHeader
@@ -473,6 +474,8 @@ export default function PrivateChat() {
                 return `idx-${index}`;
               }}
               renderItem={renderMessage}
+              onEndReached={handleLoadMore}
+              onEndReachedThreshold={0.2}
               onScroll={({ nativeEvent }) => {
                 const { contentOffset, contentSize, layoutMeasurement } =
                   nativeEvent;
@@ -491,10 +494,13 @@ export default function PrivateChat() {
                   <XStack justifyContent="center" py="$2">
                     <AppLoading />
                   </XStack>
-                ) : null
+                ) : (
+                  <YStack height={30} />
+                )
               }
               contentContainerStyle={{
                 paddingVertical: 10,
+                paddingBottom: 30,
               }}
             />
           )}

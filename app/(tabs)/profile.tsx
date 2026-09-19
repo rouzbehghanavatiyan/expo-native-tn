@@ -86,7 +86,8 @@ const Profile: React.FC = () => {
   const isMyProfile = targetUserId === userLogin?.user?.id;
 
   const [otherUserData, setOtherUserData] = useState<any>(userIdWhantToShow);
-  const currentProfile = isMyProfile ? userLogin
+  const currentProfile = isMyProfile
+    ? userLogin
     : otherUserData || userIdWhantToShow;
 
   const allVideoData = isMyProfile ? myVideosInRedux : otherUserVideos;

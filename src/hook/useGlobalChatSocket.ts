@@ -31,19 +31,12 @@ export function useGlobalChatSocket() {
       if (String(userIdLogin) !== String(targetUserId)) return;
 
       const senderStr = String(data.sender ?? data.senderId);
-
-      // 🟢 بررسی می‌کنیم آیا این فرستنده از قبل در لیست هست یا نه
-      // (getState به‌جای selector گرفتن، چون داخل callback هستیم و نیاز به مقدار لحظه‌ای داریم)
       const currentUsers = (window as any).__store__?.getState?.()?.chat?.users;
-      // اگر به store مستقیم دسترسی نداری، از دیسپچ thunk استفاده کن (روش پایین‌تر ترجیح داده میشه)
 
       dispatch(incrementSenderUnread(senderStr));
     };
 
     socketClient.on("receive_message", handleReceiveMessage);
-
-    // 🟢 هر گونه پیام از کاربر جدید که در Redux نبود، توسط این event هندل میشه
-    // (اگر بک‌اند چنین eventی نداره، این بخش رو نادیده بگیر)
     socketClient.on("new_conversation", refreshChatList);
 
     return () => {

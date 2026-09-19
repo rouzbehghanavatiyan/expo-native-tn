@@ -11,7 +11,6 @@ import {
 const baseURL = process.env.EXPO_PUBLIC_VITE_URL;
 const chatBaseURL = process.env.EXPO_PUBLIC_SOCKET;
 
-// 1. Create Axios instances
 export const api = axios.create({
   baseURL,
   headers: { "Content-Type": "application/json" },
@@ -60,22 +59,27 @@ const setupInterceptors = (instance: AxiosInstance, name: string) => {
     async (error) => {
       const originalRequest = error.config;
 
+      ///////////////////////////////////////////////////////////////////////////////////////
       if (error.response?.status !== 401 || originalRequest._retry) {
         return Promise.reject(error);
       }
-
-      // If a refresh is already in progress, queue the request
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
-        }).then((token) => {
-          originalRequest.headers.Authorization = `Bearer ${token}`;
-          return instance(originalRequest); // Retry with the new token
-        });
-      }
+        })
+          .then((token) => {
+            originalRequest._retry = true;
+            originalRequest.headers.Authorization = `Bearer ${token}`;
 
+            return instance(originalRequest);
+          })
+          .catch((err) => {
+            return Promise.reject(err); // مطمئن بشید queue reject هم درست propagate می‌شه
+          });
+      }
       originalRequest._retry = true;
       isRefreshing = true;
+      ///////////////////////////////////////////////////////////////////////////////////////
 
       const refreshToken = await getRefreshToken();
 
@@ -92,7 +96,7 @@ const setupInterceptors = (instance: AxiosInstance, name: string) => {
         const accessToken = await getAccessToken();
         logger.info("Refresh Endpoint Response:", accessToken);
         const response = await axios.post(`${baseURL}/refreshToken`, {
-          accessToken: accessToken, // Send current (expired) access token
+          accessToken: accessToken,
           refreshToken: refreshToken,
         });
         const responseData = response.data?.data;
@@ -106,13 +110,13 @@ const setupInterceptors = (instance: AxiosInstance, name: string) => {
         await saveTokens(newAccessToken, newRefreshToken);
         logger.info("✅ Tokens successfully refreshed.");
 
-        // Update the header for the current retried request
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
 
-        // Process the queue of failed requests with the new token
         processQueue(null, newAccessToken);
-
-        // Retry the original request
+        logger.info(
+          `Retrying ${originalRequest.url} with token exp:`,
+          JSON.parse(atob(newAccessToken.split(".")[1])).exp,
+        );
         return instance(originalRequest);
       } catch (refreshError: any) {
         logger.error("❌ Token refresh failed:", {
