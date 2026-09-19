@@ -254,4 +254,4 @@ const ProfileHeader = forwardRef(
 
 ProfileHeader.displayName = "ProfileHeader";
 
-export default ProfileHeader;
+export default React.memo(ProfileHeader);

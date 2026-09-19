@@ -1,4 +1,4 @@
-import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+import { useFocusEffect, useLocalSearchParams } from "expo-router";
 import React, {
   useCallback,
   useEffect,
@@ -44,6 +44,7 @@ import VideosProfileItem from "../profile/VideosProfileItem";
 
 const Profile: React.FC = () => {
   const params = useLocalSearchParams<{ userData?: string }>();
+
   const userIdWhantToShow = useMemo(() => {
     try {
       return typeof params.userData === "string"
@@ -69,18 +70,24 @@ const Profile: React.FC = () => {
   const followingCountRedux = useAppSelector(
     (state) => state?.main?.followingLength,
   );
-
+  const myUserName = userLogin?.user?.userName;
+  const myProfileImage = userLogin?.profile;
+  const myScore = userLogin?.score;
   const [showComments, setShowComments] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [percentage, setPercentage] = useState<number>(0);
   const [videoLikes, setVideoLikes] = useState<Record<string, number>>({});
-  const [newProfile, setNewProfile] = useState<Record<string, number>>({});
   const [selectedVideo, setSelectedVideo] = useState<any>(null);
   const [commentPosition, setCommentPosition] = useState(0);
   const [otherUserVideos, setOtherUserVideos] = useState<any[]>([]);
   const flatListRef = useRef<FlatList<any>>(null);
   const dispatch = useAppDispatch();
-  const router = useRouter();
+  const userLoginRef = useRef(userLogin);
+  useEffect(() => {
+    userLoginRef.current = userLogin;
+  }, [userLogin]);
+
+  const myUserId = userLogin?.user?.id;
 
   const targetUserId = userIdWhantToShow?.user?.id || userLogin?.user?.id;
   const isMyProfile = targetUserId === userLogin?.user?.id;
@@ -107,6 +114,20 @@ const Profile: React.FC = () => {
     setSelectedVideo(null);
     setCommentPosition(0);
   }, []);
+
+  const refreshMyProfileAttachment = useCallback(async () => {
+    if (!isMyProfile || !myUserId) return;
+    try {
+      const profileRes = await profileAttachment(myUserId);
+      const resData = profileRes?.data;
+      const freshUserData = resData?.data || resData;
+      if (freshUserData) {
+        dispatch(RsetUserLogin({ ...userLoginRef.current, ...freshUserData }));
+      }
+    } catch (err) {
+      logger.error("profileAttachment refresh error:", err);
+    }
+  }, [isMyProfile, myUserId, dispatch]);
 
   const fetchVideos = useCallback(
     async (paginationParams: { skip: number; take: number }) => {
@@ -219,20 +240,6 @@ const Profile: React.FC = () => {
     }
   };
 
-  const refreshMyProfileAttachment = useCallback(async () => {
-    if (!isMyProfile || !userLogin?.user?.id) return;
-    try {
-      const profileRes = await profileAttachment(userLogin.user.id);
-      const resData = profileRes?.data;
-      const freshUserData = resData?.data || resData;
-      if (freshUserData) {
-        dispatch(RsetUserLogin({ ...userLogin, ...freshUserData }));
-      }
-    } catch (err) {
-      logger.error("profileAttachment refresh error:", err);
-    }
-  }, [isMyProfile, userLogin, dispatch]);
-
   useFocusEffect(
     useCallback(() => {
       refreshMyProfileAttachment();
@@ -322,17 +329,34 @@ const Profile: React.FC = () => {
     }
   }, [userIdWhantToShow, isMyProfile]);
 
+  const currentProfileMemo = useMemo(
+    () => ({
+      id: currentProfile?.user?.id ?? currentProfile?.id,
+      userName: currentProfile?.user?.userName ?? currentProfile?.userName,
+      profile: currentProfile?.profile,
+      score: currentProfile?.score,
+      isFollowedByMe: currentProfile?.isFollowedByMe,
+    }),
+    [
+      currentProfile?.user?.id,
+      currentProfile?.id,
+      currentProfile?.user?.userName,
+      currentProfile?.userName,
+      currentProfile?.profile,
+      currentProfile?.score,
+      currentProfile?.isFollowedByMe,
+    ],
+  );
+
   const renderHeader = useCallback(
     () => (
       <YStack bg="$grey100" gap="$4" p="$2">
         <ProfileHeader
           userImage={getImageUrl(userIdWhantToShow?.profile) || findImg}
-          userName={
-            userIdWhantToShow?.user?.userName || userLogin?.user?.userName
-          }
+          userName={userIdWhantToShow?.user?.userName || myUserName}
           isMyProfile={isMyProfile}
-          score={userIdWhantToShow?.score || userLogin?.score}
-          currentProfile={currentProfile}
+          score={userIdWhantToShow?.score || myScore}
+          currentProfile={currentProfileMemo}
           followersCount={
             userIdWhantToShow?.followersCount ?? followerCountRedux?.count ?? 0
           }
@@ -351,12 +375,16 @@ const Profile: React.FC = () => {
     ),
     [
       userIdWhantToShow,
-      userLogin,
       isMyProfile,
       percentage,
       followerCountRedux?.count,
       followingCountRedux?.count,
       findImg,
+      myUserName,
+      myProfileImage,
+      myScore,
+      currentProfileMemo,
+      currentProfile,
     ],
   );
 
