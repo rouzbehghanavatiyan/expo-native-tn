@@ -1,5 +1,12 @@
+import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import { Image, Modal, Pressable, StyleSheet } from "react-native";
+import {
+  Image,
+  Modal,
+  Pressable,
+  StyleSheet,
+  TouchableOpacity,
+} from "react-native";
 import { Progress, ScrollView, Text, View, XStack, YStack } from "tamagui";
 import { logger } from "../utils/logger";
 import { Icon } from "./Icon";
@@ -26,6 +33,7 @@ interface ProfileBioProps {
   rankPercentage: number;
   rankScore: number;
   userLogin: any;
+  isMyProfile: any;
 }
 
 const allRanks = [
@@ -95,10 +103,11 @@ const ProfileBio: React.FC<ProfileBioProps> = ({
   rankScore,
   rankPercentage,
   userLogin,
+  isMyProfile,
 }) => {
   const [showRanksModal, setShowRanksModal] = useState(false);
   const [zoomedRank, setZoomedRank] = useState<any>(null);
-
+  const router = useRouter();
   logger.info("userLogin", userLogin);
 
   return (
@@ -267,7 +276,6 @@ const ProfileBio: React.FC<ProfileBioProps> = ({
               </XStack>
             </ScrollView>
           </YStack>
-
           {zoomedRank && (
             <Pressable
               style={[
@@ -299,7 +307,8 @@ const ProfileBio: React.FC<ProfileBioProps> = ({
         </View>
       </Modal>
       <YStack w="100%" mt="$5" alignItems="flex-start" gap="$3">
-        {userLogin?.bio || userLogin?.location || userLogin?.mail ? (
+        {!isMyProfile &&
+        (userLogin?.bio || userLogin?.location || userLogin?.mail) ? (
           <>
             {userLogin?.bio && (
               <Text color="$textPrimary" fontSize="$3" lineHeight={20} mb="$1">
@@ -323,31 +332,32 @@ const ProfileBio: React.FC<ProfileBioProps> = ({
               </XStack>
             )}
           </>
-        ) : (
-          <>
+        ) : isMyProfile ? (
+          <TouchableOpacity
+            onPress={() => router.push("/setting/editProfile")}
+            style={{ width: "100%" }}
+          >
             <YStack w="100%" alignItems="center">
-              {/* استایل‌های مربوط به ظاهر (Box) روی ظرف (Container) */}
               <YStack
-                bg="$errorMain" // رنگ پس‌زمینه را اینجا قرار دهید
+                bg="$primaryMain"
                 borderBottomWidth={1}
                 borderColor="#b4b4b4"
-                borderRadius="$4"
+                borderRadius="$2"
                 shadowColor="#000000"
                 shadowOffset={{ width: 0, height: 4 }}
                 shadowOpacity={0.2}
                 shadowRadius={10}
                 elevation={1}
-                px="$4" // استفاده از Tokenهای تاماگوی به جای عدد ثابت (مثلاً 5)
+                px="$4"
                 py="$2"
               >
-                {/* استایل‌های مربوط به متن فقط روی Text */}
                 <Text color="$white" fontWeight="600">
                   Edit Profile
                 </Text>
               </YStack>
             </YStack>
-          </>
-        )}
+          </TouchableOpacity>
+        ) : null}
       </YStack>
     </YStack>
   );

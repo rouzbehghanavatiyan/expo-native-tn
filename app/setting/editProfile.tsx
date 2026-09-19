@@ -147,7 +147,7 @@ export default function EditProfile() {
               flex={1}
               appearance="ghost"
               colorType="primary"
-              onPress={() => router.back()}
+              onPress={() => router.push("/profile")}
             >
               Cancel
             </BaseButton>

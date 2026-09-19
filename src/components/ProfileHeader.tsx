@@ -5,6 +5,7 @@ import { Text, View, XStack, YStack } from "tamagui";
 import { addAttachment, profileAttachment } from "../services/masterServices";
 import { RsetUserLogin } from "../slices/main";
 import { useAppDispatch, useAppSelector } from "../store/reduxHookType";
+import { getImageUrl } from "../utils/fileHelper";
 import ImageRank from "./ImageRank";
 import Follows from "./ui/Follows";
 
@@ -115,6 +116,21 @@ const ProfileHeader = forwardRef(
       // }
     };
 
+    const handleSendMessage = (data: any) => {
+      const senderStr = String(data.sender || data.id);
+      console.log("isMyProfile", currentProfile);
+
+      router.push({
+        pathname: "/chat/[id]",
+        params: {
+          id: senderStr,
+          userName: data.userNameSender ?? data.userName ?? "",
+          profile: getImageUrl(data) ?? "",
+          score: String(data.score ?? 0),
+        },
+      });
+    };
+
     return (
       <View px="$2" ref={ref} position="relative" w="100%">
         <XStack h={128} alignItems="center">
@@ -199,6 +215,29 @@ const ProfileHeader = forwardRef(
                       currentProfile?.isFollowedByMe ? "Unfollow" : "Follow"
                     }
                   />
+                </View>
+                <View
+                  onPress={onFollowToggle}
+                  cursor="pointer"
+                  borderRadius="$4"
+                  minWidth={100}
+                  alignItems="center"
+                  justifyContent="center"
+                >
+                  <Text
+                    bg={"$grey100"}
+                    px={10}
+                    py={6}
+                    borderRadius={5}
+                    fontSize={11}
+                    shadowColor="#000000"
+                    shadowOpacity={0.2}
+                    shadowRadius={10}
+                    elevation={1}
+                    onPress={handleSendMessage}
+                  >
+                    Send message
+                  </Text>
                 </View>
               </XStack>
             )}

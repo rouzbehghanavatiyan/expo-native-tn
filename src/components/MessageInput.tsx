@@ -39,7 +39,6 @@ const MessageInput: React.FC<MessageInputProps> = ({
       borderColor="$colorTransparent"
     >
       <XStack gap="$2" alignItems="flex-end" px="$3" py="$2">
-        {/* دکمه افزودن فایل (اختیاری) */}
         <Pressable
           onPress={onAttachClick}
           style={({ pressed }) => [
@@ -50,13 +49,12 @@ const MessageInput: React.FC<MessageInputProps> = ({
           <MaterialIcons name="add" size={26} color="#6b7280" />
         </Pressable>
 
-        {/* کانتینر اصلی اینپوت */}
         <View style={styles.inputContainer} flex={1}>
           <TextInput
             ref={titleInputRef}
             style={[
               styles.input,
-              { height: Math.max(40, Math.min(inputHeight, 120)) }, // حداقل 40، حداکثر 120 پیکسل
+              { height: Math.max(40, Math.min(inputHeight, 120)) },
             ]}
             multiline={true}
             placeholder="Message..."
@@ -72,7 +70,6 @@ const MessageInput: React.FC<MessageInputProps> = ({
             }}
           />
 
-          {/* دکمه ایموجی داخل اینپوت */}
           <Pressable
             style={styles.emojiButton}
             onPress={() => {
@@ -88,7 +85,6 @@ const MessageInput: React.FC<MessageInputProps> = ({
           </Pressable>
         </View>
 
-        {/* دکمه ارسال */}
         <Pressable
           onPress={hasText ? handleSendMessage : undefined}
           style={({ pressed }) => [

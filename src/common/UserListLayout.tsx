@@ -86,7 +86,6 @@ const UserListLayout: React.FC<UserListLayoutProps> = ({
                       imgSrc={image}
                     />
 
-                    {/* رندر دکمه Follow در صورت نیاز */}
                     {isFollowed && toggleFollow && (
                       <Follows
                         title={followed ? "Unfollow" : "Follow"}
@@ -94,7 +93,6 @@ const UserListLayout: React.FC<UserListLayoutProps> = ({
                       />
                     )}
 
-                    {/* رندر محتوای سفارشی سمت راست (مانند Badge چت) */}
                     {renderRight && renderRight(user)}
                   </XStack>
                 </Pressable>

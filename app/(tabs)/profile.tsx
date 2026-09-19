@@ -345,6 +345,7 @@ const Profile: React.FC = () => {
           }
         />
         <ProfileBio
+          isMyProfile={isMyProfile}
           userLogin={currentProfile}
           rankScore={currentProfile?.score}
           rankPercentage={percentage}

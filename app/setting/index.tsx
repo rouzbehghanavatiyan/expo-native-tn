@@ -49,9 +49,13 @@ export default function SettingLayout() {
     }
   };
 
+  const handleBack = () => {
+    router.replace("/(tabs)/profile");
+  };
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
-      <MainTitle title="Setting" />
+      <MainTitle title="Setting" handleBack={handleBack} />
 
       <View flex={1} px="$2" py="$2" bg="$gray2">
         <SoftLink
