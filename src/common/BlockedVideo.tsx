@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
 import { Text, YStack } from "tamagui";
 import { Icon } from "../components/Icon";
-import { logger } from "../utils/logger";
 
 interface BlockedVideoProps {
   userName?: any;
@@ -18,8 +17,6 @@ export const BlockedVideo: React.FC<BlockedVideoProps> = ({
   onUnblockSuccess,
 }) => {
   const [isUnblocking, setIsUnblocking] = useState(false);
-
-  logger.info("userName", userName);
 
   const handleUnblock = async () => {
     if (!targetUserId || !userIdLogin || isUnblocking) return;

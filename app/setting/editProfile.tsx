@@ -1,10 +1,13 @@
 import BaseButton from "@/src/components/BaseButtom";
 import BaseInput from "@/src/components/BaseInput";
 import { Icon } from "@/src/components/Icon";
+import ImageRank from "@/src/components/ImageRank";
 import MainTitle from "@/src/components/MainTitle";
 import { addProfile } from "@/src/services/masterServices";
 import { useAppSelector } from "@/src/store/reduxHookType";
+import { getImageUrl } from "@/src/utils/fileHelper";
 import { logger } from "@/src/utils/logger";
+import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { Modal, Pressable } from "react-native";
@@ -20,12 +23,15 @@ export default function EditProfile() {
   const [bio, setBio] = useState(userLogin?.bio || "");
   const [location, setLocation] = useState(userLogin?.location || "");
   const [mail, setMail] = useState(userLogin?.mail || "");
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [feedbackTitle, setFeedbackTitle] = useState("");
   const [feedbackMessage, setFeedbackMessage] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
+
+  logger.info("userLogin", userLogin);
 
   useEffect(() => {
     if (userLogin) {
@@ -42,17 +48,33 @@ export default function EditProfile() {
     setFeedbackOpen(true);
   };
 
-  const handleSubmit = async () => {
-    // در صورت نیاز به ولیدیشن ایمیل می‌توانید کد زیر را از حالت کامنت خارج کنید
-    // if (mail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail)) {
-    //   showFeedback(
-    //     "Validation Error",
-    //     "Please enter a valid email address.",
-    //     false,
-    //   );
-    //   return;
-    // }
+  const pickImage = async () => {
+    const permissionResult =
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
 
+    if (!permissionResult.granted) {
+      showFeedback(
+        "Permission Denied",
+        "Permission to access gallery is required!",
+        false,
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+      presentationStyle: ImagePicker.UIImagePickerPresentationStyle.FULL_SCREEN,
+    });
+
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      setSelectedImage(result.assets[0].uri);
+    }
+  };
+
+  const handleSubmit = async () => {
     const postData = {
       bio: bio || null,
       location: location || null,
@@ -70,7 +92,6 @@ export default function EditProfile() {
           res?.data?.message || "Profile updated successfully.",
           true,
         );
-        // router.back();
       } else {
         showFeedback(
           "Error",
@@ -100,6 +121,41 @@ export default function EditProfile() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
       <MainTitle handleBack={() => router.back()} title="Edit Profile" />
+
+      <YStack ai="center" jc="center" my="$4" gap="$2">
+        <Pressable onPress={pickImage}>
+          <YStack
+            p="$1.5"
+            bg="white"
+            borderRadius="$round"
+            shadowColor="#000"
+            shadowOffset={{ width: 0, height: 4 }}
+            shadowOpacity={0.06}
+            shadowRadius={10}
+            elevation={3}
+            borderWidth={1}
+            borderColor="#bbbbbb"
+          >
+            <ImageRank
+              onClickDisable={true}
+              iconClass="text-gray-200"
+              imgSrc={selectedImage || getImageUrl(userLogin?.profile)}
+              imgSize={104}
+            />
+          </YStack>
+        </Pressable>
+
+        <Pressable onPress={pickImage}>
+          <Text
+            color="$primaryMain"
+            fontWeight="600"
+            fontSize="$3"
+            pressStyle={{ opacity: 0.7 }}
+          >
+            Upload Image
+          </Text>
+        </Pressable>
+      </YStack>
 
       {isLoading ? (
         <YStack flex={1} jc="center" ai="center" bg="$background">

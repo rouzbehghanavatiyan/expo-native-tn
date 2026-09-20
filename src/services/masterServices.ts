@@ -170,3 +170,11 @@ export const forgotPassword = async (data: any) => {
 export const showProfileByUser = async (userId: any) => {
   return await api.get(`/showProfileByUser?userId=${userId}`);
 };
+
+export const blockListByUser = async () => {
+  return await api.get(`/blockListByUser`);
+};
+
+export const userUnBlock = async (data: any) => {
+  return await api.post(`/userUnBlock`, data);
+};

@@ -17,6 +17,8 @@ interface UserListLayoutProps {
   renderRight?: (item: any) => React.ReactNode;
   isFollowed?: (id: any) => boolean;
   toggleFollow?: (id: any) => void;
+  onUnblock?: (id: any) => void; // پراپ آن‌بلاک
+  unblockText?: string; // متن دکمه (پیش‌فرض: Unblock)
   imgSize?: number;
 }
 
@@ -30,6 +32,8 @@ const UserListLayout: React.FC<UserListLayoutProps> = ({
   renderRight,
   isFollowed,
   toggleFollow,
+  onUnblock,
+  unblockText = "Unblock",
   imgSize = 50,
 }) => {
   return (
@@ -86,6 +90,7 @@ const UserListLayout: React.FC<UserListLayoutProps> = ({
                       imgSrc={image}
                     />
 
+                    {/* دکمه فالو/آنفالو */}
                     {isFollowed && toggleFollow && (
                       <Follows
                         title={followed ? "Unfollow" : "Follow"}
@@ -93,6 +98,15 @@ const UserListLayout: React.FC<UserListLayoutProps> = ({
                       />
                     )}
 
+                    {/* دکمه یک‌دست آن‌بلاک */}
+                    {onUnblock && (
+                      <Follows
+                        title={unblockText}
+                        onFollowClick={() => onUnblock(userId)}
+                      />
+                    )}
+
+                    {/* قابلیت رندر کاستوم در صورت نیاز به موارد خاص */}
                     {renderRight && renderRight(user)}
                   </XStack>
                 </Pressable>

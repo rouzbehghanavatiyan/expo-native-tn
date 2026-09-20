@@ -3,7 +3,6 @@ import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { Image, Text as RNText, StyleSheet } from "react-native";
 import { Text, View } from "tamagui";
-import { logger } from "../utils/logger";
 
 const Started = require("../assets/ranks/starter.png");
 const bronseBase1 = require("../assets/ranks/bronze1.png");
@@ -32,6 +31,7 @@ interface ProfileWithRankProps {
   userNameStyle?: object;
   positionVideo?: number;
   showProfile?: boolean;
+  onClickDisable?: any;
   iconClass?: string;
 }
 
@@ -53,6 +53,7 @@ const ImageRank: React.FC<ProfileWithRankProps> = ({
   iconClass = "text-gray-200",
   score = -1,
   imgSize = 40,
+  onClickDisable = false,
   userInfo,
 }) => {
   const [rankData, setRankData] = useState<{
@@ -169,7 +170,7 @@ const ImageRank: React.FC<ProfileWithRankProps> = ({
   };
 
   const handleClick = () => {
-    if (!showProfile) return;
+    if (onClickDisable || !showProfile) return;
 
     const targetData = {
       profile:
@@ -194,8 +195,6 @@ const ImageRank: React.FC<ProfileWithRankProps> = ({
       location: userInfo?.location,
       bio: userInfo?.bio,
     };
-
-    logger.info("image rankkkkkkkkkkkk", targetData);
 
     router.push({
       pathname: "/profile",
@@ -224,7 +223,7 @@ const ImageRank: React.FC<ProfileWithRankProps> = ({
 
   return (
     <View
-      onPress={handleClick}
+      onPress={onClickDisable ? undefined : handleClick}
       flexDirection="row"
       alignItems="center"
       m={1}

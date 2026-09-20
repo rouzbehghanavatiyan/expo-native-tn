@@ -160,7 +160,6 @@ const OptionTop: React.FC<OptionTopProps> = ({
         reason: selectedReason,
       };
 
-      // TODO: Call your report API service here
       logger.info("Report Submitted:", postData);
 
       setReportModalOpen(false);

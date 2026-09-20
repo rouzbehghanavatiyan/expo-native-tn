@@ -1,65 +1,80 @@
-import UserListLayout from "@/src/common/UserListLayout";
-import BaseButton from "@/src/components/BaseButtom";
-import MainTitle from "@/src/components/MainTitle";
-import SoftLink from "@/src/components/SoftLink";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
-import { useState } from "react";
-import { Modal, Pressable } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { Text, View, XStack, YStack } from "tamagui";
+import React, { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
+
+import UserListLayout from "@/src/common/UserListLayout";
+import { blockListByUser, userUnBlock } from "@/src/services/masterServices";
+import { logger } from "@/src/utils/logger";
 
 export default function BlockListScreen() {
+  const [isLoading, setIsLoading] = useState(false);
+  const [blockList, setBlockList] = useState([]);
+
+  const main = useSelector((state: any) => state.main);
+  const userLoginId = main?.userLogin?.user?.id || main?.userLogin?.userId;
   const router = useRouter();
 
-  const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
-
-  const handleLogoutConfirm = async () => {
+  const handleBlockList = async () => {
     try {
-      setIsLoggingOut(true);
-      await AsyncStorage.clear();
-      setLogoutDialogOpen(false);
-      router.replace("/login");
+      setIsLoading(true);
+      const res = await blockListByUser();
+      const { data, status } = res?.data || {};
+      logger.info("blockList res", data);
+
+      if (status === 0) {
+        setBlockList(data || []);
+      }
     } catch (error) {
-      console.log("Logout error:", error);
+      console.log(error);
     } finally {
-      setIsLoggingOut(false);
+      setIsLoading(false);
     }
   };
 
-  const handleAcceptCategory = async (category: any) => {
-    switch (category.name) {
-      case "Signout":
-        setLogoutDialogOpen(true);
-        break;
-      case "Profile":
-        router.push("/setting/editProfile");
-        break;
-      case "Learning":
-        router.push("/learning");
-        break;
-      case "Support":
-        router.push("/support");
-        break;
-      case "Block List":
-        router.push("/blockList");
-        break;
-      case "About us":
-        router.push("/about");
-        break;
-      // case "Mark":
-      //   router.push("/mark");
-      //   break;
-      default:
-        break;
+  const handleUnBlockByUser = async (targetUserId: any) => {
+    try {
+      const postData = {
+        blockerId: userLoginId,
+        targetUserId: targetUserId,
+      };
+
+      setIsLoading(true);
+      const res = await userUnBlock(postData);
+      const { data, status } = res?.data || {};
+      logger.info("unblock res", data);
+
+      if (status === 0) {
+        // حذف مستقیم کاربر از لیست جاری در استیت
+        setBlockList((prev) =>
+          prev.filter((user: any) => {
+            const id =
+              user?.attachment?.attachmentId ||
+              user?.userId ||
+              user?.id ||
+              user?.sender;
+            return id !== targetUserId;
+          }),
+        );
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    handleBlockList();
+  }, []);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
-      <MainTitle title="Setting" />
-      <UserListLayout />
-    </SafeAreaView>
+    <UserListLayout
+      title="Block List"
+      isLoading={isLoading}
+      data={blockList}
+      emptyMessage="There are no blocked users."
+      onBack={() => router.back()}
+      onUnblock={handleUnBlockByUser}
+    />
   );
 }

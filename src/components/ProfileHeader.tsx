@@ -45,7 +45,7 @@ const ProfileHeader = forwardRef(
     const router = useRouter();
 
     const handleImageProfileUpload = useCallback(async () => {
-      if (!isMyProfile) return; // کاربر فقط مجاز به تغییر عکس پروفایل خودش است
+      if (!isMyProfile) return;
 
       const permissionResult =
         await ImagePicker.requestMediaLibraryPermissionsAsync();

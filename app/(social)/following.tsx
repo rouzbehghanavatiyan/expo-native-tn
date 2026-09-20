@@ -1,7 +1,6 @@
 import UserListLayout from "@/src/common/UserListLayout";
 import { useFollow } from "@/src/hook/useFollow";
 import { followingList } from "@/src/services/masterServices";
-import { RsetAllFollowingList } from "@/src/slices/main";
 import { useAppDispatch, useAppSelector } from "@/src/store/reduxHookType";
 import asyncWrapper from "@/src/utils/asyncWrapper";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -13,10 +12,10 @@ const Following = () => {
   const router = useRouter();
   const params = useLocalSearchParams();
   const [isLoading, setIsLoading] = useState(false);
+  const [following, setFollowing] = useState([]);
 
   const userIdLogin = main?.userLogin?.user?.id;
   const userIdFromLocation = params?.id;
-  const following = main?.allFollowingList || [];
   const { isFollowed, toggleFollow } = useFollow(userIdLogin);
 
   const handleAllFollowing = asyncWrapper(
@@ -29,7 +28,7 @@ const Following = () => {
       const { status, data } = res?.data;
 
       if (status === 0) {
-        dispatch(RsetAllFollowingList(data));
+        setFollowing(data);
       }
     },
     () => setIsLoading(false),

@@ -7,7 +7,6 @@ import {
   Pressable,
   StyleSheet,
   View,
-  ViewStyle,
 } from "react-native";
 import Video, {
   OnLoadData,
@@ -25,6 +24,7 @@ interface CustomVideoProps {
   isPlaying: boolean;
   onVideoPlay?: () => void;
   positionVideo: any;
+  resizeMode?: any;
 }
 
 const CustomVideo = memo(
@@ -34,7 +34,11 @@ const CustomVideo = memo(
     isPlaying,
     onVideoPlay,
     positionVideo,
+    resizeMode = "contain",
   }: CustomVideoProps) => {
+    const isStretch = resizeMode === 4 || resizeMode === "stretch";
+    const fixResizeMode = isStretch ? "stretch" : "contain";
+
     const videoRef = useRef<VideoRef>(null);
     const isFocused = useIsFocused();
     const [duration, setDuration] = useState(1);
@@ -44,9 +48,6 @@ const CustomVideo = memo(
     const { url: cachedUri, isLoading: isCacheLoading } = useCachedVideo(uri);
     const [isPlayerReady, setIsPlayerReady] = useState(false);
 
-    // logger.debug(
-    //   `custom video on route: [${route.name}]     , position:${position} ,     uri:${uri}`,
-    // );
     const handleLoad = (data: OnLoadData) => {
       setDuration(data.duration || 1);
       durationRef.current = data.duration || 1;
@@ -56,7 +57,7 @@ const CustomVideo = memo(
     const isDraggingRef = useRef(false);
     const durationRef = useRef(1);
     const positionRef = useRef(0);
-    const timelineWidthRef = useRef(1); // فقط عرض نوار پیشرفت را نیاز داریم
+    const timelineWidthRef = useRef(1);
 
     const updatePosition = (newPos: number) => {
       setPosition(newPos);
@@ -83,7 +84,6 @@ const CustomVideo = memo(
 
     const timelineResponder = useRef(
       PanResponder.create({
-        // هرگونه تاچ روی این لایه، توسط همین لایه جذب شود (و به Pressable زیرین نرسد)
         onStartShouldSetPanResponder: () => true,
         onMoveShouldSetPanResponder: () => true,
 
@@ -142,8 +142,11 @@ const CustomVideo = memo(
             <Video
               ref={videoRef}
               source={{ uri: cachedUri }}
-              style={StyleSheet.absoluteFill as ViewStyle}
-              resizeMode="contain"
+              style={[
+                styles.videoStyle,
+                isStretch && styles.videoStretchInset, // اعمال ۱۳ پیکسل فرورفتگی در بالا و پایین
+              ]}
+              resizeMode={fixResizeMode}
               repeat
               paused={!shouldPlay}
               onLoad={handleLoad}
@@ -186,6 +189,17 @@ const styles = StyleSheet.create({
     flex: 1,
     width: "100%",
     backgroundColor: "black",
+  },
+  videoStyle: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+  },
+  videoStretchInset: {
+    top: 190,
+    bottom: 190,
   },
   centerContent: {
     justifyContent: "center",

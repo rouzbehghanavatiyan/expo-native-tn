@@ -1,6 +1,5 @@
 import React from "react";
 import { Dimensions, StyleSheet, View } from "react-native";
-import { logger } from "../utils/logger";
 import { Icon } from "./Icon";
 import VideoSection from "./VideoSection";
 
@@ -57,8 +56,6 @@ export default function ShowWatchSlide({
       : video?.likeInserted > video?.likeMatched
         ? "Loss"
         : "Draw";
-
-  logger.info("videovideovideovideovideovideovideo", video);
 
   return (
     <>
