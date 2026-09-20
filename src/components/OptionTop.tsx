@@ -13,6 +13,7 @@ import { getImageUrl } from "../utils/fileHelper";
 import { logger } from "../utils/logger";
 import BaseButton from "./BaseButtom";
 import Follows from "./Follows";
+import { Icon } from "./Icon";
 import ImageRank from "./ImageRank";
 
 interface OptionTopProps {
@@ -20,6 +21,7 @@ interface OptionTopProps {
   positionVideo: number;
   openDropdowns?: { [key: number]: boolean };
   score: any;
+  onBoldPress: any;
   setOpenDropdowns?: any;
   toggleDropdown?: (position: string) => void;
   dropdownItems?: (video: any) => any[];
@@ -40,6 +42,7 @@ const OptionTop: React.FC<OptionTopProps> = ({
   score,
   userIdLogin,
   main,
+  onBoldPress,
 }) => {
   const router = useRouter();
   const [localIsFollowed, setLocalIsFollowed] = useState(false);
@@ -209,6 +212,13 @@ const OptionTop: React.FC<OptionTopProps> = ({
               />
             )}
           </View>
+          <Pressable
+            hitSlop={10}
+            style={{ paddingHorizontal: 6, paddingVertical: 4 }}
+            onPress={onBoldPress}
+          >
+            <Icon name="fullscreen" size={26} color="white" />
+          </Pressable>
           <View flex={1} alignItems="flex-end">
             {checkMyVideo && (
               <>

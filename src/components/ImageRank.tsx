@@ -190,9 +190,9 @@ const ImageRank: React.FC<ProfileWithRankProps> = ({
           : positionVideo === 1
             ? userInfo?.scoreMatched
             : userInfo?.score,
-      //             mail: user?.mail,
-      // location: user?.location,
-      // bio: user?.bio,
+      mail: userInfo?.email,
+      location: userInfo?.location,
+      bio: userInfo?.bio,
     };
 
     logger.info("image rankkkkkkkkkkkk", targetData);

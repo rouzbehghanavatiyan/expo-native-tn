@@ -21,7 +21,7 @@ const BAR_HEIGHT_ACTIVE = 5;
 
 interface CustomVideoProps {
   videoId: string;
-  uri: string;
+  uri: any;
   isPlaying: boolean;
   onVideoPlay?: () => void;
   positionVideo: any;
@@ -178,6 +178,7 @@ const CustomVideo = memo(
     );
   },
 );
+CustomVideo.displayName = "CustomVideo";
 export default CustomVideo;
 
 const styles = StyleSheet.create({

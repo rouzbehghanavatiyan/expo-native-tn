@@ -1,9 +1,10 @@
 import { FontAwesome5 } from "@expo/vector-icons";
-import { useRouter } from "expo-router"; // اضافه شدن ایمپورت روتر
+import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { Spinner, Text, XStack, YStack } from "tamagui";
 import { topScoreList } from "../services/masterServices";
 import { getImageUrl } from "../utils/fileHelper";
+import { logger } from "../utils/logger";
 import ImageRank from "./ImageRank";
 
 export interface TopUser {
@@ -20,6 +21,9 @@ export interface TopUser {
   };
   score: number;
   time?: string;
+  bio?: string;
+  email?: string;
+  location?: string;
 }
 
 interface Category {
@@ -30,7 +34,7 @@ interface Category {
 }
 
 const TopScoreItem: React.FC<any> = () => {
-  const router = useRouter(); // تعریف روتر
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const [categories, setCategories] = useState<Category[]>([
@@ -71,22 +75,32 @@ const TopScoreItem: React.FC<any> = () => {
     handleGetAllScore();
   }, []);
 
-  // تابع جدید برای ریدایرکت به صفحه پروفایل
+  // 🔴 تغییر اصلی اینجاست 🔴
   const handleProfileNavigation = (userTop: TopUser) => {
-    const targetUserId = userTop?.userId;
-
-    if (!targetUserId) {
+    if (!userTop?.userId) {
       console.warn("User ID not found for profile navigation");
       return;
     }
 
+    // ساختار دیتا دقیقاً مشابه چیزی است که صفحه پروفایل انتظار دارد دریافت کند
+    const targetData = {
+      profile: userTop?.profile,
+      user: {
+        userName: userTop?.userName,
+        id: userTop?.userId,
+      },
+      score: userTop?.score,
+      mail: userTop?.email,
+      location: userTop?.location,
+      bio: userTop?.bio,
+    };
+
+    logger.debug("Navigating with userData:", targetData);
+
     router.push({
-      pathname: "/(tabs)/profile",
+      pathname: "/profile",
       params: {
-        id: String(targetUserId),
-        userName: userTop?.userName ?? "",
-        profile: getImageUrl(userTop?.profile) ?? "",
-        score: String(userTop?.score ?? 0),
+        userData: JSON.stringify(targetData), // پاس دادن به عنوان رشته JSON
       },
     });
   };
@@ -109,7 +123,7 @@ const TopScoreItem: React.FC<any> = () => {
 
   return (
     <YStack mb="$3" m={20} gap={12}>
-      {sportCategory.users.map((userTop, index) => {
+      {sportCategory.users.map((userTop: any, index) => {
         const userInfo = {
           userProfile: userTop?.profile,
           user: {
@@ -117,6 +131,9 @@ const TopScoreItem: React.FC<any> = () => {
             id: userTop?.userId,
           },
           score: userTop?.score,
+          bio: userTop?.bio,
+          email: userTop?.email,
+          location: userTop?.location,
         };
 
         return (
@@ -125,7 +142,6 @@ const TopScoreItem: React.FC<any> = () => {
             ai="center"
             gap="$3"
             pressStyle={{ opacity: 0.8, scale: 0.98 }}
-            // جایگزینی OnPress قبلی با تابع جدید ناوبری
             onPress={() => handleProfileNavigation(userTop)}
             cursor="pointer"
           >

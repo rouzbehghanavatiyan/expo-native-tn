@@ -1,4 +1,4 @@
-import { syncPushToken } from "@/src/services/notificationService"; // ایمپورت اضافه شد
+import { syncPushToken } from "@/src/services/notificationService";
 import * as Notifications from "expo-notifications";
 import { useEffect, useRef } from "react";
 import { useAppSelector } from "../store/reduxHookType";

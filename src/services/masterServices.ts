@@ -166,3 +166,7 @@ export const addProfile = async (data: any) => {
 export const forgotPassword = async (data: any) => {
   return await api.post(`/forgotPassword`, data);
 };
+
+export const showProfileByUser = async (userId: any) => {
+  return await api.get(`/showProfileByUser?userId=${userId}`);
+};

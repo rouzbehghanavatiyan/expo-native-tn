@@ -1,6 +1,7 @@
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
+  ActivityIndicator,
   Image,
   Modal,
   Pressable,
@@ -8,6 +9,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { Progress, ScrollView, Text, View, XStack, YStack } from "tamagui";
+import { showProfileByUser } from "../services/masterServices";
 import { logger } from "../utils/logger";
 import { Icon } from "./Icon";
 
@@ -107,8 +109,35 @@ const ProfileBio: React.FC<ProfileBioProps> = ({
 }) => {
   const [showRanksModal, setShowRanksModal] = useState(false);
   const [zoomedRank, setZoomedRank] = useState<any>(null);
+  const [loadingProfile, setLoadingProfile] = useState(false);
+  const [isFetched, setIsFetched] = useState(false);
+  const [fetchedBioData, setFetchedBioData] = useState<any>(null);
   const router = useRouter();
-  logger.info("userLogin", userLogin);
+
+  const activeBio = fetchedBioData?.bio ?? userLogin?.bio;
+  const activeLocation = fetchedBioData?.location ?? userLogin?.location;
+  const activeMail = fetchedBioData?.mail ?? userLogin?.mail;
+
+  const hasProfileInfo = Boolean(activeBio || activeLocation || activeMail);
+  const shouldShowDetails = hasProfileInfo || isFetched;
+
+  const getProfileUser = async () => {
+    const targetUserId = userLogin?.user?.id || userLogin?.userId;
+    if (!targetUserId) return;
+    try {
+      setLoadingProfile(true);
+      const res = await showProfileByUser(targetUserId);
+      if (res?.data || res) {
+        logger.info("|res?.datares?.data", res?.data);
+        setFetchedBioData(res?.data?.data || res);
+      }
+    } catch (error) {
+      console.error("Error fetching profile info:", error);
+    } finally {
+      setLoadingProfile(false);
+      setIsFetched(true);
+    }
+  };
 
   return (
     <YStack px="$4" alignItems="center" w="100%">
@@ -306,33 +335,9 @@ const ProfileBio: React.FC<ProfileBioProps> = ({
           )}
         </View>
       </Modal>
+
       <YStack w="100%" mt="$5" alignItems="flex-start" gap="$3">
-        {!isMyProfile &&
-        (userLogin?.bio || userLogin?.location || userLogin?.mail) ? (
-          <>
-            {userLogin?.bio && (
-              <Text color="$textPrimary" fontSize="$3" lineHeight={20} mb="$1">
-                {userLogin?.bio}
-              </Text>
-            )}
-            {userLogin?.location && (
-              <XStack alignItems="center" gap="$2">
-                <Icon name="location-on" size={16} color="#777777" />
-                <Text color="$textSecondary" fontSize="$3">
-                  {userLogin?.location}
-                </Text>
-              </XStack>
-            )}
-            {userLogin?.mail && (
-              <XStack alignItems="center" gap="$2">
-                <Icon name="language" size={16} color="#007aff" />
-                <Text fontWeight="600" color="$infoMain" fontSize="$3">
-                  {userLogin?.mail}
-                </Text>
-              </XStack>
-            )}
-          </>
-        ) : isMyProfile ? (
+        {isMyProfile ? (
           <TouchableOpacity
             onPress={() => router.push("/setting/editProfile")}
             style={{ width: "100%" }}
@@ -357,7 +362,69 @@ const ProfileBio: React.FC<ProfileBioProps> = ({
               </YStack>
             </YStack>
           </TouchableOpacity>
-        ) : null}
+        ) : shouldShowDetails ? (
+          <>
+            {activeBio ? (
+              <Text color="$textPrimary" fontSize="$3" lineHeight={20} mb="$1">
+                {activeBio}
+              </Text>
+            ) : null}
+            {activeLocation ? (
+              <XStack alignItems="center" gap="$2">
+                <Icon name="location-on" size={16} color="#777777" />
+                <Text color="$textSecondary" fontSize="$3">
+                  {activeLocation}
+                </Text>
+              </XStack>
+            ) : null}
+            {activeMail ? (
+              <XStack alignItems="center" gap="$2">
+                <Icon name="language" size={16} color="#007aff" />
+                <Text fontWeight="600" color="$infoMain" fontSize="$3">
+                  {activeMail}
+                </Text>
+              </XStack>
+            ) : null}
+            {!hasProfileInfo && (
+              <Text color="$textSecondary" fontSize="$3" fontStyle="italic">
+                No bio information available.
+              </Text>
+            )}
+          </>
+        ) : (
+          <TouchableOpacity
+            onPress={getProfileUser}
+            disabled={loadingProfile}
+            style={{ width: "100%" }}
+          >
+            <YStack w="100%" alignItems="center">
+              <YStack
+                bg="$primaryMain"
+                borderBottomWidth={1}
+                borderColor="#b4b4b4"
+                borderRadius="$2"
+                shadowColor="#000000"
+                shadowOffset={{ width: 0, height: 4 }}
+                shadowOpacity={0.2}
+                shadowRadius={10}
+                elevation={1}
+                px="$4"
+                py="$2"
+              >
+                {loadingProfile ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <XStack alignItems="center" justifyContent="center" gap="$2">
+                    <Icon color="white" name="Visibility" size={16} />
+                    <Text color="$white" fontWeight="600">
+                      Show Profile
+                    </Text>
+                  </XStack>
+                )}
+              </YStack>
+            </YStack>
+          </TouchableOpacity>
+        )}
       </YStack>
     </YStack>
   );
