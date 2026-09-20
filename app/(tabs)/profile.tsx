@@ -12,7 +12,7 @@ import {
   SafeAreaView,
   StyleSheet,
 } from "react-native";
-import { Text, View, YStack } from "tamagui";
+import { Text, useTheme, View, YStack } from "tamagui";
 
 import ProfileAchievements from "@/src/components/ProfileAchievements";
 import ProfileBio from "@/src/components/ProfileBio";
@@ -39,11 +39,14 @@ import { logger } from "@/src/utils/logger";
 import { socketClient } from "@/src/utils/socketClient";
 
 import { Icon } from "@/src/components/Icon";
+import { getThemeColor } from "@/src/hook/getThemeColor";
 import Comments from "../comments";
 import VideosProfileItem from "../profile/VideosProfileItem";
 
 const Profile: React.FC = () => {
   const params = useLocalSearchParams<{ userData?: string }>();
+  const theme = useTheme();
+  const screenBackground = getThemeColor(theme.background, "#fff");
 
   const userIdWhantToShow = useMemo(() => {
     try {
@@ -350,7 +353,7 @@ const Profile: React.FC = () => {
 
   const renderHeader = useCallback(
     () => (
-      <YStack bg="$grey100" gap="$4" p="$2">
+      <YStack bg="$background" gap="$4" p="$2">
         <ProfileHeader
           userImage={getImageUrl(userIdWhantToShow?.profile) || findImg}
           userName={userIdWhantToShow?.user?.userName || myUserName}
@@ -389,7 +392,8 @@ const Profile: React.FC = () => {
   );
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: screenBackground }}>
+      {/* این بخش، محل نمایش ویدیوهاست و همیشه پس‌زمینه‌ی مشکی داره؛ عمداً از تم روشن/تاریک اپ مستقل نگه داشته شده */}
       <YStack f={1} bg="$black">
         <FlatList
           data={allVideoData || []}

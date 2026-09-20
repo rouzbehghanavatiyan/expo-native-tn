@@ -122,75 +122,28 @@ const tokens = createTokens({
 
 const themes = {
   light: {
-    // --- اضافه شدن دو کلید اجباری Tamagui ---
     background: tokens.color.grey50,
     color: "rgba(0, 0, 0, 0.87)",
-    // ----------------------------------------
+    borderColor: "rgba(0, 0, 0, 0.12)", // 👈 این خط حتماً اضافه شود
 
-    // Backgrounds
     backgroundDefault: tokens.color.grey50,
     backgroundPaper: tokens.color.white,
-
-    // Text
     textPrimary: "rgba(0, 0, 0, 0.87)",
     textSecondary: "rgba(0, 0, 0, 0.6)",
     textDisabled: "rgba(0, 0, 0, 0.38)",
-
-    // Primary
     primaryMain: tokens.color.indigoMain,
-    primaryLight: tokens.color.indigoLight,
-    primaryDark: tokens.color.indigoDark,
-    primaryContrastText: tokens.color.white,
-
-    // Secondary
-    secondaryMain: tokens.color.pinkMain,
-    secondaryLight: tokens.color.pinkLight,
-    secondaryDark: tokens.color.pinkDark,
-    secondaryContrastText: tokens.color.white,
-
-    // Status
-    errorMain: tokens.color.redMain,
-    warningMain: tokens.color.orangeMain,
-    infoMain: tokens.color.blueMain,
-    successMain: tokens.color.greenMain,
-
-    // Borders / Dividers
+    // ... بقیه موارد
     divider: "rgba(0, 0, 0, 0.12)",
   },
   dark: {
-    // --- اضافه شدن دو کلید اجباری Tamagui ---
     background: "#121212",
     color: tokens.color.white,
-    // ----------------------------------------
+    borderColor: "rgba(255, 255, 255, 0.12)", // 👈 این خط حتماً اضافه شود
 
-    // Backgrounds
     backgroundDefault: "#121212",
     backgroundPaper: "#1e1e1e",
-
-    // Text
     textPrimary: tokens.color.white,
-    textSecondary: "rgba(255, 255, 255, 0.7)",
-    textDisabled: "rgba(255, 255, 255, 0.5)",
-
-    // Primary (Often lighter in dark mode)
-    primaryMain: tokens.color.indigoLight,
-    primaryLight: "#a8abff",
-    primaryDark: tokens.color.indigoMain,
-    primaryContrastText: tokens.color.black,
-
-    // Secondary
-    secondaryMain: tokens.color.pinkLight,
-    secondaryLight: "#ff94c2",
-    secondaryDark: tokens.color.pinkMain,
-    secondaryContrastText: tokens.color.black,
-
-    // Status
-    errorMain: "#f44336",
-    warningMain: "#ffa726",
-    infoMain: "#29b6f6",
-    successMain: "#66bb6a",
-
-    // Borders / Dividers
+    // ... بقیه موارد
     divider: "rgba(255, 255, 255, 0.12)",
   },
 };

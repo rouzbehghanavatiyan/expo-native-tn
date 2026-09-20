@@ -230,7 +230,8 @@ const ProfileHeader = forwardRef(
                   justifyContent="center"
                 >
                   <Text
-                    bg={"$grey100"}
+                    bg="$backgroundPaper"
+                    color="$textPrimary"
                     px={10}
                     py={6}
                     borderRadius={5}

@@ -1,6 +1,16 @@
+import { getThemeColor } from "@/src/hook/getThemeColor";
 import React, { useEffect, useId, useRef, useState } from "react";
 import { Animated } from "react-native";
-import { Input, InputProps, styled, Text, View, XStack, YStack } from "tamagui";
+import {
+  Input,
+  InputProps,
+  styled,
+  Text,
+  useTheme,
+  View,
+  XStack,
+  YStack,
+} from "tamagui";
 
 type InputVariant = "outline" | "filled" | "unstyled";
 type ColorType = "primary" | "secondary" | "success" | "warning" | "error";
@@ -68,7 +78,7 @@ const BaseInput = React.forwardRef<any, BaseInputProps>(
     {
       errorMessage,
       helperText,
-      baseColorLabel = "rgb(244, 244, 244)",
+      baseColorLabel,
       label,
       leftIcon,
       rightIcon,
@@ -87,6 +97,13 @@ const BaseInput = React.forwardRef<any, BaseInputProps>(
     ref,
   ) => {
     const inputId = useId();
+    const theme = useTheme();
+
+    // پس‌زمینه‌ی پشت لیبل شناور، برای پوشوندن خط بوردر؛ اگر صریحاً پاس داده نشده باشه،
+    // بر اساس تم فعلی (روشن/تاریک) محاسبه می‌شه تا توی دارک مود لکه‌ی روشن نندازه
+    const resolvedLabelBg =
+      baseColorLabel ??
+      getThemeColor(theme.backgroundPaper, "rgb(244, 244, 244)");
 
     // استیت‌های مربوط به کنترل انیمیشن
     const [isFocused, setIsFocused] = useState(false);
@@ -168,7 +185,7 @@ const BaseInput = React.forwardRef<any, BaseInputProps>(
                 paddingHorizontal: 5,
                 backgroundColor:
                   isFloating && variant === "outline"
-                    ? baseColorLabel
+                    ? resolvedLabelBg
                     : "transparent",
               }}
               pointerEvents="none"

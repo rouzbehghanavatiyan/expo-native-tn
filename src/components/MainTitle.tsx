@@ -1,6 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { TouchableOpacity } from "react-native";
+import { Text, useTheme, View, XStack } from "tamagui";
+import { getThemeColor } from "../hook/getThemeColor";
 
 interface PropType {
   title: string;
@@ -12,60 +14,48 @@ interface PropType {
 const MainTitle: React.FC<PropType> = ({
   title,
   handleBack,
-  showBack = true,
   rightComponent,
 }) => {
-  // const router = useRouter();
-  // const onBack = handleBack ?? (showBack ? () => router.back() : undefined);
+  const theme = useTheme();
+  const iconColor = getThemeColor(theme.textSecondary, "#7b8377");
 
   return (
-    <View style={styles.container}>
-      <View style={styles.side}>
+    <XStack
+      height={35}
+      alignItems="center"
+      justifyContent="space-between"
+      bg="$backgroundPaper"
+      borderTopWidth={1}
+      borderBottomWidth={1}
+      borderColor="$divider"
+    >
+      <View width={50} justifyContent="center" alignItems="flex-start">
         {handleBack && (
-          <TouchableOpacity onPress={handleBack} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color="#7b8377" />
+          <TouchableOpacity
+            onPress={handleBack}
+            style={{ paddingHorizontal: 8 }}
+          >
+            <Ionicons name="arrow-back" size={24} color={iconColor} />
           </TouchableOpacity>
         )}
       </View>
 
-      <View style={styles.center}>
-        <Text style={styles.title}>{title}</Text>
+      <View flex={1} alignItems="center">
+        <Text
+          fontSize={15}
+          fontWeight="bold"
+          color="$textPrimary"
+          fontFamily="PlusJakartaSans"
+        >
+          {title}
+        </Text>
       </View>
 
-      <View style={styles.side}>{rightComponent}</View>
-    </View>
+      <View width={50} justifyContent="center" alignItems="flex-end">
+        {rightComponent}
+      </View>
+    </XStack>
   );
 };
 
 export default MainTitle;
-
-const styles = StyleSheet.create({
-  container: {
-    height: 35,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: "#f7f7f7",
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: "#e5e5e5",
-  },
-  side: {
-    width: 50,
-    justifyContent: "center",
-    alignItems: "flex-start",
-  },
-  backButton: {
-    paddingHorizontal: 8,
-  },
-  center: {
-    flex: 1,
-    alignItems: "center",
-  },
-  title: {
-    fontSize: 15,
-    fontWeight: "bold",
-    color: "#333",
-    fontFamily: "PlusJakartaSans",
-  },
-});

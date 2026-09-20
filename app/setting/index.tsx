@@ -1,50 +1,33 @@
+// جایگزین فایل صفحه‌ی Setting فعلی‌تون
 import BaseButton from "@/src/components/BaseButtom";
+import { Icon } from "@/src/components/Icon";
 import MainTitle from "@/src/components/MainTitle";
 import SoftLink from "@/src/components/SoftLink";
+import { useAppTheme } from "@/src/hook/ThemeContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Modal, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Switch, Text, View, XStack, YStack } from "tamagui";
+import { Text, View, XStack, YStack } from "tamagui";
 
 const THEME_STORAGE_KEY = "@app_theme";
 
 export default function SettingLayout() {
   const router = useRouter();
+  const { isDark, setThemeMode } = useAppTheme();
 
-  const [isDark, setIsDark] = useState(false);
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-
-  useEffect(() => {
-    const loadTheme = async () => {
-      try {
-        const savedTheme = await AsyncStorage.getItem(THEME_STORAGE_KEY);
-        if (savedTheme) {
-          setIsDark(savedTheme === "dark");
-        }
-      } catch (e) {
-        console.log("Error loading theme", e);
-      }
-    };
-    loadTheme();
-  }, []);
-
-  const handleToggleTheme = async (checked: boolean) => {
-    const themeMode = checked ? "dark" : "light";
-    setIsDark(checked);
-    await AsyncStorage.setItem(THEME_STORAGE_KEY, themeMode);
-    // dispatch(setTheme(themeMode));
-  };
 
   const handleLogoutConfirm = async () => {
     try {
       setIsLoggingOut(true);
-      const savedTheme = await AsyncStorage.getItem(THEME_STORAGE_KEY);
-      await AsyncStorage.clear();
-      if (savedTheme) {
-        await AsyncStorage.setItem(THEME_STORAGE_KEY, savedTheme);
+      // به‌جای clear() + دوباره نوشتنِ تم، فقط کلید تم رو نگه می‌داریم
+      const allKeys = await AsyncStorage.getAllKeys();
+      const keysToRemove = allKeys.filter((k) => k !== THEME_STORAGE_KEY);
+      if (keysToRemove.length) {
+        await AsyncStorage.multiRemove(keysToRemove);
       }
 
       setLogoutDialogOpen(false);
@@ -102,56 +85,60 @@ export default function SettingLayout() {
                   {/* Light Button */}
                   <XStack
                     tag="button"
-                    onPress={() => handleToggleTheme(false)}
-                    px="$2.5"
-                    py="$1.5"
-                    borderRadius="$10"
+                    onPress={() => setThemeMode("light")}
+                    px="$2"
+                    py="$1"
+                    borderRadius="$2"
                     borderWidth={!isDark ? 1.5 : 1}
-                    borderColor={!isDark ? "$blue9" : "$gray6"}
-                    bg={!isDark ? "$blue2" : "transparent"}
+                    borderColor={!isDark ? "$successMain" : "$grey300"}
                     ai="center"
                     jc="center"
+                    gap="$1.5"
                     pressStyle={{ opacity: 0.7 }}
                     animation="quick"
                     cursor="pointer"
                   >
+                    <Icon
+                      name="sunny"
+                      size={14}
+                      color={!isDark ? "#2e7d32" : "#757575"}
+                    />
                     <Text
-                      fontSize="$2"
+                      marginStart={3}
+                      fontSize="$3"
                       fontWeight={!isDark ? "700" : "500"}
-                      color={!isDark ? "$blue10" : "$gray9"}
+                      color={!isDark ? "$successMain" : "$grey800"}
                     >
                       Light
                     </Text>
                   </XStack>
 
-                  <Switch
-                    size="$2.5"
-                    checked={isDark}
-                    onCheckedChange={handleToggleTheme}
-                  >
-                    <Switch.Thumb animation="bouncy" />
-                  </Switch>
-
                   {/* Dark Button */}
                   <XStack
                     tag="button"
-                    onPress={() => handleToggleTheme(true)}
-                    px="$2.5"
-                    py="$1.5"
-                    borderRadius="$10"
+                    onPress={() => setThemeMode("dark")}
+                    px="$2"
+                    py="$1"
+                    borderRadius="$2"
                     borderWidth={isDark ? 1.5 : 1}
-                    borderColor={isDark ? "$blue9" : "$gray6"}
-                    bg={isDark ? "$blue2" : "transparent"}
+                    borderColor={isDark ? "$successMain" : "$grey300"}
                     ai="center"
                     jc="center"
+                    gap="$1.5"
                     pressStyle={{ opacity: 0.7 }}
                     animation="quick"
                     cursor="pointer"
                   >
+                    <Icon
+                      name="bedtime"
+                      size={14}
+                      color={isDark ? "#2e7d32" : "#757575"}
+                    />
                     <Text
-                      fontSize="$2"
+                      marginStart={3}
+                      fontSize="$3"
                       fontWeight={isDark ? "700" : "500"}
-                      color={isDark ? "$blue10" : "$gray9"}
+                      color={isDark ? "$successMain" : "$grey800"}
                     >
                       Dark
                     </Text>

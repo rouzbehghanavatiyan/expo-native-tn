@@ -10,11 +10,12 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { H2 } from "tamagui";
+import { H2, useTheme } from "tamagui";
 import AppLoading from "../components/AppLoading";
 import BaseInput from "../components/BaseInput";
 import { Icon } from "../components/Icon";
 import ImageRank from "../components/ImageRank";
+import { getThemeColor } from "../hook/getThemeColor";
 import { searchUser } from "../services/masterServices";
 import { unreadCount } from "../services/nestServices";
 import { clearUnreadCount, setUnreadMessagesCount } from "../slices/main";
@@ -27,6 +28,7 @@ const AppHeader = () => {
   const router = useRouter();
   const pathname: any = usePathname();
   const dispatch = useAppDispatch();
+  const theme = useTheme();
   const currentUser = useAppSelector((state) => state.main.userLogin?.user);
   const unreadMessagesCount = useAppSelector(
     (state) => state?.main?.unreadMessagesCount,
@@ -36,6 +38,18 @@ const AppHeader = () => {
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+
+  // رنگ‌های خام معادل تم فعلی، برای کامپوننت‌های خام React Native که توکن Tamagui نمی‌فهمن
+  const colors = useMemo(
+    () => ({
+      background: getThemeColor(theme.background, "#fff"),
+      backgroundPaper: getThemeColor(theme.backgroundPaper, "#fff"),
+      textPrimary: getThemeColor(theme.textPrimary, "#10153D"),
+      textSecondary: getThemeColor(theme.textSecondary, "#64748B"),
+      divider: getThemeColor(theme.divider, "#F1F5F9"),
+    }),
+    [theme],
+  );
 
   const routes = useMemo(
     () => ({
@@ -169,7 +183,7 @@ const AppHeader = () => {
               router.push("/chat");
             }}
             size={22}
-            color="#64748B"
+            color={colors.textSecondary}
           />
           {unreadMessagesCount > 0 && <View style={styles.badge} />}
         </View>
@@ -180,8 +194,8 @@ const AppHeader = () => {
   if (routes.isShowWatch) return null;
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
+    <View style={[styles.container]}>
+      <View style={[styles.header, { backgroundColor: colors.background }]}>
         <View
           style={[
             styles.leftSection,
@@ -208,12 +222,17 @@ const AppHeader = () => {
                   }}
                   hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 >
-                  <Icon name="search" size={16} color="#64748B" />
+                  <Icon name="search" size={16} color={colors.textSecondary} />
                 </TouchableOpacity>
               }
             />
           ) : (
-            <H2 style={styles.logo} fontFamily="$logo" color="$textPrimary">
+            <H2
+              fontFamily="$logo"
+              fontSize={20}
+              fontWeight="bold"
+              color="$textPrimary"
+            >
               {headerTitle}
             </H2>
           )}
@@ -221,7 +240,11 @@ const AppHeader = () => {
 
         {routes.isProfile ? (
           <TouchableOpacity onPress={() => router.push("/setting")}>
-            <Ionicons name="settings-outline" size={22} color="#10153D" />
+            <Ionicons
+              name="settings-outline"
+              size={22}
+              color={colors.textPrimary}
+            />
           </TouchableOpacity>
         ) : (
           <ActionIcons />
@@ -240,7 +263,15 @@ const AppHeader = () => {
               style={StyleSheet.absoluteFill}
               onPress={() => setShowDropdown(false)}
             />
-            <View style={styles.dropdownBox}>
+            <View
+              style={[
+                styles.dropdownBox,
+                {
+                  backgroundColor: colors.backgroundPaper,
+                  borderColor: colors.divider,
+                },
+              ]}
+            >
               {isLoading ? (
                 <View style={styles.dropdownLoading}>
                   <AppLoading />
@@ -258,7 +289,10 @@ const AppHeader = () => {
                   showsVerticalScrollIndicator={true}
                   renderItem={({ item }) => (
                     <TouchableOpacity
-                      style={styles.resultItem}
+                      style={[
+                        styles.resultItem,
+                        { borderBottomColor: colors.divider },
+                      ]}
                       onPress={() => handleSelectUser(item)}
                       activeOpacity={0.7}
                     >
@@ -267,7 +301,12 @@ const AppHeader = () => {
                         imgSrc={getImageUrl(item?.profile)}
                         imgSize={35}
                       />
-                      <Text style={styles.resultText}>
+                      <Text
+                        style={[
+                          styles.resultText,
+                          { color: colors.textPrimary },
+                        ]}
+                      >
                         {item?.userName ||
                           item?.fullName ||
                           item?.title ||
@@ -278,7 +317,14 @@ const AppHeader = () => {
                 />
               ) : (
                 <View style={styles.dropdownEmpty}>
-                  <Text style={styles.dropdownEmptyText}>Not found</Text>
+                  <Text
+                    style={[
+                      styles.dropdownEmptyText,
+                      { color: colors.textSecondary },
+                    ]}
+                  >
+                    Not found
+                  </Text>
                 </View>
               )}
             </View>
@@ -298,7 +344,6 @@ const styles = StyleSheet.create({
   },
   header: {
     height: 40,
-    backgroundColor: "#fff",
     paddingHorizontal: 16,
     flexDirection: "row",
     alignItems: "center",
@@ -311,14 +356,6 @@ const styles = StyleSheet.create({
   },
   leftSection: {
     flexDirection: "row",
-    alignItems: "center",
-  },
-  logo: {
-    fontFamily: "logoFont",
-    fontSize: 20,
-    color: "#10153D",
-    fontWeight: "bold",
-    display: "flex",
     alignItems: "center",
   },
   iconContainer: {
@@ -339,9 +376,7 @@ const styles = StyleSheet.create({
     paddingTop: 70,
     paddingHorizontal: 16,
   },
-
   dropdownBox: {
-    backgroundColor: "#fff",
     borderEndEndRadius: 10,
     borderBottomLeftRadius: 10,
     maxHeight: 260,
@@ -351,7 +386,6 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 12,
     borderWidth: 1,
-    borderColor: "#F1F5F9",
     overflow: "hidden",
   },
   dropdownList: {
@@ -366,12 +400,10 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#F1F5F9",
     gap: 8,
   },
   resultText: {
     fontSize: 14,
-    color: "#1E293B",
   },
   dropdownLoading: {
     flexDirection: "row",
@@ -386,6 +418,5 @@ const styles = StyleSheet.create({
   },
   dropdownEmptyText: {
     fontSize: 13,
-    color: "#94A3B8",
   },
 });
