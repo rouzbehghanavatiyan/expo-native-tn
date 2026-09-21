@@ -1,13 +1,10 @@
-import { palette } from "@/src/theme/color";
-import { Appearance } from "@/src/utils/styleResolvers";
 import React, { forwardRef } from "react";
-import { Button, Spinner, styled } from "tamagui";
-import { BaseButtonProps, ColorType } from "./type";
+import { Button, ButtonProps, Spinner, styled, Text, useTheme } from "tamagui";
+import { ColorType } from "./type";
 
 const StyledButton = styled(Button, {
   name: "BaseButton",
   borderRadius: "$3",
-  borderWidth: 1,
   height: "$10",
   justifyContent: "center",
   alignItems: "center",
@@ -16,9 +13,9 @@ const StyledButton = styled(Button, {
   },
 });
 
-export interface BaseButtonProps {
+export interface BaseButtonProps extends Omit<ButtonProps, "color"> {
   appearance?: "solid" | "outline" | "ghost";
-  colorType?: ColorType;
+  colorType?: ColorType | "neutral";
   loading?: boolean;
   fullWidth?: boolean;
   disabled?: boolean;
@@ -27,36 +24,6 @@ export interface BaseButtonProps {
   noBg?: boolean;
   children?: React.ReactNode;
 }
-
-const getVariantStyles = (
-  appearance: Appearance,
-  color: ReturnType<typeof getPalette>,
-) => {
-  switch (appearance) {
-    case "outline":
-      return {
-        backgroundColor: "transparent",
-        borderColor: color.border,
-        color: color.text,
-      };
-
-    case "ghost":
-      return {
-        backgroundColor: "transparent",
-        borderColor: "transparent",
-        color: color.text,
-      };
-
-    default:
-      return {
-        backgroundColor: color.bg,
-        borderColor: color.border,
-        color: color.contrast ?? "white",
-      };
-  }
-};
-
-const getPalette = (colorType: ColorType) => palette[colorType];
 
 export const BaseButton = forwardRef<any, BaseButtonProps>(
   (
@@ -74,9 +41,73 @@ export const BaseButton = forwardRef<any, BaseButtonProps>(
     },
     ref,
   ) => {
-    const color = getPalette(colorType);
-    const styles = getVariantStyles(appearance, color);
+    const theme = useTheme();
     const isDisabled = disabled || loading;
+
+    const resolveStyles = () => {
+      if (colorType === "neutral" || colorType === "secondary") {
+        switch (appearance) {
+          case "outline":
+            return {
+              bg: "transparent",
+              border: "$borderColor",
+              borderWidth: 1,
+              text: "$color",
+              spinnerText: theme.color?.get() || "#fff",
+            };
+          case "ghost":
+            return {
+              bg: "transparent",
+              border: "transparent",
+              borderWidth: 0,
+              text: "$color",
+              spinnerText: theme.color?.get() || "#fff",
+            };
+          case "solid":
+          default:
+            return {
+              bg: noBg ? "transparent" : "$backgroundPaper",
+              border: bordered ? "$borderColor" : "transparent",
+              borderWidth: bordered ? 1 : 0,
+              text: "$color",
+              spinnerText: theme.color?.get() || "#fff",
+            };
+        }
+      }
+
+      // ۲. دکمه‌های رنگی اصلی (Primary, Error, Success, ...)
+      const mainToken = `$${colorType}Main` as any;
+
+      switch (appearance) {
+        case "outline":
+          return {
+            bg: "transparent",
+            border: mainToken,
+            borderWidth: 1,
+            text: mainToken,
+            spinnerText: theme[`${colorType}Main`]?.get() || "#fff",
+          };
+        case "ghost":
+          return {
+            bg: "transparent",
+            border: "transparent",
+            borderWidth: 0,
+            text: mainToken,
+            spinnerText: theme[`${colorType}Main`]?.get() || "#fff",
+          };
+        case "solid":
+        default:
+          return {
+            bg: noBg ? "transparent" : mainToken,
+            border: bordered ? "$borderColor" : mainToken,
+            borderWidth: bordered ? 1 : 0,
+            text: "white",
+            spinnerText: "white",
+          };
+      }
+    };
+
+    const computed = resolveStyles();
 
     return (
       <StyledButton
@@ -84,20 +115,21 @@ export const BaseButton = forwardRef<any, BaseButtonProps>(
         disabled={isDisabled}
         width={fullWidth ? "100%" : undefined}
         opacity={isDisabled ? 0.6 : 1}
-        borderWidth={bordered ? 1 : 0}
-        backgroundColor={noBg ? "transparent" : styles.backgroundColor}
-        borderColor={bordered ? styles.borderColor : "transparent"}
-        color={styles.color}
+        backgroundColor={computed.bg}
+        borderColor={computed.border}
+        borderWidth={computed.borderWidth}
         icon={
-          loading ? (
-            <Spinner color={appearance === "solid" ? "white" : color.text} />
-          ) : (
-            icon
-          )
+          loading ? <Spinner color={computed.spinnerText} size="small" /> : icon
         }
         {...rest}
       >
-        {children}
+        {typeof children === "string" ? (
+          <Text color={computed.text as any} fontSize="$3" fontWeight="600">
+            {children}
+          </Text>
+        ) : (
+          children
+        )}
       </StyledButton>
     );
   },

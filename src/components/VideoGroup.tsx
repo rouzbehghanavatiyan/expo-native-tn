@@ -18,7 +18,7 @@ const VideoGroup = ({ group, onPress }: any) => {
 
   return (
     <TouchableOpacity style={styles.container} onPress={onPress}>
-      <View style={styles.centerContainer} pointerEvents="none">
+      {/* <View style={styles.centerContainer} pointerEvents="none">
         {matchTime ? (
           <>
             <View style={styles.iconCircle}>
@@ -37,8 +37,14 @@ const VideoGroup = ({ group, onPress }: any) => {
             </View>
           )
         )}
+      </View> */}
+      <View style={styles.centerContainer} pointerEvents="none">
+        {matchTime && (
+          <View style={styles.iconCircle}>
+            <Icon name="hourglassBottom" size={20} color="white" />
+          </View>
+        )}
       </View>
-
       <Image
         source={imageTop ? { uri: imageTop } : undefined}
         style={styles.imageTop}

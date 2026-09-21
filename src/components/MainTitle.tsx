@@ -39,7 +39,6 @@ const MainTitle: React.FC<PropType> = ({
           </TouchableOpacity>
         )}
       </View>
-
       <View flex={1} alignItems="center">
         <Text
           fontSize={15}

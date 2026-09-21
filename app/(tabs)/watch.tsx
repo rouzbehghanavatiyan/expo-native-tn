@@ -2,6 +2,7 @@ import { DeactivatedModal } from "@/src/common/DeactivatedModal";
 import { MatchTimeoutModal } from "@/src/common/MatchTimeoutModal";
 import { stopMatchTimer } from "@/src/components/TimerForFindMatch";
 import VideoGroup from "@/src/components/VideoGroup";
+import { getThemeColor } from "@/src/hook/getThemeColor";
 import { attachmentList } from "@/src/services/masterServices";
 import {
   appendWatchData,
@@ -12,11 +13,14 @@ import {
 import { useAppDispatch, useAppSelector } from "@/src/store/reduxHookType";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, StyleSheet, View } from "react-native";
+import { FlatList, RefreshControl } from "react-native";
+import { Spinner, useTheme, View, YStack } from "tamagui";
 
 export default function WatchScreen() {
+  const theme = useTheme();
   const router = useRouter();
   const dispatch = useAppDispatch();
+
   const { pagination, data } = useAppSelector((state) => state.main.watchVideo);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -28,6 +32,9 @@ export default function WatchScreen() {
   const showDeactivatedModal = useAppSelector(
     (state) => state?.video?.showDeactivatedModal,
   );
+
+  const primaryColor = getThemeColor(theme.primary, "#007AFF");
+  const spinnerColor = getThemeColor(theme.color, "$color");
 
   const generateNewSeed = () => Math.floor(Math.random() * 1000000);
 
@@ -112,7 +119,7 @@ export default function WatchScreen() {
 
   return (
     <>
-      <View style={styles.container}>
+      <View flex={1} bg="$background">
         <FlatList
           data={data}
           numColumns={2}
@@ -121,8 +128,14 @@ export default function WatchScreen() {
               ? String(item.inviteInserted.id)
               : index.toString()
           }
-          refreshing={refreshing}
-          onRefresh={onRefresh}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={primaryColor}
+              colors={[primaryColor]}
+            />
+          }
           renderItem={({ item, index }) => (
             <VideoGroup
               group={item}
@@ -133,7 +146,11 @@ export default function WatchScreen() {
           onEndReached={() => handleGetAllMatch(false)}
           onEndReachedThreshold={0.5}
           ListFooterComponent={
-            loading && !refreshing ? <ActivityIndicator size="large" /> : null
+            loading && !refreshing ? (
+              <YStack py="$4" alignItems="center" justifyContent="center">
+                <Spinner size="large" color={spinnerColor} />
+              </YStack>
+            ) : null
           }
         />
       </View>
@@ -142,9 +159,3 @@ export default function WatchScreen() {
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-});

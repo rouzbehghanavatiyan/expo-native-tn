@@ -1,6 +1,7 @@
 import { Icon } from "@/src/components/Icon";
 import VideoSkeleton from "@/src/components/VideoSkeleton";
 import ShowWatchSlide from "@/src/components/VideoSlide";
+import { getThemeColor } from "@/src/hook/getThemeColor";
 import { useShowWatch } from "@/src/hook/useShowWatch";
 import { followerAttachmentList } from "@/src/services/masterServices";
 import {
@@ -13,17 +14,20 @@ import { useHeaderHeight } from "@react-navigation/elements";
 import { FlashList } from "@shopify/flash-list";
 import { useRouter } from "expo-router";
 import React, { useCallback, useRef, useState } from "react";
+import { Platform, useWindowDimensions } from "react-native";
 import {
-  Platform,
-  StyleSheet,
+  Button,
+  Paragraph,
   Text,
-  TouchableOpacity,
-  useWindowDimensions,
+  useTheme,
   View,
-} from "react-native";
+  XStack,
+  YStack,
+} from "tamagui";
 import Comments from "../comments";
 
 const HomeScreen: React.FC = () => {
+  const theme = useTheme();
   const hasFetchedOnce = useRef(false);
   const main = useAppSelector((state) => state.main);
   const { pagination, data: reduxData } = main.homeMatch;
@@ -32,6 +36,8 @@ const HomeScreen: React.FC = () => {
   const { width, height } = useWindowDimensions();
   const headerHeight = useHeaderHeight();
   const router = useRouter();
+
+  const primaryColor = getThemeColor(theme.primary, "#4F46E5");
 
   const usableHeight =
     height - headerHeight - (Platform.OS === "android" ? 32 : 0);
@@ -156,37 +162,89 @@ const HomeScreen: React.FC = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <View flex={1} bg="$background">
       {showInitialLoader ? (
         <VideoSkeleton count={1} section="itsHome" isSwapper={false} />
       ) : showEmptyState ? (
-        <View style={styles.emptyWrapper}>
-          <View style={styles.emptyCard}>
-            <View style={styles.iconContainer}>
-              <View style={styles.iconInner}>
-                <Icon name="locationSearching" size={32} color="#4F46E5" />
+        <YStack flex={1} ai="center" jc="center" px="$6">
+          <YStack
+            w="100%"
+            maxWidth={360}
+            bg="$backgroundPaper"
+            borderRadius={50}
+            py="$6"
+            px="$6"
+            ai="center"
+          >
+            <View
+              w={80}
+              h={80}
+              borderRadius={40}
+              bg="$primaryLight"
+              ai="center"
+              jc="center"
+              mb="$5"
+            >
+              <View
+                w={60}
+                h={60}
+                borderRadius={30}
+                bg="$primaryHover"
+                ai="center"
+                jc="center"
+              >
+                <Icon name="locationSearching" size={32} color={primaryColor} />
               </View>
             </View>
 
-            <Text style={styles.emptyTitle}>No Content Available</Text>
-
-            <Text style={styles.emptyText}>
-              There are no posts from your followers right now. Visit the Watch
-              page to discover new content and creators!
+            <Text
+              fontSize="$5"
+              fontWeight="700"
+              color="$color"
+              mb="$2"
+              textAlign="center"
+              letterSpacing={-0.3}
+            >
+              No Content Available
             </Text>
 
-            <TouchableOpacity
-              style={styles.emptyButton}
-              activeOpacity={0.8}
-              onPress={handleRedirectWatch}
+            <Paragraph
+              fontSize="$3"
+              lineHeight={22}
+              color="$colorMuted"
+              textAlign="center"
+              mb="$6"
             >
-              <Icon name="start" color="white" />
-              <Text style={styles.emptyButtonText}>Watch</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+              There are no posts from your followers right now. Visit the Watch
+              page to discover new content and creators!
+            </Paragraph>
+
+            <Button
+              w="100%"
+              h={48}
+              bg="$indigoLight"
+              pressStyle={{ opacity: 0.8 }}
+              borderRadius="$4"
+              ai="center"
+              jc="center"
+              onPress={handleRedirectWatch}
+              shadowColor="$primary"
+              shadowOffset={{ width: 0, height: 4 }}
+              shadowOpacity={0.25}
+              shadowRadius={8}
+              elevation={3}
+            >
+              <XStack gap="$2" ai="center" jc="center">
+                <Icon name="start" color="$backgroundPaper" />
+                <Text fontSize={15} fontWeight="600" color="$backgroundPaper">
+                  Watch
+                </Text>
+              </XStack>
+            </Button>
+          </YStack>
+        </YStack>
       ) : (
-        <View style={{ flex: 1, width, height: usableHeight }}>
+        <View flex={1} width={width} height={usableHeight}>
           <FlashList
             data={data || []}
             extraData={currentlyPlayingId}
@@ -200,7 +258,7 @@ const HomeScreen: React.FC = () => {
             viewabilityConfig={viewabilityConfig}
             onViewableItemsChanged={onViewableItemsChanged}
             renderItem={({ item, index }) => (
-              <View style={{ width, height: usableHeight }}>
+              <View width={width} height={usableHeight}>
                 <ShowWatchSlide
                   itemHeight={usableHeight}
                   showLiked={false}
@@ -225,7 +283,12 @@ const HomeScreen: React.FC = () => {
       )}
       {showComments && (
         <View
-          style={[StyleSheet.absoluteFillObject, { zIndex: 9999 }]}
+          position="absolute"
+          top={0}
+          left={0}
+          right={0}
+          bottom={0}
+          zIndex={9999}
           pointerEvents="auto"
         >
           <Comments
@@ -240,87 +303,5 @@ const HomeScreen: React.FC = () => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#F3F4F6", // پس‌زمینه خنثی و تمیزتر
-  },
-  emptyWrapper: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 24,
-  },
-  emptyCard: {
-    width: "100%",
-    maxWidth: 360,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 24,
-    paddingVertical: 32,
-    paddingHorizontal: 24,
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#EEF2F6",
-    shadowColor: "#0F172A",
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.07,
-    shadowRadius: 20,
-    elevation: 4,
-  },
-  iconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: "#EEF2FF", // رنگ پس‌زمینه بنفش/آبی ملایم
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 20,
-  },
-  iconInner: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: "#E0E7FF",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  emptyTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#0F172A",
-    marginBottom: 8,
-    textAlign: "center",
-    letterSpacing: -0.3,
-  },
-  emptyText: {
-    fontSize: 14,
-    lineHeight: 22,
-    color: "#64748B", // کنتراست بهتر برای خوانایی نسبت به رنگ قبلی
-    textAlign: "center",
-    marginBottom: 24,
-  },
-  emptyButton: {
-    width: "100%",
-    flexDirection: "row",
-    gap: 8,
-    backgroundColor: "#4F46E5",
-    paddingVertical: 13,
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: "#4F46E5",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-
-  emptyButtonText: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#FFFFFF",
-  },
-});
 
 export default HomeScreen;

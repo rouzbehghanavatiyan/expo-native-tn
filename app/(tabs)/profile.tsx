@@ -59,8 +59,6 @@ const Profile: React.FC = () => {
     }
   }, [params.userData]);
 
-  logger.info("params", userIdWhantToShow);
-
   const myVideosInRedux =
     useAppSelector((state) => state?.main?.profileVideo) || [];
   const userLogin = useAppSelector((state) => state?.main?.userLogin);
@@ -320,6 +318,8 @@ const Profile: React.FC = () => {
     };
   }, []);
 
+  const handlePickMedia = () => {};
+
   useEffect(() => {
     const score = userIdWhantToShow?.score || userLogin?.score || 0;
     let calc = score <= 100 ? score : score % 100 || 100;
@@ -390,11 +390,9 @@ const Profile: React.FC = () => {
       currentProfile,
     ],
   );
-
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: screenBackground }}>
-      {/* این بخش، محل نمایش ویدیوهاست و همیشه پس‌زمینه‌ی مشکی داره؛ عمداً از تم روشن/تاریک اپ مستقل نگه داشته شده */}
-      <YStack f={1} bg="$black">
+      <YStack f={1} bg="$backgroundPaper">
         <FlatList
           data={allVideoData || []}
           keyExtractor={(item, index) =>
@@ -417,10 +415,6 @@ const Profile: React.FC = () => {
                 mx={20}
                 px={24}
                 py={36}
-                borderRadius={24}
-                backgroundColor="rgba(255, 255, 255, 0.03)"
-                borderWidth={1}
-                borderColor="#4F46E5"
                 shadowColor="#000"
                 shadowOffset={{ width: 0, height: 12 }}
                 shadowOpacity={0.35}
@@ -428,11 +422,11 @@ const Profile: React.FC = () => {
                 gap={20}
                 pressStyle={{ opacity: 0.85, scale: 0.98 }}
                 cursor="pointer"
-                // onPress={(e: any) => {
-                //   if (!isMyProfile) return;
-                //   e.preventDefault();
-                //   handlePickMedia();
-                // }}
+                onPress={(e: any) => {
+                  if (!isMyProfile) return;
+                  e.preventDefault();
+                  handlePickMedia();
+                }}
               >
                 <View
                   width={76}

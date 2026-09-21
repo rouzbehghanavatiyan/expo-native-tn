@@ -1,8 +1,13 @@
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
-import React, { forwardRef, useCallback } from "react";
+import React, { forwardRef, useCallback, useEffect, useState } from "react";
 import { Text, View, XStack, YStack } from "tamagui";
-import { addAttachment, profileAttachment } from "../services/masterServices";
+import {
+  addAttachment,
+  addFollower,
+  profileAttachment,
+  removeFollower,
+} from "../services/masterServices";
 import { RsetUserLogin } from "../slices/main";
 import { useAppDispatch, useAppSelector } from "../store/reduxHookType";
 import { getImageUrl } from "../utils/fileHelper";
@@ -33,7 +38,6 @@ const ProfileHeader = forwardRef(
       followersCount,
       followingCount,
       setProfileImage,
-
       onFollowToggle,
       isFollowLoading = false,
     }: ProfileHeaderProps,
@@ -43,6 +47,15 @@ const ProfileHeader = forwardRef(
     const main = useAppSelector((state) => state?.main);
     const userId = main?.userLogin?.user?.id;
     const router = useRouter();
+
+    const [localIsFollowed, setLocalIsFollowed] = useState<boolean>(
+      Boolean(currentProfile?.isFollowedByMe),
+    );
+    const [isLoadingFollow, setIsLoadingFollow] = useState<boolean>(false);
+
+    useEffect(() => {
+      setLocalIsFollowed(Boolean(currentProfile?.isFollowedByMe));
+    }, [currentProfile?.isFollowedByMe]);
 
     const handleImageProfileUpload = useCallback(async () => {
       if (!isMyProfile) return;
@@ -95,25 +108,26 @@ const ProfileHeader = forwardRef(
     }, [userId, dispatch, setProfileImage, isMyProfile]);
 
     const handleFallowClick = async () => {
-      // const userIdFollow =
-      //   positionVideo === 0 ? video?.userInserted?.id : video?.userMatched?.id;
-      // const postData = {
-      //   userId: userIdLogin || null,
-      //   followerId: userIdFollow || null,
-      // };
-      // try {
-      //   setIsLoadingFollow(true);
-      //   if (localIsFollowed) {
-      //     await removeFollower(postData);
-      //   } else {
-      //     await addFollower(postData);
-      //   }
-      //   setLocalIsFollowed(!localIsFollowed);
-      // } catch (error) {
-      //   console.error("Error in follow operation:", error);
-      // } finally {
-      //   setIsLoadingFollow(false);
-      // }
+      if (isLoadingFollow) return;
+      const userIdFollow = currentProfile?.id;
+      const postData = {
+        userId: userId || null,
+        followerId: userIdFollow || null,
+      };
+      try {
+        setIsLoadingFollow(true);
+        if (localIsFollowed) {
+          await removeFollower(postData);
+        } else {
+          await addFollower(postData);
+        }
+        setLocalIsFollowed((prev) => !prev);
+        onFollowToggle?.();
+      } catch (error) {
+        console.error("Error in follow operation:", error);
+      } finally {
+        setIsLoadingFollow(false);
+      }
     };
 
     const handleSendMessage = () => {
@@ -207,7 +221,6 @@ const ProfileHeader = forwardRef(
                 mt="$1"
               >
                 <View
-                  onPress={onFollowToggle}
                   cursor="pointer"
                   borderRadius="$4"
                   minWidth={100}
@@ -216,13 +229,11 @@ const ProfileHeader = forwardRef(
                 >
                   <Follows
                     onFollowClick={handleFallowClick}
-                    title={
-                      currentProfile?.isFollowedByMe ? "Unfollow" : "Follow"
-                    }
+                    title={localIsFollowed ? "Unfollow" : "Follow"}
                   />
                 </View>
                 <View
-                  onPress={() => handleSendMessage(currentProfile)}
+                  onPress={handleSendMessage}
                   cursor="pointer"
                   borderRadius="$4"
                   minWidth={100}

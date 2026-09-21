@@ -6,11 +6,10 @@ import {
   Modal,
   Pressable,
   StyleSheet,
-  Text,
   TouchableOpacity,
   View,
 } from "react-native";
-import { H2, useTheme } from "tamagui";
+import { Text, useTheme } from "tamagui";
 import AppLoading from "../components/AppLoading";
 import BaseInput from "../components/BaseInput";
 import { Icon } from "../components/Icon";
@@ -39,14 +38,17 @@ const AppHeader = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
 
-  // رنگ‌های خام معادل تم فعلی، برای کامپوننت‌های خام React Native که توکن Tamagui نمی‌فهمن
   const colors = useMemo(
     () => ({
       background: getThemeColor(theme.background, "#fff"),
-      backgroundPaper: getThemeColor(theme.backgroundPaper, "#fff"),
-      textPrimary: getThemeColor(theme.textPrimary, "#10153D"),
-      textSecondary: getThemeColor(theme.textSecondary, "#64748B"),
+      backgroundPaper: getThemeColor(theme.backgroundPaper, "#1e1e2d"),
+      textPrimary: getThemeColor(theme.textPrimary ?? theme.color, "#10153D"),
+      textSecondary: getThemeColor(
+        theme.textSecondary ?? theme.colorMuted,
+        "#64748B",
+      ),
       divider: getThemeColor(theme.divider, "#F1F5F9"),
+      borderColor: getThemeColor(theme.borderColor, "#334155"),
     }),
     [theme],
   );
@@ -67,7 +69,7 @@ const AppHeader = () => {
     "/profile": "Profile",
     "/notification": "Notifications",
   };
-  const headerTitle = titleMap[pathname] || "Clash Talent";
+  const headerTitle = titleMap[pathname] || "Star Faceoff";
 
   useEffect(() => {
     if (!searchQuery.trim()) {
@@ -116,7 +118,7 @@ const AppHeader = () => {
       bio: user?.bio ?? user?.user?.bio ?? "",
       isFollowedByMe: user?.isFollowedByMe,
     };
-    logger.info("HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH", user);
+    logger.info("Selected user:", user);
     router.push({
       pathname: "/profile",
       params: {
@@ -211,6 +213,10 @@ const AppHeader = () => {
               onChangeText={setSearchQuery}
               returnKeyType="search"
               fontSize={13}
+              backgroundColor={colors.backgroundPaper}
+              borderColor={colors.borderColor}
+              placeholderTextColor={colors.textSecondary}
+              color={colors.textPrimary}
               rightIcon={
                 <TouchableOpacity
                   onPress={() => {
@@ -227,14 +233,20 @@ const AppHeader = () => {
               }
             />
           ) : (
-            <H2
-              fontFamily="$logo"
+            // <H2
+            //   fontFamily="$logo"
+            //   fontSize={20}
+            //   fontWeight="bold"
+            //   color="$textPrimary"
+            // >
+            // </H2>
+            <Text
               fontSize={20}
-              fontWeight="bold"
               color="$textPrimary"
+              style={{ fontFamily: "HandleeRegular" }}
             >
               {headerTitle}
-            </H2>
+            </Text>
           )}
         </View>
 
@@ -268,7 +280,7 @@ const AppHeader = () => {
                 styles.dropdownBox,
                 {
                   backgroundColor: colors.backgroundPaper,
-                  borderColor: colors.divider,
+                  borderColor: colors.borderColor,
                 },
               ]}
             >
@@ -291,7 +303,7 @@ const AppHeader = () => {
                     <TouchableOpacity
                       style={[
                         styles.resultItem,
-                        { borderBottomColor: colors.divider },
+                        { borderBottomColor: colors.borderColor },
                       ]}
                       onPress={() => handleSelectUser(item)}
                       activeOpacity={0.7}
@@ -343,7 +355,7 @@ const styles = StyleSheet.create({
     zIndex: 99,
   },
   header: {
-    height: 40,
+    height: 35,
     paddingHorizontal: 16,
     flexDirection: "row",
     alignItems: "center",

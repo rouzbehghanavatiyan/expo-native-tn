@@ -15,11 +15,12 @@ import tamaguiConfig from "../tamagui.config";
 import AppInitializer from "./AppInitializer";
 
 function AppShell() {
-  // themeMode از AsyncStorage خونده می‌شه، پیش‌فرضش "dark" هست (داخل ThemeContext)
   const { themeMode, isThemeLoading } = useAppTheme();
 
   const [fontsLoaded] = useFonts({
-    logoFont: require("../src/assets/fonts/DancingScript-Regular.ttf"),
+    HandleeRegular: require("../src/assets/fonts/logoFont/Handlee-Regular.ttf"),
+    OleoScriptBold: require("../src/assets/fonts/logoFont/OleoScript-Bold.ttf"),
+
     playFair: require("../src/assets/fonts/PlayfairDisplay-Italic-VariableFont_wght.ttf"),
     PlusJakartaSans: require("../src/assets/fonts/PlusJakartaSans-Regular.ttf"),
     Vazirmatn: require("../src/assets/fonts/Vazirmatn-Regular.ttf"),
@@ -27,7 +28,6 @@ function AppShell() {
     VazirmatnBold: require("../src/assets/fonts/Vazirmatn-Bold.ttf"),
   });
 
-  // تا وقتی فونت‌ها یا تم لود نشدن، یه اسپلش ساده با پس‌زمینه‌ی متناسب با تم نشون بده
   if (!fontsLoaded || isThemeLoading) {
     return (
       <TamaguiProvider config={tamaguiConfig} defaultTheme={themeMode}>
@@ -43,15 +43,15 @@ function AppShell() {
     );
   }
 
+  const isDark = themeMode === "dark";
+
   return (
-    // defaultTheme فقط برای رندر اولیه/SSR استفاده می‌شه؛ سوییچ داینامیک واقعی
-    // با کامپوننت <Theme name={...}> انجام می‌شه، نه با یه prop روی TamaguiProvider
     <TamaguiProvider config={tamaguiConfig} defaultTheme={themeMode}>
       <Theme name={themeMode}>
         <StatusBar
-          style={themeMode === "dark" ? "light" : "dark"}
-          backgroundColor="transparent"
-          translucent={true}
+          style={isDark ? "light" : "dark"}
+          backgroundColor={isDark ? "#000000" : "transparent"}
+          translucent={!isDark}
         />
         <SafeAreaProvider>
           <Provider store={store}>

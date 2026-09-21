@@ -1,25 +1,32 @@
-import BlackTalent from "@/src/assets/images/black.png";
-import WhiteTalent from "@/src/assets/images/white.png";
 import AppHeader from "@/src/header/AppHeader";
+import { getThemeColor } from "@/src/hook/getThemeColor";
 import { useAppSelector } from "@/src/store/reduxHookType";
 import * as ImagePicker from "expo-image-picker";
 import { Tabs, usePathname, useRouter } from "expo-router";
 import React from "react";
-import { Alert, Image, View } from "react-native";
+import { Alert } from "react-native";
 import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
-import { useSelector } from "react-redux";
-import { YStack } from "tamagui";
+import { useTheme, View, YStack } from "tamagui";
 
 export default function TabLayout() {
+  const theme = useTheme();
   const userInfo = useAppSelector((state) => state.main?.userLogin);
   const pathname = usePathname();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const main = useSelector((state: any) => state.main);
-  const userLoginId = main?.userLogin?.user?.id || main?.userLogin?.userId;
+  const userLoginId = userInfo?.user?.id || userInfo?.userId;
+
+  // Theme-aware color resolutions
+  const activeColor = getThemeColor(theme.color, "#000000");
+  const inactiveColor = getThemeColor(theme.primary, "#225db5");
+  const tabBgColor = getThemeColor(theme.background, "#ffffff");
+  const borderColor = getThemeColor(theme.borderColor, "#d8d8d8");
+  const activeDotBg = getThemeColor(theme.background, "#ffffff");
+  const activeInnerDot = getThemeColor(theme.color, "#000000");
+  const inactiveInnerDot = getThemeColor(theme.background, "#ffffff");
 
   const isWatchTab =
     pathname === "/home" ||
@@ -27,17 +34,7 @@ export default function TabLayout() {
     pathname.includes("/watch/show");
 
   const DotIcon = ({ color }: { color: string }) => {
-    const dotSize = 8;
-    return (
-      <View
-        style={{
-          width: dotSize,
-          height: dotSize,
-          borderRadius: dotSize / 2,
-          backgroundColor: color,
-        }}
-      />
-    );
+    return <View w={8} h={8} borderRadius={4} bg={color} />;
   };
 
   const handlePickMedia = async () => {
@@ -76,20 +73,21 @@ export default function TabLayout() {
 
   return (
     <SafeAreaView style={{ flex: 1 }} edges={["top", "left", "right"]}>
-      <YStack f={1}>
+      <YStack f={1} bg="$background">
         {!isWatchTab && <AppHeader />}
         <Tabs
           screenOptions={{
             headerShown: false,
             tabBarShowLabel: false,
-            tabBarActiveTintColor: "black",
+            tabBarActiveTintColor: activeColor,
+            tabBarInactiveTintColor: inactiveColor,
             tabBarStyle: {
               height: 24 + insets.bottom,
               paddingTop: 0,
               paddingBottom: 30 + insets.bottom,
-              backgroundColor: "#fff",
+              backgroundColor: tabBgColor,
               borderTopWidth: 0.5,
-              borderTopColor: "#E5E5E5",
+              borderTopColor: borderColor,
               elevation: 0,
             },
             tabBarItemStyle: {
@@ -120,28 +118,26 @@ export default function TabLayout() {
               },
             }}
             options={{
-              tabBarIcon: ({ color, size, focused }) => {
+              tabBarIcon: ({ focused }) => {
                 const containerSize = 19;
-                const imageSize = 20;
+                const dotSize = 6;
                 return (
                   <YStack
                     width={containerSize}
                     height={containerSize}
                     borderRadius={containerSize / 2}
-                    backgroundColor={focused ? "white" : "$grey700"}
-                    justifyContent="center"
-                    alignItems="center"
-                    borderColor={"#e5e7eb"}
+                    bg={focused ? activeDotBg : inactiveColor}
+                    jc="center"
+                    ai="center"
+                    borderColor="$borderColor"
+                    borderWidth={1}
                     overflow="visible"
                   >
-                    <Image
-                      source={focused ? BlackTalent : WhiteTalent}
-                      style={{
-                        width: imageSize,
-                        height: imageSize,
-                        position: "absolute",
-                      }}
-                      resizeMode="contain"
+                    <View
+                      w={dotSize}
+                      h={dotSize}
+                      borderRadius={dotSize / 2}
+                      bg={focused ? activeInnerDot : inactiveInnerDot}
                     />
                   </YStack>
                 );

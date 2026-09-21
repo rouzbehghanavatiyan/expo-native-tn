@@ -1,4 +1,3 @@
-// جایگزین فایل صفحه‌ی Setting فعلی‌تون
 import BaseButton from "@/src/components/BaseButtom";
 import { Icon } from "@/src/components/Icon";
 import MainTitle from "@/src/components/MainTitle";
@@ -16,14 +15,12 @@ const THEME_STORAGE_KEY = "@app_theme";
 export default function SettingLayout() {
   const router = useRouter();
   const { isDark, setThemeMode } = useAppTheme();
-
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const handleLogoutConfirm = async () => {
     try {
       setIsLoggingOut(true);
-      // به‌جای clear() + دوباره نوشتنِ تم، فقط کلید تم رو نگه می‌داریم
       const allKeys = await AsyncStorage.getAllKeys();
       const keysToRemove = allKeys.filter((k) => k !== THEME_STORAGE_KEY);
       if (keysToRemove.length) {
@@ -68,8 +65,7 @@ export default function SettingLayout() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
       <MainTitle title="Setting" handleBack={handleBack} />
-
-      <View flex={1} px="$2" py="$2" bg="$gray2">
+      <View flex={1} px="$2" py="$2" bg="$backgroundPaper">
         <SoftLink
           handleAcceptCategory={handleAcceptCategory}
           categories={[
@@ -82,7 +78,6 @@ export default function SettingLayout() {
               icon: "star",
               renderRight: () => (
                 <XStack ai="center" gap="$2" mr="$2">
-                  {/* Light Button */}
                   <XStack
                     tag="button"
                     onPress={() => setThemeMode("light")}

@@ -1,5 +1,7 @@
 import { MaterialIcons } from "@expo/vector-icons";
-import React from "react";
+import React, { useMemo } from "react";
+import { useTheme } from "tamagui";
+import { getThemeColor } from "../hook/getThemeColor";
 
 interface IconProps {
   name: string;
@@ -20,17 +22,29 @@ const formatIconName = (name: string) => {
 export const Icon: React.FC<IconProps> = ({
   name,
   size = 28,
-  color = "#444444",
+  color,
   onPress,
   style,
 }) => {
+  const theme = useTheme();
   const formattedName = formatIconName(name);
+
+  const resolvedColor = useMemo(() => {
+    if (color?.startsWith("$")) {
+      const tokenKey = color.slice(1);
+      return getThemeColor(theme[tokenKey], color);
+    }
+
+    if (color) return color;
+
+    return getThemeColor(theme.textSecondary ?? theme.color, "#64748B");
+  }, [color, theme]);
 
   return (
     <MaterialIcons
       name={formattedName as any}
       size={size}
-      color={color}
+      color={resolvedColor}
       onPress={onPress}
       style={style}
     />

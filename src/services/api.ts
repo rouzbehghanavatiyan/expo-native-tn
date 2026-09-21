@@ -46,9 +46,7 @@ const setupInterceptors = (instance: AxiosInstance, name: string) => {
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
-      logger.debug(
-        `[REQUEST] ${name} to ${config.url} | Token Attached: ${!!token}`,
-      );
+
       return config;
     },
     (error) => Promise.reject(error),
@@ -74,17 +72,15 @@ const setupInterceptors = (instance: AxiosInstance, name: string) => {
             return instance(originalRequest);
           })
           .catch((err) => {
-            return Promise.reject(err); // مطمئن بشید queue reject هم درست propagate می‌شه
+            return Promise.reject(err);
           });
       }
       originalRequest._retry = true;
       isRefreshing = true;
-      ///////////////////////////////////////////////////////////////////////////////////////
 
       const refreshToken = await getRefreshToken();
 
       if (!refreshToken) {
-        logger.warn("No refresh token found. Redirecting to login.");
         await removeTokens();
         router.replace("/login");
         isRefreshing = false;
@@ -94,7 +90,6 @@ const setupInterceptors = (instance: AxiosInstance, name: string) => {
 
       try {
         const accessToken = await getAccessToken();
-        logger.info("Refresh Endpoint Response:", accessToken);
         const response = await axios.post(`${baseURL}/refreshToken`, {
           accessToken: accessToken,
           refreshToken: refreshToken,
@@ -108,15 +103,11 @@ const setupInterceptors = (instance: AxiosInstance, name: string) => {
         }
 
         await saveTokens(newAccessToken, newRefreshToken);
-        logger.info("✅ Tokens successfully refreshed.");
 
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
 
         processQueue(null, newAccessToken);
-        logger.info(
-          `Retrying ${originalRequest.url} with token exp:`,
-          JSON.parse(atob(newAccessToken.split(".")[1])).exp,
-        );
+
         return instance(originalRequest);
       } catch (refreshError: any) {
         logger.error("❌ Token refresh failed:", {
@@ -126,7 +117,7 @@ const setupInterceptors = (instance: AxiosInstance, name: string) => {
         });
         await removeTokens();
         processQueue(refreshError, null);
-        router.replace("/login"); // Redirect to login on refresh failure
+        router.replace("/login");
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
