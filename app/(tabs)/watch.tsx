@@ -123,6 +123,7 @@ export default function WatchScreen() {
         <FlatList
           data={data}
           numColumns={2}
+          contentContainerStyle={{ paddingBottom: 54 }}
           keyExtractor={(item, index) =>
             item?.inviteInserted?.id
               ? String(item.inviteInserted.id)
@@ -144,7 +145,7 @@ export default function WatchScreen() {
             />
           )}
           onEndReached={() => handleGetAllMatch(false)}
-          onEndReachedThreshold={0.5}
+          onEndReachedThreshold={0.2}
           ListFooterComponent={
             loading && !refreshing ? (
               <YStack py="$4" alignItems="center" justifyContent="center">

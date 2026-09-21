@@ -331,14 +331,14 @@ export default function EditProfile() {
                   </BaseButton>
 
                   <BaseButton
-                    bg="$backgroundPaper"
+                    bg="$indigoDark"
                     flex={1}
                     appearance="solid"
                     colorType="primary"
                     loading={isSubmitting}
                     onPress={handleSubmit}
                   >
-                    Save Changes
+                    Save
                   </BaseButton>
                 </XStack>
               </YStack>

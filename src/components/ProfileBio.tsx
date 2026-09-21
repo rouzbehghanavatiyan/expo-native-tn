@@ -154,7 +154,7 @@ const ProfileBio: React.FC<ProfileBioProps> = ({
           position="relative"
         >
           <Progress value={rankPercentage} h={16} bg="transparent">
-            <Progress.Indicator bg="$indigoDark" />
+            <Progress.Indicator bg="#c9d8f5" />
           </Progress>
           <View
             position="absolute"
@@ -164,11 +164,16 @@ const ProfileBio: React.FC<ProfileBioProps> = ({
             bottom={0}
             borderWidth={1}
             borderRadius="$4"
-            borderColor="$grey400"
+            borderColor="$indigoMain"
             justifyContent="center"
             alignItems="center"
           >
-            <Text fontWeight="bold" fontSize={10} color="$grey500" zIndex={10}>
+            <Text
+              fontWeight="bold"
+              fontSize={10}
+              color="$indigoMain"
+              zIndex={10}
+            >
               {rankPercentage}%
             </Text>
           </View>
@@ -343,23 +348,30 @@ const ProfileBio: React.FC<ProfileBioProps> = ({
             style={{ width: "100%" }}
           >
             <YStack w="100%" alignItems="center">
-              <YStack
-                bg="$primaryMain"
-                borderBottomWidth={1}
-                borderColor="#b4b4b4"
+              <XStack
+                px="$2"
+                py="$1"
                 borderRadius="$2"
-                shadowColor="#000000"
-                shadowOffset={{ width: 0, height: 4 }}
-                shadowOpacity={0.2}
-                shadowRadius={10}
-                elevation={1}
-                px="$4"
-                py="$2"
+                borderWidth={1}
+                borderColor="$pinkDark"
+                ai="center"
+                jc="center"
+                pressStyle={{ opacity: 0.7 }}
+                cursor="pointer"
+                onPress={() => {
+                  router.push("/setting/editProfile");
+                }}
               >
-                <Text color="$white" fontWeight="600">
+                <Icon name="edit" size={14} color="$pinkDark" />
+                <Text
+                  marginStart={3}
+                  fontSize="$3"
+                  fontWeight="500"
+                  color="$pinkDark"
+                >
                   Edit Profile
                 </Text>
-              </YStack>
+              </XStack>
             </YStack>
           </TouchableOpacity>
         ) : shouldShowDetails ? (
