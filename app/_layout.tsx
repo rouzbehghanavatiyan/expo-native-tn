@@ -20,7 +20,7 @@ function AppShell() {
   const isDark = themeMode === "dark";
 
   const [fontsLoaded] = useFonts({
-    HandleeRegular: require("../src/assets/fonts/logoFont/Handlee-Regular.ttf"),
+    OswaldLight: require("../src/assets/fonts/logoFont/Oswald-Light.ttf"),
     OleoScriptBold: require("../src/assets/fonts/logoFont/OleoScript-Bold.ttf"),
 
     playFair: require("../src/assets/fonts/PlayfairDisplay-Italic-VariableFont_wght.ttf"),

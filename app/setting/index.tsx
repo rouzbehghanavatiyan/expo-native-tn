@@ -198,7 +198,7 @@ export default function SettingLayout() {
                 <BaseButton
                   disabled={isLoggingOut}
                   onPress={handleLogoutConfirm}
-                  bg="$errorMain"
+                  bg="$indigoMain"
                 >
                   {isLoggingOut ? "Signing out..." : "Confirm"}
                 </BaseButton>

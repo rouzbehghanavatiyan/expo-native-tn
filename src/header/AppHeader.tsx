@@ -243,13 +243,12 @@ const AppHeader = () => {
             <Text
               fontSize={20}
               color="$textPrimary"
-              style={{ fontFamily: "HandleeRegular" }}
+              style={{ fontFamily: "OswaldLight" }}
             >
               {headerTitle}
             </Text>
           )}
         </View>
-
         {routes.isProfile ? (
           <TouchableOpacity onPress={() => router.push("/setting")}>
             <Ionicons
