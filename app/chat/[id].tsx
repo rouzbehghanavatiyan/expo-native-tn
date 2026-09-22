@@ -1,6 +1,7 @@
 import AppLoading from "@/src/components/AppLoading";
 import ImageRank from "@/src/components/ImageRank";
 import MessageInput from "@/src/components/MessageInput";
+import { useAppTheme } from "@/src/hook/ThemeContext";
 import { markAsRead, userMessages } from "@/src/services/nestServices";
 import { markSenderAsRead } from "@/src/slices/chat";
 import { useAppDispatch, useAppSelector } from "@/src/store/reduxHookType";
@@ -70,7 +71,7 @@ export default function PrivateChat() {
   const main = useAppSelector((state) => state?.main);
   const userIdLogin = main?.userLogin?.user?.id;
   const reciveUserId = id;
-
+  const { isDark, setThemeMode } = useAppTheme();
   const [messages, setMessages] = useState<MessageType[]>([]);
   const [title, setTitle] = useState("");
   const [showStickers, setShowStickers] = useState(false);
@@ -442,7 +443,9 @@ export default function PrivateChat() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
+    <SafeAreaView
+      style={{ flex: 1, backgroundColor: isDark ? "#121212" : "#fff" }}
+    >
       <Stack.Screen options={{ headerShown: false }} />
       <KeyboardAvoidingView
         style={{ flex: 1 }}

@@ -1,4 +1,5 @@
 import BaseButton from "@/src/components/BaseButtom";
+import { useAppTheme } from "@/src/hook/ThemeContext";
 import { useAppSelector } from "@/src/store/reduxHookType";
 import { useRouter } from "expo-router";
 import { useState } from "react";
@@ -13,6 +14,7 @@ const LearningScreen: React.FC = () => {
   const userIdLogin = main?.userLogin?.user?.id;
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  const { isDark, setThemeMode } = useAppTheme();
 
   const handleNext = () => {
     if (currentStep < 5) {
@@ -44,7 +46,9 @@ const LearningScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
+    <SafeAreaView
+      style={{ flex: 1, backgroundColor: isDark ? "#121212" : "#fff" }}
+    >
       <YStack f={1} w="100%" bg="$background">
         <YStack f={1} ai="center" pt="$8">
           {renderCurrentStep()}

@@ -6,6 +6,7 @@ import React from "react";
 import { Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ScrollView, Spinner, Text, View, XStack, YStack } from "tamagui";
+import { useAppTheme } from "../hook/ThemeContext";
 
 interface UserListLayoutProps {
   title?: string;
@@ -36,8 +37,12 @@ const UserListLayout: React.FC<UserListLayoutProps> = ({
   unblockText = "Unblock",
   imgSize = 50,
 }) => {
+  const { isDark, setThemeMode } = useAppTheme();
+
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
+    <SafeAreaView
+      style={{ flex: 1, backgroundColor: isDark ? "#121212" : "#fff" }}
+    >
       <View f={1} bg="$background">
         {title && <MainTitle handleBack={onBack || (() => {})} title={title} />}
 

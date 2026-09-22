@@ -1,4 +1,3 @@
-// مسیر: app/_layout.tsx
 import { ThemeProvider, useAppTheme } from "@/src/hook/ThemeContext";
 import { store } from "@/src/store/store";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
@@ -6,6 +5,8 @@ import { PortalProvider as GorhomPortalProvider } from "@gorhom/portal";
 import { useFonts } from "expo-font";
 import { Slot } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import * as SystemUI from "expo-system-ui";
+import { useEffect } from "react";
 import { ActivityIndicator } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -16,6 +17,7 @@ import AppInitializer from "./AppInitializer";
 
 function AppShell() {
   const { themeMode, isThemeLoading } = useAppTheme();
+  const isDark = themeMode === "dark";
 
   const [fontsLoaded] = useFonts({
     HandleeRegular: require("../src/assets/fonts/logoFont/Handlee-Regular.ttf"),
@@ -27,6 +29,10 @@ function AppShell() {
     VazirmatnMedium: require("../src/assets/fonts/Vazirmatn-Medium.ttf"),
     VazirmatnBold: require("../src/assets/fonts/Vazirmatn-Bold.ttf"),
   });
+
+  useEffect(() => {
+    SystemUI.setBackgroundColorAsync(isDark ? "#000000" : "#ffffff");
+  }, [isDark]);
 
   if (!fontsLoaded || isThemeLoading) {
     return (
@@ -43,15 +49,13 @@ function AppShell() {
     );
   }
 
-  const isDark = themeMode === "dark";
-
   return (
     <TamaguiProvider config={tamaguiConfig} defaultTheme={themeMode}>
       <Theme name={themeMode}>
         <StatusBar
           style={isDark ? "light" : "dark"}
-          backgroundColor={isDark ? "#000000" : "transparent"}
-          translucent={!isDark}
+          backgroundColor={isDark ? "#000000" : "#ffffff"}
+          translucent={false}
         />
         <SafeAreaProvider>
           <Provider store={store}>

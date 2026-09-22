@@ -63,7 +63,9 @@ export default function SettingLayout() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
+    <SafeAreaView
+      style={{ flex: 1, backgroundColor: isDark ? "#121212" : "#fff" }}
+    >
       <MainTitle title="Setting" handleBack={handleBack} />
       <View flex={1} px="$2" py="$2" bg="$backgroundPaper">
         <SoftLink

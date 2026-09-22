@@ -2,6 +2,7 @@ import BaseButton from "@/src/components/BaseButtom";
 import BaseInput from "@/src/components/BaseInput";
 import { Icon } from "@/src/components/Icon";
 import MainTitle from "@/src/components/MainTitle";
+import { useAppTheme } from "@/src/hook/ThemeContext";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { Modal, Pressable, ScrollView } from "react-native";
@@ -21,6 +22,7 @@ const SUPPORT_EMAIL = "app.starfaceoff@gmail.com";
 
 export default function SupportScreen() {
   const router = useRouter();
+  const { isDark, setThemeMode } = useAppTheme();
 
   const [subject, setSubject] = useState("");
   const [description, setDescription] = useState("");
@@ -89,7 +91,9 @@ export default function SupportScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
+    <SafeAreaView
+      style={{ flex: 1, backgroundColor: isDark ? "#121212" : "#fff" }}
+    >
       <MainTitle handleBack={() => router.back()} title="Support & Contact" />
 
       <ScrollView
