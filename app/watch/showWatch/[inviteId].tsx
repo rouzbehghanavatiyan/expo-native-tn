@@ -144,20 +144,19 @@ export default function ShowWatchScreen() {
 
   useEffect(() => {
     const backAction = () => {
-      if (router.canGoBack()) {
-        router.back();
-      } else {
-        router.replace("/");
+      if (showComments) {
+        handleCloseComments();
+        return true;
       }
+      router.replace("/watch");
       return true;
     };
-
     const backHandler = BackHandler.addEventListener(
       "hardwareBackPress",
       backAction,
     );
     return () => backHandler.remove();
-  }, []);
+  }, [showComments, handleCloseComments]);
 
   const onViewableItemsChanged = useRef(({ viewableItems }: any) => {
     if (viewableItems && viewableItems.length > 0) {
