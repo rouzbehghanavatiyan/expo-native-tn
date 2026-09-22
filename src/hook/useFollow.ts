@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useSelector } from "react-redux";
 import { addFollower, removeFollower } from "../services/masterServices";
 
@@ -16,10 +16,29 @@ export const useFollow = (userIdLogin: number) => {
         (f?.attachment?.attachmentId || f?.userId || f?.id) === userId,
     );
 
-    return followState[userId] ?? reduxFollowed;
+    return followState[userId] ?? reduxFollowed ?? false;
   };
 
+  // مقداردهی اولیه‌ی گروهی، مثلا وقتی از سرویس followingList لیستی می‌آید
+  // که همه‌ی آن‌ها از قبل فالو شده‌اند
+  const initFollowState = useCallback(
+    (userIds: (number | string)[], value: boolean) => {
+      setFollowState((prev) => {
+        const next = { ...prev };
+        userIds.forEach((id) => {
+          if (id !== undefined && id !== null && !(id in next)) {
+            next[id] = value;
+          }
+        });
+        return next;
+      });
+    },
+    [],
+  );
+
   const toggleFollow = async (userId: number) => {
+    if (userId === undefined || userId === null) return;
+
     const current = isFollowed(userId);
 
     const postData = {
@@ -50,6 +69,7 @@ export const useFollow = (userIdLogin: number) => {
   return {
     isFollowed,
     toggleFollow,
+    initFollowState,
     loadingId,
   };
 };

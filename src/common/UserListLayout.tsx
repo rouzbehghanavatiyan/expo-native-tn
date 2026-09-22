@@ -17,8 +17,8 @@ interface UserListLayoutProps {
   renderRight?: (item: any) => React.ReactNode;
   isFollowed?: (id: any) => boolean;
   toggleFollow?: (id: any) => void;
-  onUnblock?: (id: any) => void; // پراپ آن‌بلاک
-  unblockText?: string; // متن دکمه (پیش‌فرض: Unblock)
+  onUnblock?: (id: any) => void;
+  unblockText?: string;
   imgSize?: number;
 }
 
@@ -60,9 +60,11 @@ const UserListLayout: React.FC<UserListLayoutProps> = ({
             {data.map((user: any, index: number) => {
               const userId =
                 user?.attachment?.attachmentId ||
+                user?.followerId ||
                 user?.userId ||
                 user?.id ||
                 user?.sender;
+
               const image = getImageUrl(user?.attachment || user);
               const userName =
                 user?.userName || user?.userNameSender || "Unknown User";
