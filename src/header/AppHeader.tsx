@@ -69,7 +69,7 @@ const AppHeader = () => {
     "/profile": "Profile",
     "/notification": "Notifications",
   };
-  const headerTitle = titleMap[pathname] || "Star Faceoff";
+  const headerTitle = titleMap[pathname] || "Clash Talent";
 
   useEffect(() => {
     if (!searchQuery.trim()) {

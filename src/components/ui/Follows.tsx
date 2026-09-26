@@ -19,7 +19,7 @@ const Follows: React.FC<PropTypes> = ({
         <View
           px="$3"
           py="$2"
-          bg="$grey100"
+          bg="$backgroundPaper"
           borderRadius="$2"
           shadowColor="#0f0f0f"
           shadowOffset={{ width: 0, height: 4 }}

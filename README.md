@@ -31,8 +31,6 @@ eas build:view 208f3bf8-8e06-48a2-af42-3e1f1320f12d
 
 your connection to this site is not scure
 
----
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 EAS_LOCAL_BUILD_WORKINGDIR=~/eas-build-temp eas build --platform android --profile development --local
 
@@ -70,8 +68,3 @@ Proceeding with outdated version.
 
 Resolved "production" environment for the build. Learn more: https://docs.expo.dev/eas/environment-variables/#setting-the-environment-for-your-builds
 No environment variables with visibility "Plain text" and "Sensitive" found for the "production" environment on EAS.
-
-^C
-rouzbehghanavatiyan@IT-Ghanavatiyan:~/projects/tn$ ^C
-rouzbehghanavatiyan@IT-Ghanavatiyan:~/projects/tn$ ^C
-rouzbehghanavatiyan@IT-Ghanavatiyan:~/projects/tn$

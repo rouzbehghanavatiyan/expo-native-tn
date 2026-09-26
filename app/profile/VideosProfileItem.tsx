@@ -28,7 +28,6 @@ const VideosProfileItem = ({
 
   const hasValidInsertDate = (value: unknown) =>
     value !== undefined && value !== null && value !== -1 && value !== "";
-
   const showTimer =
     hasValidInsertDate(matchedInsertDate) ||
     hasValidInsertDate(insertedInsertDate);
