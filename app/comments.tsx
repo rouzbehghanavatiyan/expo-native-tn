@@ -1,9 +1,9 @@
 import { Icon } from "@/src/components/Icon";
 import ImageRank from "@/src/components/ImageRank";
+import { getThemeColor } from "@/src/hook/getThemeColor";
 import { addComment, commentList } from "@/src/services/masterServices";
 import { useAppSelector } from "@/src/store/reduxHookType";
 import { getImageUrl } from "@/src/utils/fileHelper";
-import { getThemeColor } from "@/src/utils/getThemeColor";
 import React, {
   memo,
   useCallback,
@@ -29,10 +29,9 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text, useTheme, View, XStack, YStack } from "tamagui";
-
+const PAGE_SIZE = 10;
 const SCREEN_HEIGHT = Dimensions.get("window").height;
 const SHEET_HEIGHT = SCREEN_HEIGHT * 0.78;
-// رنگ اکسنت مشترک بین دو تم (می‌تونی به $primaryMain تغییرش بدی)
 const ACCENT = "#4F46E5";
 
 interface CommentsProps {
@@ -78,7 +77,7 @@ const CommentsSkeleton = () => {
     <Animated.View
       style={{ opacity: pulse, paddingHorizontal: 16, paddingTop: 8 }}
     >
-      {[0, 1, 2, 3].map((i) => (
+      {[0, 1, 2, 3, 4, 5, 6].map((i) => (
         <XStack key={i} gap={12} py={10} alignItems="flex-start">
           <View width={38} height={38} borderRadius={19} bg="$divider" />
           <YStack flex={1} gap={8}>
@@ -111,13 +110,11 @@ const HIT_SLOP = { top: 8, bottom: 8, left: 8, right: 8 };
 const CommentRow = memo(
   ({ item, expanded, onToggle, onReply }: CommentRowProps) => {
     const replies: any[] = item?.replies ?? [];
-
     return (
       <XStack gap={10} py={8} alignItems="flex-start">
         <ImageRank
           imgSrc={getImageUrl(item?.profile)}
           imgSize={38}
-          userName={item?.userName}
           score={item?.score}
         />
 
@@ -237,7 +234,17 @@ const Comments: React.FC<CommentsProps> = ({
   const theme = useTheme();
   const insets = useSafeAreaInsets();
 
-  // رنگ‌های خام برای کامپوننت‌های RN (TextInput, Icon, Animated.View, ...)
+  const buildRoots = (items: any[]) => {
+    const roots = items
+      .filter((c) => !c.parentId)
+      .map((c) => ({ ...c, replies: [] as any[] }));
+    const rootById = new Map(roots.map((r) => [r.id, r]));
+    items
+      .filter((c) => !!c.parentId)
+      .forEach((c) => rootById.get(c.parentId)?.replies.push(c));
+    roots.forEach((r) => r.replies.sort((a: any, b: any) => a.id - b.id));
+    return roots;
+  };
   const colors = {
     background: getThemeColor(theme.background, "#fafafa"),
     textPrimary: getThemeColor(theme.textPrimary, "#212121"),
@@ -253,7 +260,10 @@ const Comments: React.FC<CommentsProps> = ({
   const [isFocused, setIsFocused] = useState(false);
   const [answerData, setAnswerData] = useState<ReplyTarget | null>(null);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
-
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const pageRef = useRef(1); // تعداد صفحه‌های لودشده
+  const loadingMoreRef = useRef(false); // جلوگیری از onEndReached تکراری
   const inputRef = useRef<TextInput>(null);
   const flatListRef = useRef<FlatList<any>>(null);
 
@@ -294,35 +304,57 @@ const Comments: React.FC<CommentsProps> = ({
   }, [visible, translateY, backdrop]);
 
   /* --------------------------------- Data --------------------------------- */
-  const fetchComments = useCallback(async () => {
-    if (!movieId) return;
-    setLoading(true);
+  const fetchComments = useCallback(
+    async (keepLoadedPages = false) => {
+      if (!movieId) return;
+      const pages = keepLoadedPages ? pageRef.current : 1;
+      setLoading(true);
+
+      try {
+        const res = await commentList(movieId, 1, pages * PAGE_SIZE);
+        const { data, status } = res?.data || {};
+        if (status === 0 && data) {
+          setTotalCount(data.totalCount ?? 0);
+          setHasMore(!!data.hasMore);
+          pageRef.current = pages;
+          setComments(buildRoots(data.items ?? []));
+        }
+      } catch (error) {
+        console.error("Error fetching comments:", error);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [movieId],
+  );
+
+  const fetchMore = useCallback(async () => {
+    if (!movieId || !hasMore || loadingMoreRef.current || loading) return;
+    loadingMoreRef.current = true;
+    setLoadingMore(true);
 
     try {
-      const res = await commentList(movieId);
+      const nextPage = pageRef.current + 1;
+      const res = await commentList(movieId, nextPage, PAGE_SIZE);
       const { data, status } = res?.data || {};
 
-      if (status === 0 && Array.isArray(data)) {
-        setTotalCount(data.length);
-
-        // دو مرحله‌ای: اول کامنت‌های اصلی، بعد ریپلای‌ها
-        // (تا اگه ریپلای قبل از والدش اومد هم گم نشه)
-        const roots = data
-          .filter((c: any) => !c.parentId)
-          .map((c: any) => ({ ...c, replies: [] as any[] }));
-        const rootById = new Map(roots.map((r: any) => [r.id, r]));
-        data
-          .filter((c: any) => !!c.parentId)
-          .forEach((c: any) => rootById.get(c.parentId)?.replies.push(c));
-
-        setComments(roots);
+      if (status === 0 && data) {
+        const newRoots = buildRoots(data.items ?? []);
+        pageRef.current = nextPage;
+        setHasMore(!!data.hasMore);
+        setTotalCount(data.totalCount ?? 0);
+        setComments((prev) => {
+          const ids = new Set(prev.map((c) => c.id));
+          return [...prev, ...newRoots.filter((r) => !ids.has(r.id))];
+        });
       }
     } catch (error) {
-      console.error("Error fetching comments:", error);
+      console.error("Error loading more comments:", error);
     } finally {
-      setLoading(false);
+      loadingMoreRef.current = false;
+      setLoadingMore(false);
     }
-  }, [movieId]);
+  }, [movieId, hasMore, loading]);
 
   const resetCommentsState = useCallback(() => {
     setComments([]);
@@ -331,6 +363,10 @@ const Comments: React.FC<CommentsProps> = ({
     setExpanded({});
     setLoading(false);
     setSending(false);
+    setHasMore(false);
+    setLoadingMore(false);
+    pageRef.current = 1;
+    loadingMoreRef.current = false;
   }, []);
 
   const handleClose = useCallback(() => {
@@ -411,6 +447,12 @@ const Comments: React.FC<CommentsProps> = ({
     setExpanded((prev) => ({ ...prev, [String(id)]: !prev[String(id)] }));
   }, []);
 
+  const scrollToLatest = useCallback(() => {
+    requestAnimationFrame(() => {
+      flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+    });
+  }, []);
+
   const handleSend = useCallback(async () => {
     const trimmed = text.trim();
     if (!trimmed || !movieId || sending) return;
@@ -429,20 +471,29 @@ const Comments: React.FC<CommentsProps> = ({
       const { status } = res?.data || {};
 
       if (status === 0) {
-        if (answerData?.id) {
-          // ریپلای جدید رو بلافاصله نشون بده
-          setExpanded((prev) => ({ ...prev, [String(answerData.id)]: true }));
+        const isReply = !!answerData?.id;
+        if (isReply) {
+          setExpanded((prev) => ({ ...prev, [String(answerData!.id)]: true }));
         }
         setText("");
         setAnswerData(null);
-        await fetchComments();
+        await fetchComments(true);
+        if (!isReply) scrollToLatest();
       }
     } catch (error) {
       console.error("Error sending comment:", error);
     } finally {
       setSending(false);
     }
-  }, [text, movieId, sending, loginUserId, answerData?.id, fetchComments]);
+  }, [
+    text,
+    movieId,
+    sending,
+    loginUserId,
+    answerData?.id,
+    fetchComments,
+    scrollToLatest,
+  ]);
 
   if (!visible) return null;
 
@@ -483,14 +534,7 @@ const Comments: React.FC<CommentsProps> = ({
         </XStack>
       )}
 
-      {/* Input bar */}
-      <XStack
-        alignItems="flex-end"
-        pt={10}
-        pb={Math.max(insets.bottom, 12)}
-        px={12}
-        gap={10}
-      >
+      <XStack alignItems="flex-end" py={10} px={12} gap={10}>
         <View mb={2}>
           <ImageRank imgSrc={userProfile} imgSize={36} />
         </View>
@@ -658,7 +702,6 @@ const Comments: React.FC<CommentsProps> = ({
           </YStack>
         </RNView>
 
-        {/* Body */}
         <View flex={1}>
           {loading && comments.length === 0 ? (
             <CommentsSkeleton />
@@ -666,16 +709,25 @@ const Comments: React.FC<CommentsProps> = ({
             <FlatList
               ref={flatListRef}
               data={comments}
+              inverted
               extraData={expanded}
               keyExtractor={(item, index) =>
                 item?.id?.toString() || index.toString()
               }
+              onEndReached={fetchMore}
+              onEndReachedThreshold={0.05}
               keyboardShouldPersistTaps="handled"
               keyboardDismissMode="on-drag"
               showsVerticalScrollIndicator={false}
+              ListFooterComponent={
+                <YStack height={56} pt={20} alignItems="center">
+                  {loadingMore ? (
+                    <ActivityIndicator size="small" color={ACCENT} />
+                  ) : null}
+                </YStack>
+              }
               contentContainerStyle={{
-                paddingTop: 8,
-                paddingBottom: 20,
+                paddingVertical: 8,
                 paddingHorizontal: 16,
                 flexGrow: comments.length === 0 ? 1 : undefined,
               }}
@@ -695,6 +747,7 @@ const Comments: React.FC<CommentsProps> = ({
                   py={48}
                   px={24}
                   gap={10}
+                  style={{ transform: [{ scaleY: -1 }] }}
                 >
                   <View
                     width={72}
@@ -735,7 +788,6 @@ const Comments: React.FC<CommentsProps> = ({
           )}
         </View>
 
-        {/* Footer */}
         {Platform.OS === "ios" ? (
           <KeyboardAvoidingView behavior="padding">
             {inputFooter}

@@ -26,10 +26,12 @@ interface ProfileWithRankProps {
   userInfo?: any;
   imgSrc?: string | any;
   userName?: string;
+  fontWeightUserName?: string;
   score?: number;
   imgSize?: number;
   userNameStyle?: object;
   positionVideo?: number;
+  userNameLength?: number;
   showProfile?: boolean;
   onClickDisable?: any;
   iconClass?: string;
@@ -48,8 +50,10 @@ const ImageRank: React.FC<ProfileWithRankProps> = ({
   imgSrc,
   showProfile = true,
   userNameStyle,
+  userNameLength = 15,
   positionVideo,
   userName,
+  fontWeightUserName = "bold",
   iconClass = "text-gray-200",
   score = -1,
   imgSize = 40,
@@ -166,7 +170,9 @@ const ImageRank: React.FC<ProfileWithRankProps> = ({
 
   const shortenUserName = (name: string | undefined): string => {
     if (!name) return "";
-    return name.length > 15 ? `${name.slice(0, 15)}...` : name;
+    return name.length > userNameLength
+      ? `${name.slice(0, userNameLength)}...`
+      : name;
   };
 
   const handleClick = () => {
@@ -306,7 +312,7 @@ const ImageRank: React.FC<ProfileWithRankProps> = ({
       {userName && (
         <Text
           ml={2}
-          fontWeight="bold"
+          fontWeight={fontWeightUserName}
           style={[!userNameStyle && styles.defaultUserName, userNameStyle]}
         >
           {shortenUserName(userName)}

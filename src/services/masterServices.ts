@@ -135,8 +135,14 @@ export const addComment = async (postData: any) => {
   return await api.post(`/addComment`, postData);
 };
 
-export const commentList = async (movieId: number) => {
-  return await api.get(`/commentList?movieId=${movieId}`);
+export const commentList = async (
+  movieId: any,
+  pageNumber = 1,
+  pageSize = 10,
+) => {
+  return await api.get("/commentList", {
+    params: { movieId, pageNumber, pageSize },
+  });
 };
 
 export const topScoreList = async () => {
