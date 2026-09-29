@@ -1,4 +1,4 @@
-# Welcome to TN 👋
+# Welcome to Clash talent 👋
 
 ## Get started
 
@@ -65,6 +65,5 @@ rouzbehghanavatiyan@IT-Ghanavatiyan:~/projects/tn$ eas build --platform android 
 To upgrade, run:
 npm install -g eas-cli
 Proceeding with outdated version.
-
 Resolved "production" environment for the build. Learn more: https://docs.expo.dev/eas/environment-variables/#setting-the-environment-for-your-builds
 No environment variables with visibility "Plain text" and "Sensitive" found for the "production" environment on EAS.
