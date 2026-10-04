@@ -18,7 +18,7 @@ interface ContactCardProps {
   actionIcon?: boolean;
 }
 
-const SUPPORT_EMAIL = "app.starfaceoff@gmail.com";
+const SUPPORT_EMAIL = "app.clashtalent@gmail.com";
 
 export default function SupportScreen() {
   const router = useRouter();
@@ -28,7 +28,6 @@ export default function SupportScreen() {
   const [description, setDescription] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Feedback Modal States
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [feedbackTitle, setFeedbackTitle] = useState("");
   const [feedbackMessage, setFeedbackMessage] = useState("");
@@ -60,11 +59,9 @@ export default function SupportScreen() {
     try {
       setIsSubmitting(true);
 
-      // در صورت تمایل به ارسال مستقیم ایمیل از طریق کلاینت ایمیل کاربر:
       // const mailtoUrl = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(description)}`;
       // await Linking.openURL(mailtoUrl);
 
-      // شبیه‌سازی فراخوانی API:
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
       showFeedback(
@@ -101,7 +98,6 @@ export default function SupportScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <YStack flex={1} p="$4" gap="$4" bg="$grey100">
-          {/* Official Email Contact Card */}
           <ContactCard
             icon={<Icon name="mail-outline" color="$primaryMain" size={20} />}
             title="Official Support Email"
@@ -110,7 +106,6 @@ export default function SupportScreen() {
             actionIcon={true}
           />
 
-          {/* Form Header */}
           <YStack gap="$1" mt="$2">
             <Text fontSize="$4" fontWeight="700" color="$textPrimary">
               Send us a Message
@@ -121,17 +116,16 @@ export default function SupportScreen() {
             </Text>
           </YStack>
 
-          {/* Subject Field */}
           <YStack gap="$2">
             <BaseInput
               label="Subject"
               placeholder="e.g. Account issue, Feedback..."
               value={subject}
               onChangeText={setSubject}
+              baseColorLabel={"#E0E0E0"}
               borderColor="#E0E0E0"
             />
           </YStack>
-
           <YStack gap="$2">
             <TextArea
               placeholder="Write your message or issue description here..."
@@ -148,7 +142,6 @@ export default function SupportScreen() {
             />
           </YStack>
 
-          {/* Action Buttons */}
           <XStack gap="$3" mt="auto" pt="$4" pb="$4">
             <BaseButton
               flex={1}
@@ -178,7 +171,6 @@ export default function SupportScreen() {
         </YStack>
       </ScrollView>
 
-      {/* Status Feedback Modal */}
       <Modal
         visible={feedbackOpen}
         transparent
