@@ -1,135 +1,72 @@
-import React, { memo, useEffect, useRef, useState } from "react";
+import React, { memo } from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { addScoure } from "../services/masterServices";
-import { socketClient } from "../utils/socketClient";
+import { useAppTheme } from "../hook/ThemeContext";
+import { useCountdown } from "../hook/useCountdown";
+import { MATCH_DURATION } from "../utils/matchTimer";
 
-interface TimerTornomentProps {
-  startTime: number;
-  duration: number;
+interface Props {
+  endAt: number | null;
+  duration?: number;
   active: boolean;
-  className?: string;
   onComplete?: () => void;
-  video: any;
 }
 
-const TimerTornoment: React.FC<TimerTornomentProps> = ({
-  startTime,
-  video,
-  duration = 3600,
+const fmt = (s: number) =>
+  `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+
+const TimerTornoment: React.FC<Props> = ({
+  endAt,
+  duration = MATCH_DURATION,
   active,
   onComplete,
 }) => {
-  const [winnerInfo, setWinnerInfo] = useState<any>();
-  const [remainingSeconds, setRemainingSeconds] = useState<number>(
-    Math.max(duration - (startTime || 0), 0),
-  );
-  const videoRef = useRef(video);
-  const onCompleteRef = useRef(onComplete);
-
-  useEffect(() => {
-    videoRef.current = video;
-    onCompleteRef.current = onComplete;
-  }, [video, onComplete]);
-
-  const formatTime = (seconds: number) => {
-    const safe = Math.max(seconds, 0);
-    const mins = Math.floor(safe / 60);
-    const secs = safe % 60;
-    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
-  };
-
-  const handleAddScoure = async (payload: {
-    userId: number | null;
-    movieId: number | null;
-  }) => {
-    socketClient.emit("get_winner", payload);
-    const res = await addScoure(payload);
-    console.log(res);
-  };
-
-  const handleGetWinner = () => {
-    // استفاده از آخرین دیتای ویدیو از طریق رفرنس (بدون وابستگی به رندر)
-    const currentVideo = videoRef.current;
-
-    if (currentVideo?.likeInserted > currentVideo?.likeMatched) {
-      const payload = {
-        userId: currentVideo?.userInserted?.id ?? null,
-        movieId: currentVideo?.attachmentInserted?.attachmentId ?? null,
-      };
-      setWinnerInfo(payload);
-      handleAddScoure(payload);
-    } else if (currentVideo?.likeInserted < currentVideo?.likeMatched) {
-      const payload = {
-        userId: currentVideo?.userMatched?.id ?? null,
-        movieId: currentVideo?.attachmentMatched?.attachmentId ?? null,
-      };
-      setWinnerInfo(payload);
-      handleAddScoure(payload);
-    }
-  };
-
-  useEffect(() => {
-    if (
-      !active ||
-      startTime === null ||
-      startTime === undefined ||
-      startTime === -1
-    ) {
-      return;
-    }
-
-    const initialRemaining = Math.max(duration - startTime, 0);
-    setRemainingSeconds(initialRemaining);
-
-    const interval = setInterval(() => {
-      setRemainingSeconds((prev) => {
-        const next = prev - 1;
-
-        if (next <= 0) {
-          clearInterval(interval);
-          onCompleteRef.current?.();
-          return 0;
-        }
-
-        return next;
-      });
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [active, startTime, duration]);
-
-  useEffect(() => {
-    if (startTime === -1) {
-      handleGetWinner();
-    }
-    return () => {
-      socketClient.off("add_invite_offline_response");
-    };
-  }, [startTime]);
-
-  const progressPercent = Math.max(
-    0,
-    Math.min((remainingSeconds / duration) * 100, 100),
-  );
+  const { isDark } = useAppTheme();
+  const remaining = useCountdown(endAt, active, onComplete);
+  const percent = Math.min((remaining / duration) * 100, 100);
 
   return (
     <View style={styles.wrapper}>
-      <View style={styles.left}>
-        <Text style={styles.timeText}>{formatTime(remainingSeconds)}</Text>
-      </View>
-      <View style={styles.progressTrack}>
-        <View style={[styles.progressFill, { width: `${progressPercent}%` }]} />
+      <Text
+        style={[
+          styles.timeText,
+          {
+            backgroundColor: isDark
+              ? "rgba(255,255,255,0.1)"
+              : "rgba(0,0,0,0.06)",
+            color: isDark ? "#fff" : "#1f2937",
+          },
+        ]}
+      >
+        {fmt(remaining)}
+      </Text>
+      <View
+        style={[
+          styles.track,
+          {
+            backgroundColor: isDark
+              ? "rgba(255,255,255,0.2)"
+              : "rgba(0,0,0,0.12)",
+          },
+        ]}
+      >
+        <View
+          style={[
+            styles.fill,
+            {
+              width: `${percent}%`,
+              backgroundColor: isDark ? "#fff" : "#1f2937",
+            },
+          ]}
+        />
       </View>
     </View>
   );
 };
 
-export default memo(TimerTornoment, (prevProps, nextProps) => {
-  return (
-    prevProps.active === nextProps.active &&
-    prevProps.startTime === nextProps.startTime
-  );
-});
+export default memo(
+  TimerTornoment,
+  (a, b) => a.endAt === b.endAt && a.active === b.active,
+);
 
 const styles = StyleSheet.create({
   wrapper: {
@@ -138,31 +75,14 @@ const styles = StyleSheet.create({
     gap: 8,
     width: "100%",
   },
-  left: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "flex-end",
-    marginRight: 4,
-  },
   timeText: {
-    backgroundColor: "#ffffff1a",
-    padding: 2,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
     borderRadius: 5,
-    marginLeft: 4,
+    marginLeft: 8,
     fontSize: 12,
     fontWeight: "700",
-    color: "#ffffff",
   },
-  progressTrack: {
-    flex: 1,
-    height: 4,
-    backgroundColor: "#7e7e7ea1",
-    borderRadius: 999,
-    overflow: "hidden",
-  },
-  progressFill: {
-    height: 4,
-    backgroundColor: "#ffffff",
-    borderRadius: 999,
-  },
+  track: { flex: 1, height: 4, borderRadius: 999, overflow: "hidden" },
+  fill: { height: 4, borderRadius: 999 },
 });

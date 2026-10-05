@@ -1,29 +1,81 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Alert, TouchableOpacity } from "react-native";
 import { Text, View, XStack } from "tamagui";
+
+import { useAppTheme } from "../hook/ThemeContext";
 import { addLike, removeLike } from "../services/masterServices";
-import { useAppDispatch } from "../store/reduxHookType";
 import { fixNumberCount } from "../utils/fileHelper";
 import { socketClient } from "../utils/socketClient";
 import { Icon } from "./Icon";
 
+/* -------------------------------------------------------------------------- */
+/*                                   Types                                    */
+/* -------------------------------------------------------------------------- */
+
+type MatchResult = "Win" | "Loss" | "Draw" | null;
+
+interface LikeInfo {
+  count?: number;
+  isLiked?: boolean;
+}
+
+interface VideoLikes {
+  [movieId: string]: number;
+}
+
 interface OptionBottomProps {
   handleToggleComments: () => void;
   video: any;
+
   endTime?: boolean;
-  result?: "Win" | "Loss" | "Draw" | null;
+  result?: MatchResult;
+
   showLiked?: boolean;
+
   positionVideo: number;
   userIdLogin: string | null;
+
   countLiked?: number;
   externalIsLiked?: boolean;
+
   itsMatchingWithTimer: any;
   showCountLiked: any;
+
   inviteWatch: boolean;
   profileWatch: boolean;
   itsHome: any;
-  videoLikes: any;
+
+  videoLikes: VideoLikes;
 }
+
+/* -------------------------------------------------------------------------- */
+/*                               Result Config                                */
+/* -------------------------------------------------------------------------- */
+
+const RESULT_STYLES: Record<
+  Exclude<MatchResult, null>,
+  {
+    color: string;
+    text: string;
+  }
+> = {
+  Win: {
+    color: "#1ec75f",
+    text: "Win",
+  },
+  Loss: {
+    color: "#f12d2d",
+    text: "Loss",
+  },
+  Draw: {
+    color: "#eab308",
+    text: "Draw",
+  },
+};
+
+/* -------------------------------------------------------------------------- */
+/*                               Component                                    */
+/* -------------------------------------------------------------------------- */
 
 const OptionBottom: React.FC<OptionBottomProps> = ({
   handleToggleComments,
@@ -42,36 +94,64 @@ const OptionBottom: React.FC<OptionBottomProps> = ({
   externalIsLiked,
   itsHome,
 }) => {
-  const dispatch = useAppDispatch();
+  const { isDark } = useAppTheme();
+
+  /* ------------------------------------------------------------------------ */
+  /*                                  State                                   */
+  /* ------------------------------------------------------------------------ */
+
   const [isLiked, setIsLiked] = useState(false);
   const [localLikeCount, setLocalLikeCount] = useState(0);
-  // console.log(
-  //   "Top Video:",
-  //   video?.inviteInserted?.id,
-  //   "Botton Video:",
-  //   video?.inviteMatched?.id,
-  // );
-  // console.log(
-  //   // "itsMatchingWithTimer:",
-  //   // itsMatchingWithTimer,
-  //   "inviteWatch:",
-  //   inviteWatch,
-  //   "endTime:",
-  //   endTime,
-  //   "showLiked:",
-  //   showLiked,
-  //   "profileWatch",
-  //   profileWatch,
-  //   "inviteWatch",
-  //   inviteWatch,
-  // );
+
+  /* ------------------------------------------------------------------------ */
+  /*                              Derived Values                              */
+  /* ------------------------------------------------------------------------ */
 
   const movieId = useMemo(() => {
-    if (!video) return null;
+    if (!video) {
+      return null;
+    }
+
     return positionVideo === 0
       ? video?.attachmentInserted?.attachmentId
       : video?.attachmentMatched?.attachmentId;
   }, [video, positionVideo]);
+
+  const canLike = useMemo(() => {
+    return Boolean(endTime && (inviteWatch || profileWatch));
+  }, [endTime, inviteWatch, profileWatch]);
+
+  const shouldShowLikeCount = useMemo(() => {
+    return Boolean(endTime && (itsHome || profileWatch));
+  }, [endTime, itsHome, profileWatch]);
+
+  const shouldShowWaitingLike = useMemo(() => {
+    return Boolean(!endTime && (inviteWatch || profileWatch || itsHome));
+  }, [endTime, inviteWatch, profileWatch, itsHome]);
+
+  const likeInfo: LikeInfo | undefined = useMemo(() => {
+    if (!movieId || !video?.likes) {
+      return undefined;
+    }
+
+    return video.likes[movieId];
+  }, [video, movieId]);
+
+  /* ------------------------------------------------------------------------ */
+  /*                              Result Style                                */
+  /* ------------------------------------------------------------------------ */
+
+  const resultStyle = useMemo(() => {
+    if (!result) {
+      return null;
+    }
+
+    return RESULT_STYLES[result];
+  }, [result]);
+
+  /* ------------------------------------------------------------------------ */
+  /*                              Like Count                                  */
+  /* ------------------------------------------------------------------------ */
 
   useEffect(() => {
     let baseCount = 0;
@@ -79,51 +159,45 @@ const OptionBottom: React.FC<OptionBottomProps> = ({
     if (countLiked !== undefined) {
       baseCount = countLiked;
     } else if (video && movieId) {
-      if (video?.likes?.[movieId]) {
-        const likeInfo = video.likes[movieId];
-        baseCount = likeInfo.count || 0;
+      if (likeInfo) {
+        baseCount = likeInfo.count ?? 0;
       } else {
         baseCount =
           positionVideo === 0
-            ? video?.likeInserted || 0
-            : video?.likeMatched || 0;
+            ? (video?.likeInserted ?? 0)
+            : (video?.likeMatched ?? 0);
       }
     }
 
     const socketDelta =
-      videoLikes && movieId && videoLikes[movieId] ? videoLikes[movieId] : 0;
+      movieId && videoLikes?.[movieId] ? videoLikes[movieId] : 0;
 
-    setLocalLikeCount(baseCount + socketDelta);
-  }, [countLiked, video, positionVideo, movieId, videoLikes]);
+    setLocalLikeCount(Math.max(0, baseCount + socketDelta));
+  }, [countLiked, video, positionVideo, movieId, videoLikes, likeInfo]);
+
+  /* ------------------------------------------------------------------------ */
+  /*                              Like Status                                 */
+  /* ------------------------------------------------------------------------ */
 
   useEffect(() => {
-    if (!movieId || !video) return;
-
-    if (video?.likes?.[movieId]) {
-      setIsLiked(video.likes[movieId].isLiked || false);
-    } else {
-      const initialLikeStatus =
-        positionVideo === 0 ? video?.isLikedInserted : video?.isLikedMatched;
-      setIsLiked(initialLikeStatus || false);
+    if (!movieId || !video) {
+      return;
     }
-  }, [video, positionVideo, movieId]);
 
-  // useEffect(() => {
-  //   if (countLiked !== undefined) {
-  //     setLocalLikeCount(countLiked);
-  //   } else if (video && movieId) {
-  //     if (video?.likes?.[movieId]) {
-  //       const likeInfo = video.likes[movieId];
-  //       setLocalLikeCount(likeInfo.count || 0);
-  //     } else {
-  //       const baseCount =
-  //         positionVideo === 0
-  //           ? video?.likeInserted || 0
-  //           : video?.likeMatched || 0;
-  //       setLocalLikeCount(baseCount);
-  //     }
-  //   }
-  // }, [countLiked, video, positionVideo, movieId]);
+    if (likeInfo) {
+      setIsLiked(Boolean(likeInfo.isLiked));
+      return;
+    }
+
+    const initialLikeStatus =
+      positionVideo === 0 ? video?.isLikedInserted : video?.isLikedMatched;
+
+    setIsLiked(Boolean(initialLikeStatus));
+  }, [video, positionVideo, movieId, likeInfo]);
+
+  /* ------------------------------------------------------------------------ */
+  /*                         External Like Status                             */
+  /* ------------------------------------------------------------------------ */
 
   useEffect(() => {
     if (externalIsLiked !== undefined) {
@@ -131,77 +205,70 @@ const OptionBottom: React.FC<OptionBottomProps> = ({
     }
   }, [externalIsLiked]);
 
+  /* ------------------------------------------------------------------------ */
+  /*                              Like Handler                                */
+  /* ------------------------------------------------------------------------ */
+
   const handleLikeClick = useCallback(async () => {
-    const newLikeStatus = !isLiked;
+    if (!movieId || !userIdLogin) {
+      return;
+    }
+
+    const previousLikeStatus = isLiked;
+    const newLikeStatus = !previousLikeStatus;
 
     setIsLiked(newLikeStatus);
 
-    if (newLikeStatus) {
-      setLocalLikeCount((prev) => {
-        console.log("like count before +:", prev);
-        return prev + 1;
-      });
-    } else {
-      setLocalLikeCount((prev) => {
-        console.log("like count before -:", prev);
-        return Math.max(0, prev - 1);
-      });
-    }
+    setLocalLikeCount((prev) => {
+      return newLikeStatus ? prev + 1 : Math.max(0, prev - 1);
+    });
 
     const postData = {
-      userId: userIdLogin || null,
-      movieId: movieId,
+      userId: userIdLogin,
+      movieId,
     };
 
     try {
-      if (isLiked) {
-        const removeRes = await removeLike(postData);
-        if (removeRes?.data?.status !== 0) {
-          throw new Error(removeRes?.data?.message || "Remove like failed");
+      if (previousLikeStatus) {
+        const response = await removeLike(postData);
+
+        if (response?.data?.status !== 0) {
+          throw new Error(response?.data?.message || "Remove like failed");
         }
+
         socketClient?.emit("remove_liked", postData);
-      } else {
-        const addRes = await addLike(postData);
-        if (addRes?.data?.status !== 0) {
-          throw new Error(addRes?.data?.message || "Add like failed");
-        }
-        socketClient?.emit("add_liked", postData);
+
+        return;
       }
+
+      const response = await addLike(postData);
+
+      if (response?.data?.status !== 0) {
+        throw new Error(response?.data?.message || "Add like failed");
+      }
+
+      socketClient?.emit("add_liked", postData);
     } catch (error: any) {
-      console.log("error:", error);
-      console.log("error message:", error?.message);
-      console.log("error status:", error?.response?.status);
-      console.log("error data:", error?.response?.data);
-      console.log("error headers:", error?.response?.headers);
+      console.error(
+        "❌ Like update error:",
+        error?.response?.data || error?.message || error,
+      );
 
       Alert.alert("Error", "Failed to update like status");
 
-      setIsLiked(isLiked);
+      setIsLiked(previousLikeStatus);
 
-      if (isLiked) {
-        setLocalLikeCount((prev) => prev - 1);
-      } else {
-        setLocalLikeCount((prev) => prev + 1);
-      }
-    } finally {
-      console.log("====== LIKE CLICK END ======");
+      setLocalLikeCount((prev) => {
+        return previousLikeStatus ? prev + 1 : Math.max(0, prev - 1);
+      });
     }
-  }, [isLiked, movieId, userIdLogin, socketClient, dispatch, positionVideo]);
+  }, [isLiked, movieId, userIdLogin]);
 
-  const getResultStyle = () => {
-    switch (result) {
-      case "Win":
-        return { color: "#1ec75f", text: "Win", borderColor: "#ffffff" };
-      case "Loss":
-        return { color: "#f12d2d", text: "Loss", borderColor: "#ef4444" };
-      case "Draw":
-        return { color: "#eab308", text: "Draw", borderColor: "#eab308" };
-      default:
-        return null;
-    }
-  };
-
-  const resultStyle: any = getResultStyle();
+  // رنگ‌های متناسب با تم
+  const iconColor = isDark ? "#ffffff" : "#1f2937";
+  const disabledIconColor = isDark
+    ? "rgba(255, 255, 255, 0.45)"
+    : "rgba(31, 41, 55, 0.45)";
 
   return (
     <View position="absolute" bottom={10} left={0} right={0} zIndex={10}>
@@ -213,12 +280,11 @@ const OptionBottom: React.FC<OptionBottomProps> = ({
       >
         <View flex={1} alignItems="flex-start">
           <TouchableOpacity onPress={handleToggleComments}>
-            <Icon size={20} name="chat-bubble-outline" color="white" />
+            <Icon size={20} name="chat-bubble-outline" color={iconColor} />
           </TouchableOpacity>
         </View>
-        {((!endTime && inviteWatch) ||
-          (!endTime && profileWatch) ||
-          (!endTime && itsHome)) && (
+
+        {shouldShowWaitingLike && (
           <View flex={1} alignItems="center">
             <View px={2} marginTop={50} py={1} borderRadius="$3">
               <Text
@@ -232,35 +298,39 @@ const OptionBottom: React.FC<OptionBottomProps> = ({
             </View>
           </View>
         )}
+
         <View flex={1} alignItems="flex-end">
           <XStack gap={2} alignItems="center">
-            {((endTime && inviteWatch) || (profileWatch && endTime)) && (
+            {canLike && (
               <TouchableOpacity
                 onPress={handleLikeClick}
-                style={{ padding: 8, zIndex: 999 }}
+                style={{
+                  padding: 8,
+                  zIndex: 999,
+                }}
               >
-                {isLiked ? (
-                  <Icon name="thumb-up" size={20} color="#ffffff" />
-                ) : (
-                  <Icon name="thumb-up-off-alt" size={20} color="white" />
-                )}
+                <Icon
+                  name={isLiked ? "thumb-up" : "thumb-up-off-alt"}
+                  size={20}
+                  color={iconColor}
+                />
               </TouchableOpacity>
             )}
-            {((endTime && itsHome) || (endTime && profileWatch)) && (
+
+            {shouldShowLikeCount && (
               <XStack gap={1} alignItems="center">
-                <Text margin={2} pt={1} color="$grey300" fontSize="$3">
+                <Text margin={2} pt={1} color="$textSecondary" fontSize="$3">
                   {fixNumberCount(localLikeCount)}
                 </Text>
               </XStack>
             )}
-            {((!endTime && inviteWatch) ||
-              (!endTime && profileWatch) ||
-              (!endTime && itsHome)) && (
+
+            {shouldShowWaitingLike && (
               <XStack gap={5} alignItems="center">
-                <Text marginTop={3} color="$grey300" fontSize="$3">
+                <Text marginTop={3} color="$textSecondary" fontSize="$3">
                   {fixNumberCount(localLikeCount)}
                 </Text>
-                <Icon name="thumb-up" color="#b4b4b485" size={20} />
+                <Icon name="thumb-up" color={disabledIconColor} size={20} />
               </XStack>
             )}
           </XStack>
@@ -270,4 +340,4 @@ const OptionBottom: React.FC<OptionBottomProps> = ({
   );
 };
 
-export default OptionBottom;
+export default React.memo(OptionBottom);

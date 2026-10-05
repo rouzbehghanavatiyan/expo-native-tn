@@ -21,16 +21,8 @@ const VideosProfileItem = ({
   isActive = true,
   onPlay,
 }: any) => {
-  const matchedInsertDate = video?.inviteMatched?.insertDate;
-  const insertedInsertDate = video?.inviteInserted?.insertDate;
-
-  const startTime = matchedInsertDate ?? insertedInsertDate;
-
-  const hasValidInsertDate = (value: unknown) =>
-    value !== undefined && value !== null && value !== -1 && value !== "";
-  const showTimer =
-    hasValidInsertDate(matchedInsertDate) ||
-    hasValidInsertDate(insertedInsertDate);
+  const endAt = video?.matchEndAt ?? null;
+  const showTimer = !!endAt;
 
   const resultInserted =
     video?.likeInserted > video?.likeMatched
@@ -119,14 +111,11 @@ const VideosProfileItem = ({
         <View pointerEvents="box-none" style={styles.timerOverlay}>
           <View style={styles.timerBox}>
             <TimerTornoment
-              video={video}
-              startTime={video?.inviteMatched?.insertDate}
-              duration={3600}
+              endAt={endAt}
               active={isActive}
               onComplete={() => {
-                if (isAnyPlaying) {
-                  onPlay(null);
-                }
+                if (isAnyPlaying) onPlay(null);
+                onMatchExpired?.();
               }}
             />
           </View>

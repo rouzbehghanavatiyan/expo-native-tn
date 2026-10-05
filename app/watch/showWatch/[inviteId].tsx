@@ -1,6 +1,8 @@
 import Comments from "@/app/comments";
 import VideoSkeleton from "@/src/components/VideoSkeleton";
 import ShowWatchSlide from "@/src/components/VideoSlide";
+import { getColors } from "@/src/hook/themeColors";
+import { useAppTheme } from "@/src/hook/ThemeContext";
 import { useShowWatch } from "@/src/hook/useShowWatch";
 import { attachmentListByInviteId } from "@/src/services/masterServices";
 import {
@@ -11,13 +13,20 @@ import {
 } from "@/src/slices/main";
 import { useAppDispatch, useAppSelector } from "@/src/store/reduxHookType";
 import { router, useLocalSearchParams } from "expo-router";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   ActivityIndicator,
   BackHandler,
   Dimensions,
   FlatList,
   Platform,
+  StatusBar,
   StyleSheet,
   Text,
   View,
@@ -35,11 +44,14 @@ export default function ShowWatchScreen() {
     (state) => state.main.showWatchMatch,
   );
   const userIdLogin = main?.userLogin?.user?.id || main?.userLogin?.userId;
+  const { isDark } = useAppTheme();
+  const colors = getColors(isDark);
 
   const [showComments, setShowComments] = useState(false);
   const [commentPosition, setCommentPosition] = useState(0);
   const [selectedVideo, setSelectedVideo] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const styles = useMemo(() => createStyles(colors), [isDark]);
 
   const [containerHeight, setContainerHeight] = useState(
     Dimensions.get("window").height,
@@ -175,7 +187,8 @@ export default function ShowWatchScreen() {
     hasFetchedOnce.current && !loading && (!data || data.length === 0);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
+      <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
       <View
         style={styles.container}
         onLayout={(event) =>
@@ -251,64 +264,62 @@ export default function ShowWatchScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#000",
-  },
-  page: {
-    backgroundColor: "#000",
-  },
-  centerIcon: {
-    position: "absolute",
-    top: "50%",
-    left: "50%",
-    zIndex: 999,
-    width: 40,
-    height: 40,
-    borderRadius: 32,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.45)",
-    justifyContent: "center",
-    alignItems: "center",
-    transform: [{ translateX: -20 }, { translateY: -20 }],
-    backgroundColor: "rgba(0,0,0,0.25)",
-  },
-  emptyWrapper: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 16,
-    backgroundColor: "#000",
-  },
-  emptyCard: {
-    width: "100%",
-    maxWidth: 420,
-    borderWidth: 1,
-    borderColor: "#333",
-    borderRadius: 12,
-    padding: 20,
-    backgroundColor: "#1c1c1e",
-    shadowColor: "#000",
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    shadowOffset: {
-      width: 0,
-      height: 3,
+const createStyles = (c: ReturnType<typeof getColors>) =>
+  StyleSheet.create({
+    container: { flex: 1, backgroundColor: c.bg },
+    page: { backgroundColor: c.bg },
+
+    centerIcon: {
+      position: "absolute",
+      top: "50%",
+      left: "50%",
+      zIndex: 999,
+      width: 40,
+      height: 40,
+      borderRadius: 32,
+      borderWidth: 1,
+      borderColor: "rgba(255,255,255,0.45)",
+      justifyContent: "center",
+      alignItems: "center",
+      transform: [{ translateX: -20 }, { translateY: -20 }],
+      backgroundColor: "rgba(0,0,0,0.25)",
     },
-    elevation: 3,
-  },
-  emptyTitle: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: "#fff",
-    marginBottom: 12,
-    textAlign: "center",
-  },
-  emptyText: {
-    fontSize: 14,
-    lineHeight: 21,
-    color: "#aaa",
-    textAlign: "center",
-  },
-});
+    emptyWrapper: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+      padding: 16,
+      backgroundColor: c.bg,
+    },
+    emptyCard: {
+      width: "100%",
+      maxWidth: 420,
+      borderWidth: 1,
+      borderColor: "#333",
+      borderRadius: 12,
+      padding: 20,
+      backgroundColor: c.card,
+
+      shadowColor: "#000",
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      shadowOffset: {
+        width: 0,
+        height: 3,
+      },
+      elevation: 3,
+    },
+    emptyTitle: {
+      fontSize: 20,
+      fontWeight: "700",
+      color: c.title,
+      marginBottom: 12,
+      textAlign: "center",
+    },
+    emptyText: {
+      fontSize: 14,
+      lineHeight: 21,
+      color: c.text,
+      textAlign: "center",
+    },
+  });

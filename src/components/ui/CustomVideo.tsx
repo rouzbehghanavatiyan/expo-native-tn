@@ -23,6 +23,8 @@ interface CustomVideoProps {
   uri: any;
   isPlaying: boolean;
   onVideoPlay?: () => void;
+  backgroundColor?: string;
+
   positionVideo: any;
   resizeMode?: any;
 }
@@ -34,6 +36,7 @@ const CustomVideo = memo(
     isPlaying,
     onVideoPlay,
     positionVideo,
+    backgroundColor = "black",
     resizeMode = "contain",
   }: CustomVideoProps) => {
     const isStretch = resizeMode === 4 || resizeMode === "stretch";
@@ -125,16 +128,19 @@ const CustomVideo = memo(
     const shouldPlay = isPlaying && isFocused && !isDragging;
 
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor }]}>
         {isVideoLoading && (
           <View
             style={[
               StyleSheet.absoluteFill,
               styles.centerContent,
-              { zIndex: 20, backgroundColor: "black" },
+              { zIndex: 20, backgroundColor },
             ]}
           >
-            <ActivityIndicator size="large" color="#ffffff" />
+            <ActivityIndicator
+              size="large"
+              color={backgroundColor === "black" ? "#fff" : "#000"}
+            />
           </View>
         )}
         {!!cachedUri && !isCacheLoading && (

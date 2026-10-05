@@ -40,6 +40,7 @@ import { socketClient } from "@/src/utils/socketClient";
 
 import { Icon } from "@/src/components/Icon";
 import { getThemeColor } from "@/src/hook/getThemeColor";
+import { isMatchActive, withMatchEndAt } from "@/src/utils/matchTimer";
 import Comments from "../comments";
 import VideosProfileItem from "../profile/VideosProfileItem";
 
@@ -71,6 +72,7 @@ const Profile: React.FC = () => {
   const followingCountRedux = useAppSelector(
     (state) => state?.main?.followingLength,
   );
+
   const myUserName = userLogin?.user?.userName;
   const myProfileImage = userLogin?.profile;
   const myScore = userLogin?.score;
@@ -82,6 +84,18 @@ const Profile: React.FC = () => {
   const [commentPosition, setCommentPosition] = useState(0);
   const [otherUserVideos, setOtherUserVideos] = useState<any[]>([]);
   const flatListRef = useRef<FlatList<any>>(null);
+  const expireTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
+  const onRefreshRef = useRef<() => void>(() => {});
+
+  const handleMatchExpired = useCallback(() => {
+    clearTimeout(expireTimerRef.current);
+    expireTimerRef.current = setTimeout(() => onRefreshRef.current(), 3000);
+  }, []);
+
+  useEffect(() => () => clearTimeout(expireTimerRef.current), []);
+
   const dispatch = useAppDispatch();
   const userLoginRef = useRef(userLogin);
   useEffect(() => {
@@ -139,10 +153,12 @@ const Profile: React.FC = () => {
       ) {
         return null;
       }
-      return await userAttachmentList({
+      const resUserAttachmentList = await userAttachmentList({
         ...paginationParams,
         id: targetUserId,
       });
+      logger.info("resUserAttachmentList", resUserAttachmentList);
+      return resUserAttachmentList;
     },
     [targetUserId, isMyProfile, myVideosInRedux.length],
   );
@@ -150,19 +166,18 @@ const Profile: React.FC = () => {
   const handleDataLoaded = useCallback(
     (newItems: any[], isFirstPage: boolean) => {
       if (!newItems) return;
+      const items = withMatchEndAt(newItems);
 
       if (isMyProfile) {
-        if (isFirstPage) {
-          dispatch(RsetProfileVideo(newItems));
-        } else {
-          dispatch(RsetProfileVideo([...myVideosInRedux, ...newItems]));
-        }
+        dispatch(
+          RsetProfileVideo(
+            isFirstPage ? items : [...myVideosInRedux, ...items],
+          ),
+        );
       } else {
-        if (isFirstPage) {
-          setOtherUserVideos(newItems);
-        } else {
-          setOtherUserVideos((prev) => [...prev, ...newItems]);
-        }
+        setOtherUserVideos((prev) =>
+          isFirstPage ? items : [...prev, ...items],
+        );
       }
     },
     [dispatch, isMyProfile, myVideosInRedux],
@@ -218,21 +233,20 @@ const Profile: React.FC = () => {
             console.error("❌ Follower Length Error:", err?.message),
           ),
       ];
-
       if (isMyProfile && userLogin?.user?.id) {
         promises.push(refreshMyProfileAttachment());
       }
 
       const [videosRes] = await Promise.all(promises);
+      logger.info("User Attachment List Result:", videosRes?.data);
 
       const freshVideos = videosRes?.data?.data || videosRes?.data || videosRes;
 
       if (freshVideos && Array.isArray(freshVideos)) {
-        if (isMyProfile) {
-          dispatch(RsetProfileVideo(freshVideos));
-        } else {
-          setOtherUserVideos(freshVideos);
-        }
+        const items = withMatchEndAt(freshVideos);
+        isMyProfile
+          ? dispatch(RsetProfileVideo(items))
+          : setOtherUserVideos(items);
       }
     } catch (error) {
       console.error("Profile refresh error:", error);
@@ -240,6 +254,7 @@ const Profile: React.FC = () => {
       setRefreshing(false);
     }
   };
+  onRefreshRef.current = onRefresh;
 
   useFocusEffect(
     useCallback(() => {
@@ -257,13 +272,10 @@ const Profile: React.FC = () => {
     }
   }, [targetUserId]);
 
-  const itsMatchingWithTimer = useMemo(() => {
-    return allVideoData?.some(
-      (item: any) =>
-        item?.inviteInserted?.insertDate !== -1 ||
-        item?.inviteMatched?.insertDate !== -1,
-    );
-  }, [allVideoData]);
+  const itsMatchingWithTimer = useMemo(
+    () => allVideoData?.some(isMatchActive),
+    [allVideoData],
+  );
 
   useEffect(() => {
     if (needProfileRefresh) {
@@ -274,9 +286,7 @@ const Profile: React.FC = () => {
 
   useEffect(() => {
     if (!itsMatchingWithTimer) return;
-
     let isMounted = true;
-
     const timer = setTimeout(() => {
       if (isMounted && flatListRef.current) {
         flatListRef.current.scrollToOffset({ offset: 230, animated: true });

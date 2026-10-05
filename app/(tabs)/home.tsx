@@ -10,6 +10,7 @@ import {
   setPaginationHomeMatch,
 } from "@/src/slices/main";
 import { useAppDispatch, useAppSelector } from "@/src/store/reduxHookType";
+import { logger } from "@/src/utils/logger";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { FlashList } from "@shopify/flash-list";
 import { useRouter } from "expo-router";
@@ -31,6 +32,7 @@ const HomeScreen: React.FC = () => {
   const hasFetchedOnce = useRef(false);
   const main = useAppSelector((state) => state.main);
   const { pagination, data: reduxData } = main.homeMatch;
+
   const userIdLogin = main?.userLogin?.user?.id;
   const [currentIndex, setCurrentIndex] = useState(0);
   const { width, height } = useWindowDimensions();
@@ -105,6 +107,7 @@ const HomeScreen: React.FC = () => {
         });
 
         hasFetchedOnce.current = true;
+        logger.info("res?.data?.data", res?.data?.data);
 
         return res?.data?.data || [];
       } catch (error) {

@@ -1,9 +1,9 @@
-import React from "react";
-import { Dimensions, StyleSheet, View } from "react-native";
+import React, { useMemo } from "react";
+import { StyleSheet, View } from "react-native";
+import { useAppTheme } from "../hook/ThemeContext";
+import { getColors } from "../hook/themeColors";
 import { Icon } from "./Icon";
 import VideoSection from "./VideoSection";
-
-const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 export default function ShowWatchSlide({
   video,
@@ -16,7 +16,6 @@ export default function ShowWatchSlide({
   dropdownItems,
   setOpenDropdowns,
   handleToggleComments,
-  endTime,
   showScore,
   showResult,
   showLiked,
@@ -24,7 +23,9 @@ export default function ShowWatchSlide({
 }: any) {
   const findeVideoInTournomentTop = video?.attachmentMatched?.insertDate;
   const findeVideoInTournomentBott = video?.attachmentInserted?.insertDate;
-  const getTimeNow = new Date();
+  const { isDark } = useAppTheme();
+  const colors = getColors(isDark);
+  const styles = useMemo(() => createStyles(colors), [isDark]);
 
   const getTimestamp = (dateString: any) => {
     if (!dateString) return 0;
@@ -87,11 +88,7 @@ export default function ShowWatchSlide({
       </View>
       {video?.icon ? (
         <View style={styles.centerIcon}>
-          <Icon
-            name={video?.icon}
-            color="rgba(255, 255, 255, 0.14)"
-            size={20}
-          />
+          <Icon name={video?.icon} color={colors.centerIconColor} size={20} />
         </View>
       ) : null}
       <View style={styles.half}>
@@ -124,25 +121,27 @@ export default function ShowWatchSlide({
   );
 }
 
-const styles = StyleSheet.create({
-  half: {
-    height: "50%",
-    position: "relative",
-    flex: 1,
-    borderBottomWidth: 1,
-    borderBottomColor: "#000000",
-  },
-  centerIcon: {
-    position: "absolute",
-    top: "50%",
-    left: "50%",
-    zIndex: 999,
-    width: 40,
-    height: 40,
-    borderRadius: 32,
-    justifyContent: "center",
-    alignItems: "center",
-    transform: [{ translateX: -20 }, { translateY: -20 }],
-    backgroundColor: "rgba(0,0,0,0.25)",
-  },
-});
+const createStyles = (c: ReturnType<typeof getColors>) =>
+  StyleSheet.create({
+    half: {
+      height: "50%",
+      position: "relative",
+      flex: 1,
+      borderBottomWidth: 1,
+      borderBottomColor: c.divider,
+      backgroundColor: c.videoBg,
+    },
+    centerIcon: {
+      position: "absolute",
+      top: "50%",
+      left: "50%",
+      zIndex: 999,
+      width: 40,
+      height: 40,
+      borderRadius: 32,
+      justifyContent: "center",
+      alignItems: "center",
+      transform: [{ translateX: -20 }, { translateY: -20 }],
+      backgroundColor: c.centerIconBg,
+    },
+  });

@@ -3,6 +3,7 @@ import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { Image, Text as RNText, StyleSheet } from "react-native";
 import { Text, View } from "tamagui";
+import { logger } from "../utils/logger";
 
 const Started = require("../assets/ranks/starter.png");
 const bronseBase1 = require("../assets/ranks/bronze1.png");
@@ -201,6 +202,8 @@ const ImageRank: React.FC<ProfileWithRankProps> = ({
       location: userInfo?.location,
       bio: userInfo?.bio,
     };
+
+    logger.info("targetData targetData targetData", targetData);
 
     router.push({
       pathname: "/profile",

@@ -2,6 +2,8 @@ import React, { memo, useState } from "react";
 import { Dimensions, StyleSheet, View } from "react-native";
 import BlockedVideo from "../common/BlockedVideo";
 import FullScreenVideoModal from "../common/FullScreenVideoModal";
+import { useAppTheme } from "../hook/ThemeContext";
+import { getColors } from "../hook/themeColors";
 import { useAppSelector } from "../store/reduxHookType";
 import { getImageUrl } from "../utils/fileHelper";
 import OptionBottom from "./OptionBottom";
@@ -36,6 +38,8 @@ const VideoSection = ({
   const main = useAppSelector((state) => state.main);
   const userIdLogin = main?.userLogin?.user?.id;
   const [isFullScreen, setIsFullScreen] = useState(false);
+  const { isDark } = useAppTheme();
+  const colors = getColors(isDark);
 
   const isBlocked =
     positionVideo === 0
@@ -64,11 +68,13 @@ const VideoSection = ({
   };
 
   if (!videoUrl && !isBlocked) {
-    return <View style={styles.placeholder} />;
+    return (
+      <View style={[styles.placeholder, { backgroundColor: colors.videoBg }]} />
+    );
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.videoBg }]}>
       <OptionTop
         main={main}
         video={video}
@@ -81,11 +87,11 @@ const VideoSection = ({
         dropdownItems={dropdownItems}
         onBoldPress={() => setIsFullScreen(true)}
       />
-
       <View style={styles.videoContainer}>
-        <View style={styles.videoCenter}>
+        <View style={[styles.videoCenter, { backgroundColor: colors.videoBg }]}>
           {!isBlocked && (
             <CustomVideo
+              backgroundColor={colors.videoBg}
               videoId={videoId}
               positionVideo={positionVideo}
               onVideoPlay={handlePlayAction}
@@ -116,7 +122,6 @@ const VideoSection = ({
           />
         </View>
       </View>
-
       {isBlocked && (
         <BlockedVideo
           userName={blockedUser}
@@ -130,7 +135,6 @@ const VideoSection = ({
           }}
         />
       )}
-
       <FullScreenVideoModal
         visible={isFullScreen}
         onClose={() => setIsFullScreen(false)}
