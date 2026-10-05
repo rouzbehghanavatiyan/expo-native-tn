@@ -8,10 +8,6 @@ import { fixNumberCount } from "../utils/fileHelper";
 import { socketClient } from "../utils/socketClient";
 import { Icon } from "./Icon";
 
-/* -------------------------------------------------------------------------- */
-/*                                   Types                                    */
-/* -------------------------------------------------------------------------- */
-
 type MatchResult = "Win" | "Loss" | "Draw" | null;
 
 interface LikeInfo {
@@ -48,10 +44,6 @@ interface OptionBottomProps {
   videoLikes: VideoLikes;
 }
 
-/* -------------------------------------------------------------------------- */
-/*                               Result Config                                */
-/* -------------------------------------------------------------------------- */
-
 const RESULT_STYLES: Record<
   Exclude<MatchResult, null>,
   {
@@ -73,19 +65,12 @@ const RESULT_STYLES: Record<
   },
 };
 
-/* -------------------------------------------------------------------------- */
-/*                               Component                                    */
-/* -------------------------------------------------------------------------- */
-
 const OptionBottom: React.FC<OptionBottomProps> = ({
   handleToggleComments,
   video,
   inviteWatch,
-  showCountLiked,
-  itsMatchingWithTimer,
   endTime,
   result,
-  showLiked,
   videoLikes,
   positionVideo,
   profileWatch,
@@ -95,17 +80,8 @@ const OptionBottom: React.FC<OptionBottomProps> = ({
   itsHome,
 }) => {
   const { isDark } = useAppTheme();
-
-  /* ------------------------------------------------------------------------ */
-  /*                                  State                                   */
-  /* ------------------------------------------------------------------------ */
-
   const [isLiked, setIsLiked] = useState(false);
   const [localLikeCount, setLocalLikeCount] = useState(0);
-
-  /* ------------------------------------------------------------------------ */
-  /*                              Derived Values                              */
-  /* ------------------------------------------------------------------------ */
 
   const movieId = useMemo(() => {
     if (!video) {
@@ -137,10 +113,6 @@ const OptionBottom: React.FC<OptionBottomProps> = ({
     return video.likes[movieId];
   }, [video, movieId]);
 
-  /* ------------------------------------------------------------------------ */
-  /*                              Result Style                                */
-  /* ------------------------------------------------------------------------ */
-
   const resultStyle = useMemo(() => {
     if (!result) {
       return null;
@@ -148,10 +120,6 @@ const OptionBottom: React.FC<OptionBottomProps> = ({
 
     return RESULT_STYLES[result];
   }, [result]);
-
-  /* ------------------------------------------------------------------------ */
-  /*                              Like Count                                  */
-  /* ------------------------------------------------------------------------ */
 
   useEffect(() => {
     let baseCount = 0;
@@ -175,10 +143,6 @@ const OptionBottom: React.FC<OptionBottomProps> = ({
     setLocalLikeCount(Math.max(0, baseCount + socketDelta));
   }, [countLiked, video, positionVideo, movieId, videoLikes, likeInfo]);
 
-  /* ------------------------------------------------------------------------ */
-  /*                              Like Status                                 */
-  /* ------------------------------------------------------------------------ */
-
   useEffect(() => {
     if (!movieId || !video) {
       return;
@@ -195,19 +159,11 @@ const OptionBottom: React.FC<OptionBottomProps> = ({
     setIsLiked(Boolean(initialLikeStatus));
   }, [video, positionVideo, movieId, likeInfo]);
 
-  /* ------------------------------------------------------------------------ */
-  /*                         External Like Status                             */
-  /* ------------------------------------------------------------------------ */
-
   useEffect(() => {
     if (externalIsLiked !== undefined) {
       setIsLiked(externalIsLiked);
     }
   }, [externalIsLiked]);
-
-  /* ------------------------------------------------------------------------ */
-  /*                              Like Handler                                */
-  /* ------------------------------------------------------------------------ */
 
   const handleLikeClick = useCallback(async () => {
     if (!movieId || !userIdLogin) {
@@ -264,7 +220,6 @@ const OptionBottom: React.FC<OptionBottomProps> = ({
     }
   }, [isLiked, movieId, userIdLogin]);
 
-  // رنگ‌های متناسب با تم
   const iconColor = isDark ? "#ffffff" : "#1f2937";
   const disabledIconColor = isDark
     ? "rgba(255, 255, 255, 0.45)"

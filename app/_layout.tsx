@@ -22,7 +22,6 @@ function AppShell() {
   const [fontsLoaded] = useFonts({
     OswaldLight: require("../src/assets/fonts/logoFont/Oswald-Light.ttf"),
     OleoScriptBold: require("../src/assets/fonts/logoFont/OleoScript-Bold.ttf"),
-
     playFair: require("../src/assets/fonts/PlayfairDisplay-Italic-VariableFont_wght.ttf"),
     PlusJakartaSans: require("../src/assets/fonts/PlusJakartaSans-Regular.ttf"),
     Vazirmatn: require("../src/assets/fonts/Vazirmatn-Regular.ttf"),
