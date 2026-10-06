@@ -135,6 +135,10 @@ const Profile: React.FC = () => {
     try {
       const profileRes = await profileAttachment(myUserId);
       const resData = profileRes?.data;
+      logger.info(
+        "profileResprofileResprofileResprofileResprofileResprofileResprofileResprofileResprofileResprofileResprofileResprofileResprofileResprofileResprofileResprofileResprofileResprofileResprofileResprofileResprofileResprofileResprofileResprofileResprofileResprofileResprofileResprofileResprofileResprofileResprofileResprofileResprofileRes",
+        resData,
+      );
       const freshUserData = resData?.data || resData;
       if (freshUserData) {
         dispatch(RsetUserLogin({ ...userLoginRef.current, ...freshUserData }));
@@ -157,7 +161,6 @@ const Profile: React.FC = () => {
         ...paginationParams,
         id: targetUserId,
       });
-      logger.info("resUserAttachmentList", resUserAttachmentList);
       return resUserAttachmentList;
     },
     [targetUserId, isMyProfile, myVideosInRedux.length],
@@ -400,6 +403,7 @@ const Profile: React.FC = () => {
       currentProfile,
     ],
   );
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: screenBackground }}>
       <YStack f={1} bg="$backgroundPaper">

@@ -106,10 +106,6 @@ const LoginScreen: React.FC<any> = () => {
 
           followerLength(userId)
             .then((res) => {
-              console.log(
-                "✅ Follower Length Response:",
-                JSON.stringify(res.data, null, 2),
-              );
               dispatch(RsetFollowerLength(res?.data?.data));
             })
             .catch((err) =>
@@ -123,7 +119,7 @@ const LoginScreen: React.FC<any> = () => {
                 JSON.stringify(res.data, null, 2),
               );
               if (res?.data?.data) {
-                dispatch(RsetUserLogin({ ...res.data.data, token, userId }));
+                dispatch(RsetUserLogin({ ...res?.data?.data, token, userId }));
               }
             })
             .catch((err) => {

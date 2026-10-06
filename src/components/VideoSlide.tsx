@@ -2,8 +2,11 @@ import React, { useMemo } from "react";
 import { StyleSheet, View } from "react-native";
 import { useAppTheme } from "../hook/ThemeContext";
 import { getColors } from "../hook/themeColors";
+import { useMatchOpen } from "../hook/useMatchOpen";
+import { logger } from "../utils/logger";
 import { Icon } from "./Icon";
 import VideoSection from "./VideoSection";
+const ONE_HOUR_MS = 60 * 60 * 1000; // 3,600,000 میلی‌ثانیه (۱ ساعت)
 
 export default function ShowWatchSlide({
   video,
@@ -25,8 +28,10 @@ export default function ShowWatchSlide({
   const findeVideoInTournomentBott = video?.attachmentInserted?.insertDate;
   const { isDark } = useAppTheme();
   const colors = getColors(isDark);
-  const styles = useMemo(() => createStyles(colors), [isDark]);
+  const isOpen = useMatchOpen(video?.matchEndAt);
+  const votingOpen = isOpen && !video?.isFinished;
 
+  const styles = useMemo(() => createStyles(colors), [isDark]);
   const getTimestamp = (dateString: any) => {
     if (!dateString) return 0;
     let fixedDate = dateString;
@@ -42,7 +47,7 @@ export default function ShowWatchSlide({
   const latestTime = Math.max(timeTop, timeBott);
 
   const isTimeUp =
-    latestTime > 0 ? new Date().getTime() - latestTime >= 120000 : false;
+    latestTime > 0 ? new Date().getTime() - latestTime >= 3600000 : false;
 
   const resultInserted =
     video?.likeInserted > video?.likeMatched
@@ -58,6 +63,8 @@ export default function ShowWatchSlide({
         ? "Loss"
         : "Draw";
 
+  logger.info("vvvvvvvvvvvvvvvvvvvvvvvvvvvvv", video);
+
   return (
     <>
       <View style={styles.half}>
@@ -65,10 +72,10 @@ export default function ShowWatchSlide({
           itsHome={itsHome}
           inviteWatch={inviteWatch}
           score={showScore ? video?.scoreInserted : null}
-          result={showResult || isTimeUp ? resultInserted : null}
+          result={showResult || !votingOpen ? resultInserted : null} // پایینی: resultMatched
+          endTime={votingOpen}
           showLiked={showLiked}
           countLiked={showCountLiked ? video?.likeInserted : null}
-          endTime={isTimeUp ? false : true}
           video={video}
           isPlaying={
             currentlyPlayingId === video?.attachmentInserted?.attachmentId
@@ -93,13 +100,13 @@ export default function ShowWatchSlide({
       ) : null}
       <View style={styles.half}>
         <VideoSection
+          result={showResult || !votingOpen ? resultInserted : null}
+          endTime={votingOpen}
           itsHome={itsHome}
           inviteWatch={inviteWatch}
           score={showScore ? video?.scoreMatched : null}
-          result={showResult || isTimeUp ? resultMatched : null}
           showLiked={showLiked}
           countLiked={showCountLiked ? video?.likeMatched : null}
-          endTime={isTimeUp ? false : true}
           video={video}
           isPlaying={
             currentlyPlayingId === video?.attachmentMatched?.attachmentId

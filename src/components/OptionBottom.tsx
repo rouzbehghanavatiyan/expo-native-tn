@@ -5,6 +5,7 @@ import { Text, View, XStack } from "tamagui";
 import { useAppTheme } from "../hook/ThemeContext";
 import { addLike, removeLike } from "../services/masterServices";
 import { fixNumberCount } from "../utils/fileHelper";
+import { logger } from "../utils/logger";
 import { socketClient } from "../utils/socketClient";
 import { Icon } from "./Icon";
 
@@ -88,6 +89,8 @@ const OptionBottom: React.FC<OptionBottomProps> = ({
       return null;
     }
 
+    logger.info("video video video", video);
+
     return positionVideo === 0
       ? video?.attachmentInserted?.attachmentId
       : video?.attachmentMatched?.attachmentId;
@@ -166,9 +169,7 @@ const OptionBottom: React.FC<OptionBottomProps> = ({
   }, [externalIsLiked]);
 
   const handleLikeClick = useCallback(async () => {
-    if (!movieId || !userIdLogin) {
-      return;
-    }
+    if (!movieId || !userIdLogin || !canLike) return;
 
     const previousLikeStatus = isLiked;
     const newLikeStatus = !previousLikeStatus;
@@ -218,7 +219,7 @@ const OptionBottom: React.FC<OptionBottomProps> = ({
         return previousLikeStatus ? prev + 1 : Math.max(0, prev - 1);
       });
     }
-  }, [isLiked, movieId, userIdLogin]);
+  }, [isLiked, movieId, userIdLogin, canLike]);
 
   const iconColor = isDark ? "#ffffff" : "#1f2937";
   const disabledIconColor = isDark

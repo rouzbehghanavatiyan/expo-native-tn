@@ -99,7 +99,6 @@ const VideoSection = ({
               isPlaying={isPlaying}
             />
           )}
-
           <OptionBottom
             itsHome={itsHome}
             videoLikes={videoLikes}

@@ -19,6 +19,7 @@ export interface FormErrors {
 
 export interface FormValues {
   username?: string;
+  gender?: any;
   email?: string;
   password?: string;
   passwordConfirmation?: string;

@@ -12,6 +12,8 @@ import {
   setPaginationShowWatch,
 } from "@/src/slices/main";
 import { useAppDispatch, useAppSelector } from "@/src/store/reduxHookType";
+import { logger } from "@/src/utils/logger";
+import { withMatchEndAt } from "@/src/utils/matchTimer";
 import { router, useLocalSearchParams } from "expo-router";
 import React, {
   useCallback,
@@ -56,7 +58,6 @@ export default function ShowWatchScreen() {
   const [containerHeight, setContainerHeight] = useState(
     Dimensions.get("window").height,
   );
-
   const loadingRef = useRef(false);
   const paginationRef = useRef(pagination);
 
@@ -84,8 +85,8 @@ export default function ShowWatchScreen() {
           take: currentTake,
           inviteId: inviteIdNumber,
         });
-
-        const newData = res?.data || [];
+        logger.info("cccccccccccccccccccccccccccccccccc", res);
+        const newData = withMatchEndAt(res?.data || []);
 
         if (reset) {
           dispatch(RsetShowWatch(newData));

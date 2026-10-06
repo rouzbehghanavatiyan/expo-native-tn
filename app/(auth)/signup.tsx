@@ -47,7 +47,7 @@ export default function SignUpScreen() {
   const inputBorderColor = isDark ? "#383838" : "#e0e0e0";
   const iconColor = isDark ? "#999999" : "#666666";
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = (field: string, value: string | number) => {
     setInputs((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: undefined }));
@@ -62,25 +62,33 @@ export default function SignUpScreen() {
   };
 
   const handleSignUp = async () => {
-    const validationErrors = validateForm(inputs, [
-      "username",
-      "email",
-      "password",
-      "passwordConfirmation",
-    ]);
+    const isGenderEmpty =
+      inputs.gender === undefined ||
+      inputs.gender === null ||
+      inputs.gender === "";
 
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
+    const isValid = validateForm(inputs, setErrors);
+
+    if (isGenderEmpty) {
+      setErrors((prev) => ({
+        ...prev,
+        gender: "Please select your gender",
+      }));
+    }
+
+    if (!isValid || isGenderEmpty) {
       return;
     }
 
     setIsLoading(true);
+
     try {
       const res = await registerUser({
         username: inputs.username,
         email: inputs.email,
         password: inputs.password,
         confirmPassword: inputs.passwordConfirmation,
+        userGender: Number(inputs.gender),
       });
 
       const { status, message: apiMessage } = res?.data || {};
@@ -114,6 +122,11 @@ export default function SignUpScreen() {
       setIsLoading(false);
     }
   };
+
+  const genderOptions = [
+    { label: "Male", value: 1, icon: "male" },
+    { label: "Female", value: 2, icon: "female" },
+  ];
 
   return (
     <SafeAreaView
@@ -223,6 +236,71 @@ export default function SignUpScreen() {
                       </Text>
                       <Text color="$errorMain" fontSize="$2">
                         {errors.email}
+                      </Text>
+                    </XStack>
+                  )}
+                </YStack>
+
+                <YStack gap="$2" mt="$1">
+                  <XStack gap="$3" justifyContent="space-between">
+                    {genderOptions.map((item) => {
+                      const isSelected = inputs.gender === item.value;
+                      return (
+                        <View
+                          key={item.value}
+                          flex={1}
+                          onPress={() =>
+                            handleInputChange("gender", item.value)
+                          }
+                          cursor="pointer"
+                          flexDirection="row"
+                          alignItems="center"
+                          justifyContent="center"
+                          gap="$2"
+                          py="$3"
+                          borderRadius="$2"
+                          borderWidth={1}
+                          borderColor={
+                            isSelected
+                              ? "$primaryMain"
+                              : errors.gender
+                                ? "$errorMain"
+                                : isDark
+                                  ? "#383838"
+                                  : "#e0e0e0"
+                          }
+                          backgroundColor={
+                            isSelected
+                              ? isDark
+                                ? "#2a2a2a"
+                                : "#f0f7ff"
+                              : "transparent"
+                          }
+                        >
+                          <Icon
+                            name={item.icon}
+                            size={18}
+                            color={isSelected ? "$primaryMain" : iconColor}
+                          />
+                          <Text
+                            fontSize="$3"
+                            fontWeight={isSelected ? "bold" : "normal"}
+                            color={isSelected ? "$primaryMain" : "$textPrimary"}
+                          >
+                            {item.label}
+                          </Text>
+                        </View>
+                      );
+                    })}
+                  </XStack>
+
+                  {errors.gender && (
+                    <XStack gap="$1.5" alignItems="center" ml="$1">
+                      <Text color="$errorMain" fontSize="$2">
+                        *
+                      </Text>
+                      <Text color="$errorMain" fontSize="$2">
+                        {errors.gender}
                       </Text>
                     </XStack>
                   )}

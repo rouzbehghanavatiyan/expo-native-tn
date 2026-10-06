@@ -8,7 +8,7 @@ import {
 import { OnLoadData, OnProgressData, VideoRef } from "react-native-video";
 import { Spinner, Text, View, XStack } from "tamagui";
 import { RsetShowTimerButtn } from "../slices/main";
-import { goToStep, removeInviteThunk } from "../slices/video";
+import { goToStep, removeInviteThunk, updateMovieData } from "../slices/video";
 import { useAppDispatch, useAppSelector } from "../store/reduxHookType";
 import BaseButton from "./BaseButtom";
 import { Icon } from "./Icon";
@@ -174,15 +174,11 @@ const VideoPreviewStep: React.FC<VideoPreviewStepProps> = ({
                 backgroundColor="#374151"
                 marginTop="$1"
               />
-
               <View
                 flex={1}
                 width="100%"
                 alignItems="center"
                 justifyContent="space-evenly"
-                paddingVertical="$2"
-                borderBottomWidth={0.5}
-                borderBottomColor="rgba(251, 6, 6, 0.82)"
               >
                 <View
                   height={110}
@@ -199,7 +195,7 @@ const VideoPreviewStep: React.FC<VideoPreviewStepProps> = ({
                   {showTimerButtn ? (
                     <ButtonTimer show={showTimerButtn} startTime={120} />
                   ) : (
-                    <Icon size={50} name="Question" color="white" />
+                    <Icon size={70} name="Question" color="white" />
                   )}
                 </View>
                 <XStack alignItems="center" justifyContent="center">
@@ -212,6 +208,7 @@ const VideoPreviewStep: React.FC<VideoPreviewStepProps> = ({
                   >
                     Request a match with:
                   </Text>
+
                   <XStack
                     backgroundColor="#111827"
                     borderRadius={10}
@@ -251,19 +248,21 @@ const VideoPreviewStep: React.FC<VideoPreviewStepProps> = ({
                     })}
                   </XStack>
                 </XStack>
+                <View
+                  width={SCREEN_WIDTH - 32}
+                  height={1}
+                  backgroundColor="#374151"
+                  marginTop="$1"
+                />
               </View>
             </View>
           )}
         </View>
-
-        {/* دکمه‌های پایین صفحه */}
         <View
           shadowColor="#000000"
           shadowOffset={{ width: 0, height: -8 }}
           shadowOpacity={0.25}
           shadowRadius={12}
-          borderTopWidth={0.5}
-          borderTopColor="rgba(255, 255, 255, 0.08)"
           paddingHorizontal={20}
           paddingBottom={insets.bottom > 13 ? insets.bottom - 30 : 3}
           backgroundColor="#1f2937"
@@ -278,6 +277,7 @@ const VideoPreviewStep: React.FC<VideoPreviewStepProps> = ({
               loading={isLoading}
               disabled={!!showTimerButtn}
               onPress={() => {
+                dispatch(updateMovieData({ targetGender: selectedGender }));
                 onAccept(selectedGender);
               }}
             >

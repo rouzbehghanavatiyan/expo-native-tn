@@ -747,7 +747,6 @@ const Comments: React.FC<CommentsProps> = ({
                   py={48}
                   px={24}
                   gap={10}
-                  style={{ transform: [{ scaleY: -1 }] }}
                 >
                   <View
                     width={72}
