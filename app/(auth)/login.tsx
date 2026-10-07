@@ -43,7 +43,6 @@ const LoginScreen: React.FC<any> = () => {
 
   const dispatch = useAppDispatch();
 
-  // رنگ‌های وابسته به تم برای BaseInput و اجزا
   const inputBgColor = isDark ? "#1e1e1e" : "#ffffff";
   const inputBorderColor = isDark ? "#383838" : "#E0E0E0";
   const iconColor = isDark ? "#9E9E9E" : "#757575";

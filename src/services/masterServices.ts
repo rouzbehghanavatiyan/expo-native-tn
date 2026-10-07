@@ -184,3 +184,6 @@ export const blockListByUser = async () => {
 export const userUnBlock = async (data: any) => {
   return await api.post(`/userUnBlock`, data);
 };
+
+export const requestChangeEmail = (data: { newEmail: string }) =>
+  api.post("/Login/requestChangeEmail", data);

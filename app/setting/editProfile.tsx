@@ -25,6 +25,8 @@ export default function EditProfile() {
   const theme = useTheme();
   const router = useRouter();
   const userLogin = useAppSelector((state) => state?.main?.userLogin);
+  const [newEmail, setNewEmail] = useState("");
+  const [goBackOnClose, setGoBackOnClose] = useState(false);
 
   // Theme Colors
   const inputBorderColor = getThemeColor(theme.borderColor, "#E0E0E0");
@@ -55,10 +57,16 @@ export default function EditProfile() {
     }
   }, [userLogin]);
 
-  const showFeedback = (title: string, message: string, success: boolean) => {
+  const showFeedback = (
+    title: string,
+    message: string,
+    success: boolean,
+    goBack = false,
+  ) => {
     setFeedbackTitle(title);
     setFeedbackMessage(message);
     setIsSuccess(success);
+    setGoBackOnClose(goBack);
     setFeedbackOpen(true);
   };
 
@@ -126,34 +134,37 @@ export default function EditProfile() {
   };
 
   const handleEmailChangeRequest = async () => {
-    if (!mail || mail.trim() === "") {
-      showFeedback("Error", "Please enter a valid email address.", false);
-      return;
-    }
-
-    try {
-      setIsEmailUpdating(true);
-      showFeedback(
-        "Verification Sent",
-        `A confirmation link has been sent to ${mail}. Please check your inbox.`,
-        true,
-      );
-    } catch (error) {
-      showFeedback(
-        "Error",
-        "Failed to send email verification request.",
-        false,
-      );
-    } finally {
-      setIsEmailUpdating(false);
-    }
-  };
-
-  const handleFeedbackClose = () => {
-    setFeedbackOpen(false);
-    if (isSuccess) {
-      router.back();
-    }
+    // const email = newEmail.trim();
+    // if (!/^\S+@\S+\.\S+$/.test(email)) {
+    //   showFeedback("Error", "Please enter a valid email address.", false);
+    //   return;
+    // }
+    // try {
+    //   setIsEmailUpdating(true);
+    //   const res = await requestChangeEmail({ newEmail: email });
+    //   if (res?.data?.status === 0) {
+    //     showFeedback(
+    //       "Verification Sent",
+    //       `A confirmation link has been sent to ${email}. Your email will change after you confirm it.`,
+    //       true,
+    //     );
+    //     setNewEmail("");
+    //   } else {
+    //     showFeedback(
+    //       "Error",
+    //       res?.data?.message || "Failed to send verification email.",
+    //       false,
+    //     );
+    //   }
+    // } catch (error) {
+    //   showFeedback(
+    //     "Network Error",
+    //     "Something went wrong. Please try again.",
+    //     false,
+    //   );
+    // } finally {
+    //   setIsEmailUpdating(false);
+    // }
   };
 
   return (
