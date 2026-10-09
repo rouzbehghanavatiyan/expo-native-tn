@@ -3,6 +3,7 @@ import { allUserMessagese } from "@/src/services/nestServices";
 import { markSenderAsRead, setChatUsers } from "@/src/slices/chat";
 import { useAppDispatch, useAppSelector } from "@/src/store/reduxHookType";
 import { getImageUrl } from "@/src/utils/fileHelper";
+import { logger } from "@/src/utils/logger";
 import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import { View } from "tamagui";
@@ -36,6 +37,8 @@ const ChatRoom: React.FC = () => {
         if (!userIdLogin) return;
         const res = await allUserMessagese(userIdLogin);
         const { data, status } = res?.data || {};
+
+        logger.info("res?.data", res?.data);
         if (status === 0 && data) {
           dispatch(setChatUsers(data));
         }
@@ -56,9 +59,7 @@ const ChatRoom: React.FC = () => {
 
   const handleRedirect = (data: MessageData) => {
     const senderStr = String(data.sender || data.id);
-
     dispatch(markSenderAsRead(senderStr));
-
     router.push({
       pathname: "/chat/[id]",
       params: {

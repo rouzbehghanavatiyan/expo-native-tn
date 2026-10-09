@@ -42,7 +42,7 @@ const HomeScreen: React.FC = () => {
   const primaryColor = getThemeColor(theme.primary, "#4F46E5");
 
   const usableHeight =
-    height - headerHeight - (Platform.OS === "android" ? 32 : 0);
+    height - headerHeight - (Platform.OS === "android" ? 30 : 0);
 
   const [refreshing, setRefreshing] = useState(false);
   const [showComments, setShowComments] = useState(false);

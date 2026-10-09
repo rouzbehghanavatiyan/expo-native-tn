@@ -1,9 +1,9 @@
+import { useAppDispatch, useAppSelector } from "@/src/store/reduxHookType";
 import React from "react";
 import { Modal, Pressable } from "react-native";
-import { YStack, XStack, Text, Button } from "tamagui";
-import { useAppDispatch, useAppSelector } from "@/src/store/reduxHookType";
-import { setShowTimeout } from "../slices/video";
+import { Text, XStack, YStack } from "tamagui";
 import BaseButton from "../components/BaseButtom";
+import { setShowTimeout } from "../slices/video";
 
 export const MatchTimeoutModal = () => {
   const dispatch = useAppDispatch();
@@ -42,9 +42,12 @@ export const MatchTimeoutModal = () => {
                 No Match Found
               </Text>
               <Text fontSize="$3" color="$grey500" lineHeight={20}>
-                Your video will be matched with
-                other participants upon the{" "}
-                <Text textDecorationLine="underline" fontWeight="700" color="black">
+                Your video will be matched with other participants upon the{" "}
+                <Text
+                  textDecorationLine="underline"
+                  fontWeight="700"
+                  color="black"
+                >
                   first
                 </Text>{" "}
                 incoming request from available contenders.
@@ -54,7 +57,7 @@ export const MatchTimeoutModal = () => {
             <XStack justifyContent="flex-end">
               <BaseButton
                 flex={1}
-                bg="$warningMain"
+                bg="$blueMain"
                 onPress={() => dispatch(setShowTimeout(false))}
               >
                 Ok

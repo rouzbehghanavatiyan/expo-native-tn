@@ -13,11 +13,10 @@ const LearningStepOne: React.FC = () => {
         ta="center" // text-align: center+
         color="$textPrimary"
       >
-        Personalized talent connections at your fingertips
+        An easy way to grow
       </Text>
-
       <Text fontSize="$4" ta="center" color="$textSecondary">
-        Easy to navigate, visually appealing design.
+        Find yourself with your peers.
       </Text>
     </YStack>
   );

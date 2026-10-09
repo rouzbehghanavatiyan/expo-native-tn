@@ -168,7 +168,7 @@ export const uploadFullProcessThunk = createAsyncThunk(
         try {
           const res = await sendUserNotif({
             userId: receiverUserId,
-            message: "Your video has been successfully uploaded to Match!🎉",
+            message: "A match has been found for your video",
           });
           logger.info("✅ Match notification sent", res?.data);
         } catch (error) {
