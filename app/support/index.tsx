@@ -3,11 +3,12 @@ import BaseInput from "@/src/components/BaseInput";
 import { Icon } from "@/src/components/Icon";
 import MainTitle from "@/src/components/MainTitle";
 import { useAppTheme } from "@/src/hook/ThemeContext";
+import { supportConnect } from "@/src/services/masterServices";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { Modal, Pressable, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Spinner, Text, TextArea, XStack, YStack } from "tamagui";
+import { Text, TextArea, Theme, XStack, YStack } from "tamagui";
 // import * as Clipboard from "expo-clipboard";
 
 interface ContactCardProps {
@@ -16,13 +17,14 @@ interface ContactCardProps {
   detail: string;
   onAction?: () => void;
   actionIcon?: boolean;
+  isDark?: boolean;
 }
 
 const SUPPORT_EMAIL = "app.clashtalent@gmail.com";
 
 export default function SupportScreen() {
   const router = useRouter();
-  const { isDark, setThemeMode } = useAppTheme();
+  const { isDark } = useAppTheme();
 
   const [subject, setSubject] = useState("");
   const [description, setDescription] = useState("");
@@ -32,6 +34,8 @@ export default function SupportScreen() {
   const [feedbackTitle, setFeedbackTitle] = useState("");
   const [feedbackMessage, setFeedbackMessage] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
+
+  const borderColor = isDark ? "#2C2C2C" : "#E0E0E0";
 
   const showFeedback = (title: string, message: string, success: boolean) => {
     setFeedbackTitle(title);
@@ -55,22 +59,29 @@ export default function SupportScreen() {
       showFeedback("Validation Error", "Please enter your message.", false);
       return;
     }
-
     try {
+      const postData = {
+        subject: subject.trim(),
+        description: description.trim(),
+      };
       setIsSubmitting(true);
-
-      // const mailtoUrl = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(description)}`;
-      // await Linking.openURL(mailtoUrl);
-
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      showFeedback(
-        "Message Sent",
-        "Thank you! Your message has been sent to our support team.",
-        true,
-      );
-      setSubject("");
-      setDescription("");
+      const res = await supportConnect(postData);
+      if (res?.data?.code === 0) {
+        showFeedback(
+          "Message Sent",
+          "Thank you! Your message has been sent to our support team.",
+          true,
+        );
+        setSubject("");
+        setDescription("");
+      } else {
+        showFeedback(
+          "Error",
+          res?.data?.message ||
+            "Failed to send your message. Please try again.",
+          false,
+        );
+      }
     } catch (error) {
       console.error("Support submit error:", error);
       showFeedback(
@@ -88,148 +99,151 @@ export default function SupportScreen() {
   };
 
   return (
-    <SafeAreaView
-      style={{ flex: 1, backgroundColor: isDark ? "#121212" : "#fff" }}
-    >
-      <MainTitle handleBack={() => router.back()} title="Support & Contact" />
-
-      <ScrollView
-        contentContainerStyle={{ flexGrow: 1 }}
-        keyboardShouldPersistTaps="handled"
+    <Theme name={isDark ? "dark" : "light"}>
+      <SafeAreaView
+        style={{ flex: 1, backgroundColor: isDark ? "#121212" : "#fff" }}
       >
-        <YStack flex={1} p="$4" gap="$4" bg="$grey100">
-          <ContactCard
-            icon={<Icon name="mail-outline" color="$primaryMain" size={20} />}
-            title="Official Support Email"
-            detail={SUPPORT_EMAIL}
-            onAction={handleCopyEmail}
-            actionIcon={true}
-          />
+        <MainTitle handleBack={() => router.back()} title="Support & Contact" />
 
-          <YStack gap="$1" mt="$2">
-            <Text fontSize="$4" fontWeight="700" color="$textPrimary">
-              Send us a Message
-            </Text>
-            <Text fontSize="$2" color="$textSecondary">
-              Fill out the form below and we'll get back to you as soon as
-              possible.
-            </Text>
-          </YStack>
-
-          <YStack gap="$2">
-            <BaseInput
-              label="Subject"
-              placeholder="e.g. Account issue, Feedback..."
-              value={subject}
-              onChangeText={setSubject}
-              baseColorLabel={"#E0E0E0"}
-              borderColor="#E0E0E0"
-            />
-          </YStack>
-          <YStack gap="$2">
-            <TextArea
-              placeholder="Write your message or issue description here..."
-              value={description}
-              onChangeText={setDescription}
-              bg="$backgroundPaper"
-              borderColor="#E0E0E0"
-              borderWidth={1}
-              borderRadius="$3"
-              numberOfLines={5}
-              h={130}
-              textAlignVertical="top"
-              p="$3"
-            />
-          </YStack>
-
-          <XStack gap="$3" mt="auto" pt="$4" pb="$4">
-            <BaseButton
-              flex={1}
-              appearance="ghost"
-              colorType="primary"
-              onPress={() => router.back()}
-            >
-              Cancel
-            </BaseButton>
-
-            <BaseButton
-              disabled={isSubmitting}
-              onPress={handleSubmit}
-              bg="$primaryMain"
-              flex={1}
-              borderRadius="$3"
-            >
-              {isSubmitting ? (
-                <Spinner size="small" color="white" />
-              ) : (
-                <Text color="white" fontWeight="600">
-                  Send Message
-                </Text>
-              )}
-            </BaseButton>
-          </XStack>
-        </YStack>
-      </ScrollView>
-
-      <Modal
-        visible={feedbackOpen}
-        transparent
-        animationType="fade"
-        onRequestClose={handleFeedbackClose}
-      >
-        <Pressable
-          style={{
-            flex: 1,
-            backgroundColor: "rgba(0,0,0,0.45)",
-            justifyContent: "center",
-            alignItems: "center",
-            paddingHorizontal: 24,
-          }}
-          onPress={handleFeedbackClose}
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1 }}
+          keyboardShouldPersistTaps="handled"
         >
-          <Pressable
-            onPress={(e) => e.stopPropagation()}
-            style={{ width: "100%", maxWidth: 320 }}
-          >
-            <YStack
-              bg="$backgroundPaper"
-              borderRadius="$4"
-              p="$5"
-              gap={15}
-              alignItems="center"
-              elevation={6}
-            >
-              <Icon
-                name={isSuccess ? "check-circle" : "error-outline"}
-                size={40}
-                color={isSuccess ? "#2e7d32" : "#d32f2f"}
+          <YStack flex={1} p="$4" gap="$4" bg={isDark ? "#121212" : "$grey100"}>
+            <ContactCard
+              icon={<Icon name="mail-outline" color="$primaryMain" size={20} />}
+              title="Official Support Email"
+              detail={SUPPORT_EMAIL}
+              onAction={handleCopyEmail}
+              actionIcon={true}
+              isDark={isDark}
+            />
+
+            <YStack gap="$1" mt="$2">
+              <Text fontSize="$4" fontWeight="700" color="$textPrimary">
+                Send us a Message
+              </Text>
+              <Text fontSize="$2" color="$textSecondary">
+                Fill out the form below and we'll get back to you as soon as
+                possible.
+              </Text>
+            </YStack>
+
+            <YStack gap="$2">
+              <BaseInput
+                label="Subject"
+                placeholder="e.g. Account issue, Feedback..."
+                value={subject}
+                onChangeText={setSubject}
+                baseColorLabel={isDark ? "#616161" : "#f7f7f7"}
+                borderColor={borderColor}
               />
-              <Text
-                fontSize="$4"
-                fontWeight="800"
+            </YStack>
+
+            <YStack gap="$2">
+              <TextArea
+                placeholder="Write your message or issue description here..."
+                placeholderTextColor={isDark ? "#757575" : "#9E9E9E"}
+                value={description}
+                onChangeText={setDescription}
+                bg="$backgroundPaper"
                 color="$textPrimary"
-                textAlign="center"
+                borderColor={borderColor}
+                borderWidth={1}
+                borderRadius="$3"
+                numberOfLines={5}
+                h={130}
+                textAlignVertical="top"
+                p="$3"
+              />
+            </YStack>
+
+            <XStack gap="$3" mt="auto" pt="$4" pb="$4">
+              <BaseButton
+                flex={1}
+                appearance="ghost"
+                colorType="primary"
+                onPress={() => router.back()}
               >
-                {feedbackTitle}
-              </Text>
-              <Text fontSize="$3" color="$textSecondary" textAlign="center">
-                {feedbackMessage}
-              </Text>
+                Cancel
+              </BaseButton>
 
               <BaseButton
-                onPress={handleFeedbackClose}
-                bg={isSuccess ? "$primaryMain" : "$textPrimary"}
-                w="100%"
+                bg="$indigoDark"
+                flex={1}
+                appearance="solid"
+                colorType="primary"
+                loading={isSubmitting}
+                onPress={handleSubmit}
               >
-                <Text color="white" fontWeight="600">
-                  OK
-                </Text>
+                Send
               </BaseButton>
-            </YStack>
+            </XStack>
+          </YStack>
+        </ScrollView>
+
+        <Modal
+          visible={feedbackOpen}
+          transparent
+          animationType="fade"
+          onRequestClose={handleFeedbackClose}
+        >
+          <Pressable
+            style={{
+              flex: 1,
+              backgroundColor: "rgba(0,0,0,0.6)",
+              justifyContent: "center",
+              alignItems: "center",
+              paddingHorizontal: 24,
+            }}
+            onPress={handleFeedbackClose}
+          >
+            <Pressable
+              onPress={(e) => e.stopPropagation()}
+              style={{ width: "100%", maxWidth: 320 }}
+            >
+              <YStack
+                bg="$backgroundPaper"
+                borderRadius="$4"
+                p="$5"
+                gap={15}
+                alignItems="center"
+                elevation={6}
+                borderWidth={isDark ? 1 : 0}
+                borderColor={borderColor}
+              >
+                <Icon
+                  name={isSuccess ? "check-circle" : "error-outline"}
+                  size={40}
+                  color={isSuccess ? "#2e7d32" : "#d32f2f"}
+                />
+                <Text
+                  fontSize="$4"
+                  fontWeight="800"
+                  color="$textPrimary"
+                  textAlign="center"
+                >
+                  {feedbackTitle}
+                </Text>
+                <Text fontSize="$3" color="$textSecondary" textAlign="center">
+                  {feedbackMessage}
+                </Text>
+
+                <BaseButton
+                  onPress={handleFeedbackClose}
+                  bg={isSuccess ? "$primaryMain" : "$textPrimary"}
+                  w="100%"
+                >
+                  <Text color="white" fontWeight="600">
+                    OK
+                  </Text>
+                </BaseButton>
+              </YStack>
+            </Pressable>
           </Pressable>
-        </Pressable>
-      </Modal>
-    </SafeAreaView>
+        </Modal>
+      </SafeAreaView>
+    </Theme>
   );
 }
 
@@ -239,6 +253,7 @@ const ContactCard: React.FC<ContactCardProps> = ({
   detail,
   onAction,
   actionIcon = true,
+  isDark = false,
 }) => {
   return (
     <XStack
@@ -248,10 +263,10 @@ const ContactCard: React.FC<ContactCardProps> = ({
       ai="center"
       jc="space-between"
       borderWidth={1}
-      borderColor="#E0E0E0"
+      borderColor={isDark ? "#2C2C2C" : "#E0E0E0"}
     >
       <XStack ai="center" gap="$3" flex={1}>
-        <YStack bg="$grey100" p="$2" borderRadius={50}>
+        <YStack bg={isDark ? "#1E1E1E" : "$grey100"} p="$2" borderRadius={50}>
           {icon}
         </YStack>
         <YStack flex={1}>

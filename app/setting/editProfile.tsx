@@ -133,6 +133,8 @@ export default function EditProfile() {
     }
   };
 
+  const handleFeedbackClose = () => {};
+
   const handleEmailChangeRequest = async () => {
     // const email = newEmail.trim();
     // if (!/^\S+@\S+\.\S+$/.test(email)) {
@@ -356,8 +358,6 @@ export default function EditProfile() {
             )}
           </ScrollView>
         </KeyboardAvoidingView>
-
-        {/* Feedback Modal */}
         <Modal
           visible={feedbackOpen}
           transparent

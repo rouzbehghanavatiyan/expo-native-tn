@@ -4,7 +4,6 @@ import { useAppTheme } from "../hook/ThemeContext";
 import { getColors } from "../hook/themeColors";
 import { useMatchOpen } from "../hook/useMatchOpen";
 import { logger } from "../utils/logger";
-import { Icon } from "./Icon";
 import VideoSection from "./VideoSection";
 const ONE_HOUR_MS = 60 * 60 * 1000; // 3,600,000 میلی‌ثانیه (۱ ساعت)
 
@@ -93,11 +92,11 @@ export default function ShowWatchSlide({
           }
         />
       </View>
-      {video?.icon ? (
+      {/* {video?.icon ? (
         <View style={styles.centerIcon}>
           <Icon name={video?.icon} color={colors.centerIconColor} size={20} />
         </View>
-      ) : null}
+      ) : null} */}
       <View style={styles.half}>
         <VideoSection
           result={showResult || !votingOpen ? resultInserted : null}

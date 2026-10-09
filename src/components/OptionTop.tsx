@@ -1,6 +1,7 @@
 import {
   addFollower,
   removeFollower,
+  reportVideo,
   userBlock,
 } from "@/src/services/masterServices";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -51,10 +52,12 @@ const OptionTop: React.FC<OptionTopProps> = ({
 
   // Report Modal States
   const [reportModalOpen, setReportModalOpen] = useState(false);
-  const [selectedReason, setSelectedReason] = useState<string | null>(null);
+  const [selectedReason, setSelectedReason] = useState<number | null>(null);
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
 
-  // Block Modal States
+  const [reportSuccessModalOpen, setReportSuccessModalOpen] = useState(false);
+
+  // Block Modal States// Success Report Modal State
   const [blockModalOpen, setBlockModalOpen] = useState(false);
   const [isSubmittingBlock, setIsSubmittingBlock] = useState(false);
 
@@ -156,14 +159,19 @@ const OptionTop: React.FC<OptionTopProps> = ({
       const postData = {
         reporterId: userIdLogin,
         targetUserId: userInfo?.id,
-        videoId: video?.id,
+        MovieId: video?.id,
         reason: selectedReason,
       };
 
+      const res = await reportVideo(postData);
       logger.info("Report Submitted:", postData);
 
       setReportModalOpen(false);
       setSelectedReason(null);
+
+      if (res?.data?.code === 0 || res?.status === 200) {
+        setReportSuccessModalOpen(true);
+      }
     } catch (error) {
       console.error("Report submission failed:", error);
     } finally {
@@ -315,11 +323,11 @@ const OptionTop: React.FC<OptionTopProps> = ({
 
                       <YStack gap="$2" mb="$4">
                         {REPORT_REASONS.map((reason) => {
-                          const isSelected = selectedReason === reason.value;
+                          const isSelected = selectedReason === reason.id;
                           return (
                             <Pressable
                               key={reason.id}
-                              onPress={() => setSelectedReason(reason.value)}
+                              onPress={() => setSelectedReason(reason.id)}
                               style={[
                                 styles.reasonItem,
                                 isSelected && styles.reasonItemSelected,
@@ -433,6 +441,67 @@ const OptionTop: React.FC<OptionTopProps> = ({
                           )}
                         </Pressable>
                       </XStack>
+                    </View>
+                  </View>
+                </Modal>
+
+                {/* Report Success Modal */}
+                <Modal
+                  visible={reportSuccessModalOpen}
+                  transparent
+                  animationType="fade"
+                  onRequestClose={() => setReportSuccessModalOpen(false)}
+                >
+                  <View style={styles.modalBackdrop}>
+                    <View
+                      style={[
+                        styles.modalContainer,
+                        { alignItems: "center", py: "$4" },
+                      ]}
+                    >
+                      <View
+                        backgroundColor="#ECFDF5"
+                        p="$3"
+                        borderRadius={50}
+                        mb="$3"
+                      >
+                        <MaterialIcons
+                          name="check-circle"
+                          size={48}
+                          color="#10B981"
+                        />
+                      </View>
+
+                      <Text
+                        fontSize="$4"
+                        fontWeight="bold"
+                        color="#111"
+                        mb="$2"
+                      >
+                        Report Submitted
+                      </Text>
+
+                      <Text
+                        fontSize="$3"
+                        color="#6B7280"
+                        textAlign="center"
+                        mb="$4"
+                        lineHeight={22}
+                      >
+                        Thank you! Your report has been submitted and will be
+                        reviewed shortly!
+                      </Text>
+
+                      <BaseButton
+                        colorType="primary"
+                        onPress={() => setReportSuccessModalOpen(false)}
+                        borderRadius="$3"
+                        w="100%"
+                      >
+                        <Text color="white" fontWeight="bold">
+                          OK
+                        </Text>
+                      </BaseButton>
                     </View>
                   </View>
                 </Modal>

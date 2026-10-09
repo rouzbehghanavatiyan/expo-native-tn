@@ -51,13 +51,20 @@ export default function TopScoreScreen() {
       </XStack> */}
 
       <ScrollView flex={1} showsVerticalScrollIndicator={false}>
-        {activeTab === "topScore" ? (
+        {/* {activeTab === "topScore" ? (
           <YStack>
             <MainTitle title="Top score" />
             <TopScoreItem />
           </YStack>
         ) : (
           <Notification />
+        )} */}
+        {activeTab === "topScore" && (
+          <YStack>
+            <MainTitle title="Top score" />
+            <TopScoreItem />
+            <Notification />
+          </YStack>
         )}
       </ScrollView>
     </YStack>

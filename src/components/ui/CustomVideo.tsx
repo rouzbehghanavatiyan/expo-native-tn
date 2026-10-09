@@ -24,9 +24,9 @@ interface CustomVideoProps {
   isPlaying: boolean;
   onVideoPlay?: () => void;
   backgroundColor?: string;
-
   positionVideo: any;
   resizeMode?: any;
+  isFullScreen?: boolean; // <--- این پراپ اضافه شد
 }
 
 const CustomVideo = memo(
@@ -38,9 +38,16 @@ const CustomVideo = memo(
     positionVideo,
     backgroundColor = "black",
     resizeMode = "contain",
+    isFullScreen = false, // مقدار پیش‌فرض
   }: CustomVideoProps) => {
-    const isStretch = resizeMode === 4 || resizeMode === "stretch";
-    const fixResizeMode = isStretch ? "stretch" : "contain";
+    // در حالت فول‌اسکرین، هیچ‌گونه استرچ یا حاشیه‌ای اعمال نمی‌کنیم
+    const isStretch =
+      !isFullScreen && (resizeMode === 4 || resizeMode === "stretch");
+    const fixResizeMode = isFullScreen
+      ? "contain"
+      : isStretch
+        ? "stretch"
+        : "contain";
 
     const videoRef = useRef<VideoRef>(null);
     const isFocused = useIsFocused();
@@ -94,9 +101,6 @@ const CustomVideo = memo(
           isDraggingRef.current = true;
           setIsDragging(true);
           const targetTime = seek(evt.nativeEvent.locationX);
-          console.log(
-            `[Video ${positionVideo}] 📍 Timeline Touched! Target: ${targetTime.toFixed(2)}s`,
-          );
         },
 
         onPanResponderMove: (evt) => {
@@ -106,9 +110,6 @@ const CustomVideo = memo(
         },
 
         onPanResponderRelease: () => {
-          console.log(
-            `[Video ${positionVideo}] ✅ Drag Released, seeking to: ${positionRef.current.toFixed(2)}s`,
-          );
           videoRef.current?.seek(positionRef.current);
           isDraggingRef.current = false;
           setIsDragging(false);
@@ -148,10 +149,7 @@ const CustomVideo = memo(
             <Video
               ref={videoRef}
               source={{ uri: cachedUri }}
-              style={[
-                styles.videoStyle,
-                isStretch && styles.videoStretchInset, // اعمال ۱۳ پیکسل فرورفتگی در بالا و پایین
-              ]}
+              style={[styles.videoStyle, isStretch && styles.videoStretchInset]}
               resizeMode={fixResizeMode}
               repeat
               paused={!shouldPlay}

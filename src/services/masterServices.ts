@@ -185,5 +185,13 @@ export const userUnBlock = async (data: any) => {
   return await api.post(`/userUnBlock`, data);
 };
 
-export const requestChangeEmail = (data: { newEmail: string }) =>
-  api.post("/Login/requestChangeEmail", data);
+// export const requestChangeEmail = (data: { newEmail: string }) =>
+//   api.post("/Login/requestChangeEmail", data);
+
+export const reportVideo = async (data: any) => {
+  return await api.post(`/reportVideo`, data);
+};
+
+export const supportConnect = async (data: any) => {
+  return await api.post(`/supportConnect`, data);
+};

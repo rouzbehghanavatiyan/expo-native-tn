@@ -1,11 +1,14 @@
 import { FontAwesome5 } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { Spinner, Text, XStack, YStack } from "tamagui";
+import { Dimensions } from "react-native";
+import { Spinner, Text, Theme, XStack, YStack } from "tamagui";
+import { useAppTheme } from "../hook/ThemeContext";
 import { topScoreList } from "../services/masterServices";
 import { getImageUrl } from "../utils/fileHelper";
 import { logger } from "../utils/logger";
 import ImageRank from "./ImageRank";
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 export interface TopUser {
   userId: number;
@@ -36,6 +39,7 @@ interface Category {
 const TopScoreItem: React.FC<any> = () => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const { isDark } = useAppTheme();
 
   const [categories, setCategories] = useState<Category[]>([
     {
@@ -75,14 +79,12 @@ const TopScoreItem: React.FC<any> = () => {
     handleGetAllScore();
   }, []);
 
-  // 🔴 تغییر اصلی اینجاست 🔴
   const handleProfileNavigation = (userTop: TopUser) => {
     if (!userTop?.userId) {
       console.warn("User ID not found for profile navigation");
       return;
     }
 
-    // ساختار دیتا دقیقاً مشابه چیزی است که صفحه پروفایل انتظار دارد دریافت کند
     const targetData = {
       profile: userTop?.profile,
       user: {
@@ -100,7 +102,7 @@ const TopScoreItem: React.FC<any> = () => {
     router.push({
       pathname: "/profile",
       params: {
-        userData: JSON.stringify(targetData), // پاس دادن به عنوان رشته JSON
+        userData: JSON.stringify(targetData),
       },
     });
   };
@@ -108,7 +110,7 @@ const TopScoreItem: React.FC<any> = () => {
   if (isLoading) {
     return (
       <YStack py="$4" ai="center" jc="center">
-        <Spinner size="small" color="$orange10" />
+        <Spinner size="small" color="$primaryMain" />
       </YStack>
     );
   }
@@ -122,52 +124,69 @@ const TopScoreItem: React.FC<any> = () => {
   }
 
   return (
-    <YStack mb="$3" m={20} gap={12}>
-      {sportCategory.users.map((userTop: any, index) => {
-        const userInfo = {
-          userProfile: userTop?.profile,
-          user: {
-            userName: userTop?.userName,
-            id: userTop?.userId,
-          },
-          score: userTop?.score,
-          bio: userTop?.bio,
-          email: userTop?.email,
-          location: userTop?.location,
-        };
+    <Theme name={isDark ? "dark" : "light"}>
+      <YStack mb="$3" mx="$3" gap="$2.5">
+        {sportCategory.users.map((userTop: TopUser, index: number) => {
+          const userInfo = {
+            userProfile: userTop?.profile,
+            user: {
+              userName: userTop?.userName,
+              id: userTop?.userId,
+            },
+            score: userTop?.score,
+            bio: userTop?.bio,
+            email: userTop?.email,
+            location: userTop?.location,
+          };
 
-        return (
-          <XStack
-            key={userTop?.userId ? String(userTop.userId) : String(index)}
-            ai="center"
-            gap="$3"
-            pressStyle={{ opacity: 0.8, scale: 0.98 }}
-            onPress={() => handleProfileNavigation(userTop)}
-            cursor="pointer"
-          >
-            <ImageRank
-              userInfo={userInfo}
-              imgSize={50}
-              score={userTop?.score}
-              imgSrc={getImageUrl(userTop?.profile)}
-            />
-            <YStack jc="center">
-              <Text
-                fontSize="$3"
-                fontWeight="600"
-                numberOfLines={1}
-                color="$grey900"
-              >
-                {userTop?.userName}
-              </Text>
-              <Text fontSize="$2" color="$gray10">
-                {userTop?.score ?? 0} pts
-              </Text>
-            </YStack>
-          </XStack>
-        );
-      })}
-    </YStack>
+          return (
+            <XStack
+              key={userTop?.userId ? String(userTop.userId) : String(index)}
+              ai="center"
+              m={2}
+              py={15}
+              borderTopWidth={index === 0 ? 0 : 1}
+              borderTopColor={isDark ? "#2A2A2A" : "#EEEEEE"}
+              gap="$3"
+              pressStyle={{ opacity: 0.75, scale: 0.985 }}
+              cursor="pointer"
+              onPress={() => handleProfileNavigation(userTop)}
+            >
+              <ImageRank
+                userInfo={userInfo}
+                imgSize={46}
+                score={userTop?.score}
+                imgSrc={getImageUrl(userTop?.profile)}
+                onClickDisable={true} // کلیک از روی کل سطر هندل می‌شود
+              />
+              <YStack flex={1} jc="center" gap="$0.5">
+                <Text
+                  fontSize="$3"
+                  fontWeight="700"
+                  color="$textPrimary"
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                  letterSpacing={0.2}
+                >
+                  {userTop?.userName || "Anonymous"}
+                </Text>
+
+                <XStack ai="center" gap="$1">
+                  <Text fontSize="$2" fontWeight="600" color="$primaryMain">
+                    score: {userTop?.score}
+                  </Text>
+                </XStack>
+              </YStack>
+              <FontAwesome5
+                name="chevron-right"
+                size={12}
+                color={isDark ? "#555" : "#CCC"}
+              />
+            </XStack>
+          );
+        })}
+      </YStack>
+    </Theme>
   );
 };
 
