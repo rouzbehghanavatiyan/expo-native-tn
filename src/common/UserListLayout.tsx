@@ -3,10 +3,10 @@ import MainTitle from "@/src/components/MainTitle";
 import Follows from "@/src/components/ui/Follows";
 import { getImageUrl } from "@/src/utils/fileHelper";
 import { useRouter } from "expo-router";
-import React from "react";
-import { Pressable } from "react-native";
+import React, { useCallback, useRef } from "react";
+import { FlatList, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { ScrollView, Spinner, Text, View, XStack, YStack } from "tamagui";
+import { Spinner, Text, View, XStack, YStack } from "tamagui";
 import { useAppTheme } from "../hook/ThemeContext";
 
 interface UserListLayoutProps {
@@ -22,7 +22,20 @@ interface UserListLayoutProps {
   onUnblock?: (id: any) => void;
   unblockText?: string;
   imgSize?: number;
+  // --- pagination (اختیاری) ---
+  onEndReached?: () => void;
+  isLoadingMore?: boolean;
+  refreshing?: boolean;
+  onRefresh?: () => void;
+  keyExtractor?: (item: any, index: number) => string;
 }
+
+const getUserId = (user: any) =>
+  user?.attachment?.attachmentId ||
+  user?.followerId ||
+  user?.userId ||
+  user?.id ||
+  user?.sender;
 
 const UserListLayout: React.FC<UserListLayoutProps> = ({
   title,
@@ -37,9 +50,21 @@ const UserListLayout: React.FC<UserListLayoutProps> = ({
   onUnblock,
   unblockText = "Unblock",
   imgSize = 50,
+  onEndReached,
+  isLoadingMore = false,
+  refreshing = false,
+  onRefresh,
+  keyExtractor,
 }) => {
   const { isDark } = useAppTheme();
   const router = useRouter();
+  const hasScrolledRef = useRef(false);
+
+  const handleEndReached = useCallback(() => {
+    if (!hasScrolledRef.current) return;
+    hasScrolledRef.current = false;
+    onEndReached?.();
+  }, [onEndReached]);
 
   const handleUserClick = (user: any) => {
     if (onItemPress) {
@@ -74,6 +99,77 @@ const UserListLayout: React.FC<UserListLayoutProps> = ({
     });
   };
 
+  const defaultKeyExtractor = useCallback(
+    (user: any, index: number) => String(user?.id || getUserId(user) || index),
+    [],
+  );
+
+  const renderItem = useCallback(
+    ({ item: user }: { item: any }) => {
+      const userId = getUserId(user);
+      const image = getImageUrl(user?.attachment || user);
+      const userName = user?.userName || user?.userNameSender || "Unknown User";
+      const followed = isFollowed ? isFollowed(userId) : false;
+
+      return (
+        <XStack
+          px="$4"
+          py="$3"
+          borderBottomWidth={1}
+          borderColor={isDark ? "$grey800" : "$grey100"}
+          ai="center"
+          jc="space-between"
+          bg="$backgroundPaper"
+          width="100%"
+        >
+          <Pressable
+            style={{ flex: 1, justifyContent: "center" }}
+            onPress={() => handleUserClick(user)}
+          >
+            <View pointerEvents="none">
+              <ImageRank
+                score={user?.score ?? 0}
+                userNameStyle={{
+                  color: isDark ? "#fff" : "rgb(71, 71, 71)",
+                }}
+                imgSize={imgSize}
+                userName={userName}
+                imgSrc={image}
+              />
+            </View>
+          </Pressable>
+
+          <XStack ai="center" gap="$2" pl="$2" zIndex={10}>
+            {isFollowed && toggleFollow && (
+              <Follows
+                title={followed ? "Unfollow" : "Follow"}
+                onFollowClick={() => toggleFollow(userId)}
+              />
+            )}
+            {onUnblock && (
+              <Follows
+                title={unblockText}
+                onFollowClick={() => onUnblock(userId)}
+              />
+            )}
+            {renderRight && renderRight(user)}
+          </XStack>
+        </XStack>
+      );
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [
+      isDark,
+      imgSize,
+      isFollowed,
+      toggleFollow,
+      onUnblock,
+      unblockText,
+      renderRight,
+      onItemPress,
+    ],
+  );
+
   return (
     <SafeAreaView
       style={{ flex: 1, backgroundColor: isDark ? "#121212" : "#fff" }}
@@ -81,83 +177,49 @@ const UserListLayout: React.FC<UserListLayoutProps> = ({
       <View f={1} bg="$backgroundPaper">
         {title && <MainTitle handleBack={onBack || (() => {})} title={title} />}
 
-        {isLoading && (
+        {isLoading ? (
           <YStack f={1} ai="center" jc="center">
             <Spinner size="large" color="$indigoMain" />
           </YStack>
-        )}
-
-        {!isLoading && data.length === 0 && (
-          <YStack f={1} ai="center" jc="center" p="$4">
-            <Text color="$textSecondary" fontSize="$5">
-              {emptyMessage}
-            </Text>
-          </YStack>
-        )}
-
-        {!isLoading && data.length > 0 && (
-          <ScrollView>
-            {data.map((user: any, index: number) => {
-              const userId =
-                user?.attachment?.attachmentId ||
-                user?.followerId ||
-                user?.userId ||
-                user?.id ||
-                user?.sender;
-
-              const image = getImageUrl(user?.attachment || user);
-              const userName =
-                user?.userName || user?.userNameSender || "Unknown User";
-              const followed = isFollowed ? isFollowed(userId) : false;
-
-              return (
-                <XStack
-                  key={user?.id || userId || index}
-                  px="$4"
-                  py="$3"
-                  borderBottomWidth={1}
-                  borderColor={isDark ? "$grey800" : "$grey100"}
-                  ai="center"
-                  jc="space-between"
-                  bg="$backgroundPaper"
-                  width="100%"
-                >
-                  <Pressable
-                    style={{ flex: 1, justifyContent: "center" }}
-                    onPress={() => handleUserClick(user)}
-                  >
-                    <View pointerEvents="none">
-                      <ImageRank
-                        score={user?.score ?? 0}
-                        userNameStyle={{
-                          color: isDark ? "#fff" : "rgb(71, 71, 71)",
-                        }}
-                        imgSize={imgSize}
-                        userName={userName}
-                        imgSrc={image}
-                      />
-                    </View>
-                  </Pressable>
-
-                  <XStack ai="center" gap="$2" pl="$2" zIndex={10}>
-                    {isFollowed && toggleFollow && (
-                      <Follows
-                        title={followed ? "Unfollow" : "Follow"}
-                        onFollowClick={() => toggleFollow(userId)}
-                      />
-                    )}
-                    {onUnblock && (
-                      <Follows
-                        title={unblockText}
-                        onFollowClick={() => onUnblock(userId)}
-                      />
-                    )}
-                    {renderRight && renderRight(user)}
-                  </XStack>
-                </XStack>
-              );
-            })}
-          </ScrollView>
+        ) : (
+          <FlatList
+            data={data}
+            renderItem={renderItem}
+            keyExtractor={keyExtractor ?? defaultKeyExtractor}
+            // pagination
+            onEndReached={handleEndReached}
+            onEndReachedThreshold={0.1}
+            onScrollBeginDrag={() => {
+              hasScrolledRef.current = true;
+            }}
+            onMomentumScrollBegin={() => {
+              hasScrolledRef.current = true;
+            }}
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            contentContainerStyle={
+              data.length === 0 ? { flexGrow: 1 } : { paddingBottom: 15 }
+            }
+            ListEmptyComponent={
+              <YStack f={1} ai="center" jc="center" p="$4">
+                <Text color="$textSecondary" fontSize="$5">
+                  {emptyMessage}
+                </Text>
+              </YStack>
+            }
+            ListFooterComponent={
+              // یک ارتفاع ثابت همیشه وجود دارد؛ فقط اسپینر شرطی است
+              <YStack height={50} ai="center" jc="center">
+                {isLoadingMore ? (
+                  <Spinner size="small" color="$indigoMain" />
+                ) : null}
+              </YStack>
+            }
+            initialNumToRender={12}
+            maxToRenderPerBatch={10}
+            windowSize={10}
+            removeClippedSubviews={false}
+          />
         )}
       </View>
     </SafeAreaView>

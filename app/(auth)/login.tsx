@@ -24,7 +24,13 @@ import { FormErrors, FormValues } from "@/src/utils/GlobalType";
 import { logger } from "@/src/utils/logger";
 import { Link, useRouter } from "expo-router";
 import { useState } from "react";
-import { Modal, Pressable } from "react-native";
+import {
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
+  ScrollView,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image, Text, View, XStack, YStack } from "tamagui";
 
@@ -157,177 +163,207 @@ const LoginScreen: React.FC<any> = () => {
         backgroundColor: isDark ? "#121212" : "#ffffff",
       }}
     >
-      <YStack
-        flex={1}
-        alignItems="center"
-        justifyContent="center"
-        px="$4"
-        bg="$backgroundPaper"
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
       >
-        <YStack
-          borderRadius="$4"
-          p="$6"
-          width="100%"
-          maxWidth={400}
-          gap="$4"
-          bg={isDark ? "#1e1e1e" : "#ffffff"}
-          borderWidth={1}
-          borderColor={isDark ? "#2c2c2c" : "#f0f0f0"}
-          shadowColor={isDark ? "#000000" : "$shadowColor"}
-          shadowOpacity={isDark ? 0.35 : 0.08}
-          shadowRadius={12}
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1 }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
-          <YStack alignItems="center" mb="$4">
-            <Link href="/" asChild>
-              <View cursor="pointer">
-                <Image
-                  src={Logo}
-                  width={100}
-                  height={100}
-                  borderRadius={50}
-                  alt="Logo"
-                />
-              </View>
-            </Link>
-
-            <Text fontSize="$6" fontWeight="bold" color="$textPrimary" mt="$4">
-              Clash Talent
-            </Text>
-
-            <Text color="$textSecondary" mt="$2">
-              Sign in to your account
-            </Text>
-          </YStack>
-
-          <YStack gap="$8">
-            <YStack gap="$2">
-              <BaseInput
-                baseColorLabel={inputBgColor}
-                label="Username"
-                value={formState.username}
-                borderColor={inputBorderColor}
-                onChangeText={(text) => handleInputChange("username", text)}
-                colorType="primary"
-                hasError={!!errors.username}
-                variant="outline"
-                errorMessage={errors.username}
-              />
-            </YStack>
-
-            <YStack gap="$2">
-              <View position="relative">
-                <BaseInput
-                  baseColorLabel={inputBgColor}
-                  label="Password"
-                  secureTextEntry={!showPassword}
-                  borderColor={inputBorderColor}
-                  value={formState.password}
-                  onChangeText={(text) => handleInputChange("password", text)}
-                  errorMessage={errors.password}
-                  rightIcon={
-                    <View
-                      onPress={() => setShowPassword((prev) => !prev)}
-                      cursor="pointer"
-                    >
-                      <Icon
-                        name={showPassword ? "visibility" : "visibility-off"}
-                        size={20}
-                        color={iconColor}
-                      />
-                    </View>
-                  }
-                />
-              </View>
-            </YStack>
-
-            <BaseButton
-              appearance="solid"
-              colorType="primary"
-              loading={loading}
-              onPress={handleSubmit}
-              width="100%"
-            >
-              {loading ? "Signing in..." : "Sign in"}
-            </BaseButton>
-
-            <Link href="/forgotPassword" asChild>
-              <BaseButton appearance="ghost" colorType="primary">
-                Forgot password?
-              </BaseButton>
-            </Link>
-
-            <XStack justifyContent="center" mt="$2" gap="$2" flexWrap="wrap">
-              <Text fontSize="$3" color="$textPrimary">
-                {`Don't have an account?`}
-              </Text>
-
-              <Link href="/signup" asChild>
-                <Text
-                  fontSize="$3"
-                  color="$primaryMain"
-                  fontWeight="bold"
-                  cursor="pointer"
-                >
-                  Sign up
-                </Text>
-              </Link>
-            </XStack>
-          </YStack>
-        </YStack>
-
-        {/* Error Modal */}
-        <Modal
-          visible={showErrorModal}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setShowErrorModal(false)}
-        >
-          <Pressable
-            style={{
-              flex: 1,
-              backgroundColor: "rgba(0,0,0,0.55)",
-              justifyContent: "center",
-              alignItems: "center",
-              paddingHorizontal: 24,
-            }}
-            onPress={() => setShowErrorModal(false)}
+          <YStack
+            flex={1}
+            alignItems="center"
+            justifyContent="center"
+            px="$4"
+            py="$6"
+            bg="$backgroundPaper"
           >
-            <Pressable
-              onPress={(e) => e.stopPropagation()}
-              style={{ width: "100%", maxWidth: 360 }}
+            <YStack
+              borderRadius="$4"
+              p="$6"
+              width="100%"
+              maxWidth={400}
+              gap="$4"
+              bg={isDark ? "#1e1e1e" : "#ffffff"}
+              borderWidth={1}
+              borderColor={isDark ? "#2c2c2c" : "#f0f0f0"}
+              shadowColor={isDark ? "#000000" : "$shadowColor"}
+              shadowOpacity={isDark ? 0.35 : 0.08}
+              shadowRadius={12}
             >
-              <YStack
-                bg="$backgroundPaper"
-                borderRadius="$4"
-                p="$5"
-                gap={14}
-                elevation={6}
-                borderWidth={isDark ? 1 : 0}
-                borderColor={isDark ? "#333333" : "transparent"}
-              >
-                <YStack gap={8}>
-                  <Text fontSize="$5" fontWeight="700" color="$errorMain">
-                    Login Error
-                  </Text>
-                  <Text fontSize="$3" color="$textSecondary" lineHeight={20}>
-                    {modalMessage}
-                  </Text>
+              <YStack alignItems="center" mb="$4">
+                <Link href="/" asChild>
+                  <View cursor="pointer">
+                    <Image
+                      src={Logo}
+                      width={100}
+                      height={100}
+                      borderRadius={50}
+                      alt="Logo"
+                    />
+                  </View>
+                </Link>
+
+                <Text
+                  fontSize="$6"
+                  fontWeight="bold"
+                  color="$textPrimary"
+                  mt="$4"
+                >
+                  Clash Talent
+                </Text>
+
+                <Text color="$textSecondary" mt="$2">
+                  Sign in to your account
+                </Text>
+              </YStack>
+
+              <YStack gap="$8">
+                <YStack gap="$2">
+                  <BaseInput
+                    baseColorLabel={inputBgColor}
+                    label="Username"
+                    value={formState.username}
+                    borderColor={inputBorderColor}
+                    onChangeText={(text) => handleInputChange("username", text)}
+                    colorType="primary"
+                    hasError={!!errors.username}
+                    variant="outline"
+                    errorMessage={errors.username}
+                  />
                 </YStack>
 
-                <XStack jc="flex-end">
-                  <BaseButton
-                    onPress={() => setShowErrorModal(false)}
-                    bg="$primaryMain"
-                    width={80}
-                  >
-                    OK
+                <YStack gap="$2">
+                  <View position="relative">
+                    <BaseInput
+                      baseColorLabel={inputBgColor}
+                      label="Password"
+                      secureTextEntry={!showPassword}
+                      borderColor={inputBorderColor}
+                      value={formState.password}
+                      onChangeText={(text) =>
+                        handleInputChange("password", text)
+                      }
+                      errorMessage={errors.password}
+                      rightIcon={
+                        <View
+                          onPress={() => setShowPassword((prev) => !prev)}
+                          cursor="pointer"
+                        >
+                          <Icon
+                            name={
+                              showPassword ? "visibility" : "visibility-off"
+                            }
+                            size={20}
+                            color={iconColor}
+                          />
+                        </View>
+                      }
+                    />
+                  </View>
+                </YStack>
+
+                <BaseButton
+                  appearance="solid"
+                  colorType="primary"
+                  loading={loading}
+                  onPress={handleSubmit}
+                  width="100%"
+                >
+                  {loading ? "Signing in..." : "Sign in"}
+                </BaseButton>
+
+                <Link href="/forgotPassword" asChild>
+                  <BaseButton appearance="ghost" colorType="primary">
+                    Forgot password?
                   </BaseButton>
+                </Link>
+
+                <XStack
+                  justifyContent="center"
+                  mt="$2"
+                  gap="$2"
+                  flexWrap="wrap"
+                >
+                  <Text fontSize="$3" color="$textPrimary">
+                    {`Don't have an account?`}
+                  </Text>
+
+                  <Link href="/signup" asChild>
+                    <Text
+                      fontSize="$3"
+                      color="$primaryMain"
+                      fontWeight="bold"
+                      cursor="pointer"
+                    >
+                      Sign up
+                    </Text>
+                  </Link>
                 </XStack>
               </YStack>
-            </Pressable>
-          </Pressable>
-        </Modal>
-      </YStack>
+            </YStack>
+
+            {/* Error Modal */}
+            <Modal
+              visible={showErrorModal}
+              transparent
+              animationType="fade"
+              onRequestClose={() => setShowErrorModal(false)}
+            >
+              <Pressable
+                style={{
+                  flex: 1,
+                  backgroundColor: "rgba(0,0,0,0.55)",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  paddingHorizontal: 24,
+                }}
+                onPress={() => setShowErrorModal(false)}
+              >
+                <Pressable
+                  onPress={(e) => e.stopPropagation()}
+                  style={{ width: "100%", maxWidth: 360 }}
+                >
+                  <YStack
+                    bg="$backgroundPaper"
+                    borderRadius="$4"
+                    p="$5"
+                    gap={14}
+                    elevation={6}
+                    borderWidth={isDark ? 1 : 0}
+                    borderColor={isDark ? "#333333" : "transparent"}
+                  >
+                    <YStack gap={8}>
+                      <Text fontSize="$5" fontWeight="700" color="$errorMain">
+                        Login Error
+                      </Text>
+                      <Text
+                        fontSize="$3"
+                        color="$textSecondary"
+                        lineHeight={20}
+                      >
+                        {modalMessage}
+                      </Text>
+                    </YStack>
+
+                    <XStack jc="flex-end">
+                      <BaseButton
+                        onPress={() => setShowErrorModal(false)}
+                        bg="$primaryMain"
+                        width={80}
+                      >
+                        OK
+                      </BaseButton>
+                    </XStack>
+                  </YStack>
+                </Pressable>
+              </Pressable>
+            </Modal>
+          </YStack>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };

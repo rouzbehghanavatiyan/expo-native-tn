@@ -42,9 +42,15 @@ export const uploadVideo = async (postData: any) => {
   return await chatApi.post(`/api/file/uploadVideo`, postData);
 };
 
-export const allUserMessagese = async (userIdLogin: number) => {
-  return await chatApi.get(`api/chat/allUserMessagese`, {
-    params: { userIdLogin },
+export const allUserMessagese = async (
+  skip: number = 0,
+  take: number = 10,
+): Promise<any> => {
+  return await chatApi.get("api/chat/allUserMessagese", {
+    params: {
+      skip,
+      take,
+    },
   });
 };
 

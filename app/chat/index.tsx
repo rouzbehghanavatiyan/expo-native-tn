@@ -1,12 +1,14 @@
 import UserListLayout from "@/src/common/UserListLayout";
 import { allUserMessagese } from "@/src/services/nestServices";
-import { markSenderAsRead, setChatUsers } from "@/src/slices/chat";
+import { markSenderAsRead, setChatUsersPage } from "@/src/slices/chat";
 import { useAppDispatch, useAppSelector } from "@/src/store/reduxHookType";
 import { getImageUrl } from "@/src/utils/fileHelper";
 import { logger } from "@/src/utils/logger";
 import { useRouter } from "expo-router";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { View } from "tamagui";
+
+const PAGE_SIZE = 10;
 
 interface MessageData {
   id?: string;
@@ -23,39 +25,74 @@ interface MessageData {
 
 const ChatRoom: React.FC = () => {
   const router = useRouter();
+  const dispatch = useAppDispatch();
+
   const main = useAppSelector((state) => state?.main);
   const userSender = useAppSelector((state) => state.chat.users) || [];
   const chatListLoaded = useAppSelector((state) => state.chat.loaded);
+  const skip = useAppSelector((state) => state.chat.skip);
+  const hasMore = useAppSelector((state) => state.chat.hasMore);
   const userIdLogin = main?.userLogin?.user?.id;
-  const dispatch = useAppDispatch();
-  const [isLoading, setIsLoading] = useState(false);
 
-  const handleGetUserMessages = useCallback(
-    async (showLoading = true) => {
+  const [isLoading, setIsLoading] = useState(false); // لود اولیه
+  const [isLoadingMore, setIsLoadingMore] = useState(false); // صفحه بعد
+  const [isRefreshing, setIsRefreshing] = useState(false); // pull to refresh
+
+  const fetchingRef = useRef(false);
+
+  const fetchPage = useCallback(
+    async (reset: boolean) => {
+      if (!userIdLogin || fetchingRef.current) return;
+      fetchingRef.current = true;
+
       try {
-        if (showLoading) setIsLoading(true);
-        if (!userIdLogin) return;
-        const res = await allUserMessagese(userIdLogin);
-        const { data, status } = res?.data || {};
+        const res = await allUserMessagese(reset ? 0 : skip, PAGE_SIZE);
+        const body = res?.data;
+        logger.info("chat page", { reset, count: body?.data?.length });
 
-        logger.info("res?.data", res?.data);
-        if (status === 0 && data) {
-          dispatch(setChatUsers(data));
+        if (body?.status === 0 && Array.isArray(body.data)) {
+          dispatch(
+            setChatUsersPage({
+              data: body.data,
+              hasMore: Boolean(body.hasMore),
+              reset,
+            }),
+          );
         }
       } catch (error) {
         console.log(error);
       } finally {
-        if (showLoading) setIsLoading(false);
+        fetchingRef.current = false;
       }
     },
-    [userIdLogin, dispatch],
+    [userIdLogin, skip, dispatch],
   );
 
   useEffect(() => {
-    if (!chatListLoaded) {
-      handleGetUserMessages(true);
+    if (chatListLoaded || !userIdLogin) return;
+    setIsLoading(true);
+    fetchPage(true).finally(() => setIsLoading(false));
+  }, [chatListLoaded, userIdLogin]);
+
+  const handleLoadMore = useCallback(async () => {
+    if (!hasMore || fetchingRef.current) return;
+    setIsLoadingMore(true);
+    try {
+      await fetchPage(false);
+    } finally {
+      setIsLoadingMore(false);
     }
-  }, [handleGetUserMessages, chatListLoaded]);
+  }, [hasMore, fetchPage]);
+
+  const handleRefresh = useCallback(async () => {
+    if (fetchingRef.current) return;
+    setIsRefreshing(true);
+    try {
+      await fetchPage(true);
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [fetchPage]);
 
   const handleRedirect = (data: MessageData) => {
     const senderStr = String(data.sender || data.id);
@@ -80,6 +117,11 @@ const ChatRoom: React.FC = () => {
       onBack={() => router.back()}
       onItemPress={handleRedirect}
       imgSize={50}
+      onEndReached={handleLoadMore}
+      isLoadingMore={isLoadingMore}
+      refreshing={isRefreshing}
+      onRefresh={handleRefresh}
+      keyExtractor={(item: MessageData) => String(item.sender)}
       renderRight={(user: MessageData) => {
         const showBadge =
           (user?.unreadCount && user.unreadCount > 0) ||

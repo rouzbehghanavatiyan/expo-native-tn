@@ -11,9 +11,16 @@ export interface ChatSenderData {
 interface ChatListState {
   users: ChatSenderData[];
   loaded: boolean;
+  skip: number;
+  hasMore: boolean;
 }
 
-const initialState: ChatListState = { users: [], loaded: false };
+const initialState: ChatListState = {
+  users: [],
+  loaded: false,
+  skip: 0,
+  hasMore: true,
+};
 
 const chatSlice = createSlice({
   name: "chat",
@@ -44,9 +51,32 @@ const chatSlice = createSlice({
         state.users.unshift(user);
       }
     },
+    setChatUsersPage: (
+      state,
+      action: PayloadAction<{ data: any[]; hasMore: boolean; reset?: boolean }>,
+    ) => {
+      const { data, hasMore, reset } = action.payload;
+
+      if (reset) {
+        state.users = data;
+        state.skip = data.length;
+      } else {
+        const existing = new Set(state.users.map((u) => String(u.sender)));
+        const fresh = data.filter((u) => !existing.has(String(u.sender)));
+        state.users.push(...fresh);
+        state.skip += data.length;
+      }
+
+      state.hasMore = hasMore;
+      state.loaded = true;
+    },
   },
 });
 
-export const { setChatUsers, markSenderAsRead, incrementSenderUnread } =
-  chatSlice.actions;
+export const {
+  setChatUsers,
+  markSenderAsRead,
+  setChatUsersPage,
+  incrementSenderUnread,
+} = chatSlice.actions;
 export default chatSlice.reducer;
