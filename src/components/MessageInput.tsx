@@ -39,7 +39,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
       borderColor="$colorTransparent"
     >
       <XStack gap="$2" alignItems="flex-end" px="$3" py="$2">
-        <Pressable
+        {/* <Pressable
           onPress={onAttachClick}
           style={({ pressed }) => [
             styles.iconButton,
@@ -47,7 +47,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
           ]}
         >
           <MaterialIcons name="add" size={26} color="#6b7280" />
-        </Pressable>
+        </Pressable> */}
 
         <View style={styles.inputContainer} flex={1}>
           <TextInput

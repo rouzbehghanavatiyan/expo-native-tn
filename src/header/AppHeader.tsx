@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { Text, useTheme } from "tamagui";
+import { Text, useTheme, XStack } from "tamagui";
 import AppLoading from "../components/AppLoading";
 import BaseInput from "../components/BaseInput";
 import { Icon } from "../components/Icon";
@@ -49,6 +49,7 @@ const AppHeader = () => {
       ),
       divider: getThemeColor(theme.divider, "#F1F5F9"),
       borderColor: getThemeColor(theme.borderColor, "#334155"),
+      badgeRed: "#f44336",
     }),
     [theme],
   );
@@ -172,27 +173,47 @@ const AppHeader = () => {
     getInitialCount();
   }, [currentUser, dispatch]);
 
-  const ActionIcons = () => (
-    <View style={styles.iconContainer}>
-      <TouchableOpacity style={{ marginLeft: 16 }}>
-        <View>
+  const ActionIcons = () => {
+    return (
+      <XStack alignItems="center" gap="$3">
+        {/* دکمه پیام‌ها */}
+        <TouchableOpacity
+          activeOpacity={0.7}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          onPress={() => {
+            if (unreadMessagesCount > 0) dispatch(clearUnreadCount());
+            router.push("/chat");
+          }}
+          style={styles.iconWrapper}
+        >
           <Ionicons
             name="mail-outline"
-            onPress={() => {
-              if (unreadMessagesCount > 0) {
-                dispatch(clearUnreadCount());
-              }
-              router.push("/chat");
-            }}
             size={22}
             color={colors.textSecondary}
           />
-          {unreadMessagesCount > 0 && <View style={styles.badge} />}
-        </View>
-      </TouchableOpacity>
-    </View>
-  );
+          {unreadMessagesCount > 0 && (
+            <View
+              style={[styles.badge, { backgroundColor: colors.badgeRed }]}
+            />
+          )}
+        </TouchableOpacity>
 
+        {/* دکمه تیکت‌ها */}
+        <TouchableOpacity
+          activeOpacity={0.7}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          onPress={() => router.push("/tickets")}
+          style={styles.iconWrapper}
+        >
+          <Ionicons
+            name="ticket-outline"
+            size={22}
+            color={colors.textSecondary}
+          />
+        </TouchableOpacity>
+      </XStack>
+    );
+  };
   if (routes.isShowWatch) return null;
 
   return (
@@ -364,6 +385,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 4,
     elevation: 2,
+  },
+  iconWrapper: {
+    position: "relative",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 2,
   },
   leftSection: {
     flexDirection: "row",

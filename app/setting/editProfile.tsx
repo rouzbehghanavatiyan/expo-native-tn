@@ -220,7 +220,7 @@ export default function EditProfile() {
               </YStack>
             ) : (
               <YStack flex={1} p="$4" gap="$4" bg="$background">
-                <YStack gap="$1">
+                {/* <YStack gap="$1">
                   <XStack ai="center" gap="$2">
                     <YStack flex={1}>
                       <BaseInput
@@ -292,7 +292,7 @@ export default function EditProfile() {
                       )}
                     </Pressable>
                   </XStack>
-                </YStack>
+                </YStack> */}
 
                 <YStack gap="$2">
                   <BaseInput
