@@ -197,9 +197,7 @@ const AppHeader = () => {
             />
           )}
         </TouchableOpacity>
-
-        {/* دکمه تیکت‌ها */}
-        <TouchableOpacity
+        {/* <TouchableOpacity
           activeOpacity={0.7}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           onPress={() => router.push("/tickets")}
@@ -210,7 +208,7 @@ const AppHeader = () => {
             size={22}
             color={colors.textSecondary}
           />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </XStack>
     );
   };

@@ -78,7 +78,7 @@ export default function SupportScreen() {
         showFeedback(
           "Error",
           res?.data?.message ||
-            "Failed to send your message. Please try again.",
+          "Failed to send your message. Please try again.",
           false,
         );
       }

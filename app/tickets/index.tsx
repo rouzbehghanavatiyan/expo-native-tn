@@ -219,7 +219,6 @@ export default function TicketScreen() {
               </Paragraph>
             </YStack>
 
-            {/* Network selector */}
             <XStack gap="$3" mb="$4">
               {NETWORKS.map((n) => (
                 <TouchableOpacity

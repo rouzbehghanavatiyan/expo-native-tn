@@ -6,7 +6,7 @@ import {
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 import { OnLoadData, OnProgressData, VideoRef } from "react-native-video";
-import { Spinner, Text, View, XStack } from "tamagui";
+import { ScrollView, Spinner, Text, View, XStack, YStack } from "tamagui";
 import { RsetShowTimerButtn } from "../slices/main";
 import { goToStep, removeInviteThunk, updateMovieData } from "../slices/video";
 import { useAppDispatch, useAppSelector } from "../store/reduxHookType";
@@ -18,24 +18,36 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 type MatchGender = "random" | "male" | "female";
 
+interface ActivityOption {
+  label: string;
+  value: string;
+  id: number;
+}
+
 interface VideoPreviewStepProps {
   videoSrc: any;
   movieData: any;
   onMovieDataChange: (data: any) => void;
   coverImage?: string;
   handleNextStep?: any;
-  onAccept: any;
+  onAccept: (gender: MatchGender, activity: ActivityOption, categoryId: number) => void;
   isLoading: any;
   onCancel?: () => void;
 }
 
+const activityOptions: ActivityOption[] = [
+  { label: "Ball Sports ⚽", id: 1010, value: "ball_sports" },
+  { label: "Fitness & Gym 🏋️", id: 1004, value: "fitness" },
+  { label: "Combat 🥊", id: 1011, value: "combat" },
+  { label: "Street & Urban 🛹", id: 2040, value: "urban" },
+  { label: "Other sport 🎯", id: 2041, value: "otherSport" },
+];
+
 const VideoPreviewStep: React.FC<VideoPreviewStepProps> = ({
-  videoSrc,
   isLoading,
   movieData,
   onMovieDataChange,
   coverImage,
-  handleNextStep,
   onAccept,
 }) => {
   const insets = useSafeAreaInsets();
@@ -44,6 +56,9 @@ const VideoPreviewStep: React.FC<VideoPreviewStepProps> = ({
   const [duration, setDuration] = useState(0);
   const [trimRange, setTrimRange] = useState([0, 0]);
   const [selectedGender, setSelectedGender] = useState<MatchGender>("random");
+  const [selectedActivity, setSelectedActivity] = useState<ActivityOption | null>(null);
+  const [activityError, setActivityError] = useState(false);
+
   const showTimerButtn = useAppSelector((state) => state.main.showTimerButtn);
   const [videoLayout, setVideoLayout] = useState({
     width: SCREEN_WIDTH - 32,
@@ -68,7 +83,6 @@ const VideoPreviewStep: React.FC<VideoPreviewStepProps> = ({
 
   const handleCanceled = async () => {
     router.replace("/(tabs)/watch");
-    console.log("showTimerButtn", showTimerButtn);
     await dispatch(removeInviteThunk(movieData?.inviteId));
     dispatch(RsetShowTimerButtn(false));
   };
@@ -119,6 +133,11 @@ const VideoPreviewStep: React.FC<VideoPreviewStepProps> = ({
   };
 
   const handleNextPress = () => {
+    if (!selectedActivity) {
+      setActivityError(true);
+      return;
+    }
+
     const selectedDuration = trimRange[1] - trimRange[0];
 
     onMovieDataChange({
@@ -126,15 +145,27 @@ const VideoPreviewStep: React.FC<VideoPreviewStepProps> = ({
       trimEnd: trimRange[1],
       duration: selectedDuration,
       targetGender: selectedGender,
+      activity: selectedActivity.value,
+      subSubCategoryId: selectedActivity.id,
     });
 
     dispatch(goToStep(2));
   };
 
-  const formatTime = (secs: number) => {
-    const m = Math.floor(secs / 60);
-    const s = Math.floor(secs % 60);
-    return `${m}:${s.toString().padStart(2, "0")}`;
+  const handleStartMatch = () => {
+    if (!selectedActivity) {
+      setActivityError(true);
+      return;
+    }
+
+    dispatch(
+      updateMovieData({
+        targetGender: selectedGender,
+        activity: selectedActivity.value,
+        subSubCategoryId: selectedActivity.id,
+      })
+    );
+    onAccept(selectedGender, selectedActivity.value, selectedActivity.id);
   };
 
   const genderOptions: { label: string; value: MatchGender }[] = [
@@ -154,7 +185,7 @@ const VideoPreviewStep: React.FC<VideoPreviewStepProps> = ({
             <View width="100%" flex={1} alignItems="center">
               <View
                 width={SCREEN_WIDTH}
-                height={SCREEN_HEIGHT * 0.5}
+                height={SCREEN_HEIGHT * 0.44}
                 backgroundColor="black"
                 overflow="hidden"
                 justifyContent="center"
@@ -174,14 +205,17 @@ const VideoPreviewStep: React.FC<VideoPreviewStepProps> = ({
                 backgroundColor="#374151"
                 marginTop="$1"
               />
+
               <View
                 flex={1}
                 width="100%"
                 alignItems="center"
                 justifyContent="space-evenly"
+                gap="$2"
               >
+                {/* Timer / Question Icon */}
                 <View
-                  height={110}
+                  height={80}
                   justifyContent="center"
                   alignItems="center"
                   {...(!showTimerButtn && {
@@ -195,28 +229,119 @@ const VideoPreviewStep: React.FC<VideoPreviewStepProps> = ({
                   {showTimerButtn ? (
                     <ButtonTimer show={showTimerButtn} startTime={120} />
                   ) : (
-                    <Icon size={70} name="Question" color="white" />
+                    <Icon size={60} name="Question" color="white" />
                   )}
                 </View>
-                <XStack alignItems="center" justifyContent="center">
+
+                {/* Activity Field */}
+                <YStack width={SCREEN_WIDTH - 32} gap="$1">
+                  <XStack
+                    width="100%"
+                    alignItems="center"
+                    justifyContent="space-between"
+                  >
+                    <Text
+                      color="#9CA3AF"
+                      fontSize={10}
+                      fontWeight="600"
+                      textTransform="uppercase"
+                      width={90}
+                    >
+                      Match topic:
+                    </Text>
+
+                    <View
+                      flex={1}
+                      backgroundColor="#111827"
+                      borderRadius={10}
+                      padding={4}
+                      borderWidth={1}
+                      borderColor={
+                        activityError
+                          ? "#ef4444"
+                          : "rgba(255, 255, 255, 0.08)"
+                      }
+                      opacity={showTimerButtn ? 0.6 : 1}
+                      pointerEvents={showTimerButtn ? "none" : "auto"}
+                      overflow="hidden"
+                    >
+                      <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={{
+                          alignItems: "center",
+                          gap: 4,
+                        }}
+                      >
+                        {activityOptions.map((item) => {
+                          const isSelected = selectedActivity?.id === item.id;
+                          return (
+                            <View
+                              key={item.id}
+                              pressStyle={{ opacity: 0.8 }}
+                              onPress={() => {
+                                setSelectedActivity(item);
+                                setActivityError(false);
+                              }}
+                              backgroundColor={isSelected ? "$greenMain" : "transparent"}
+                              paddingVertical={8}
+                              paddingHorizontal={16}
+                              borderRadius={8}
+                              alignItems="center"
+                              justifyContent="center"
+                            >
+                              <Text
+                                fontSize={10}
+                                fontWeight={isSelected ? "700" : "500"}
+                                color={isSelected ? "#ffffff" : "#9ca3af"}
+                              >
+                                {item.label}
+                              </Text>
+                            </View>
+                          );
+                        })}
+                      </ScrollView>
+                    </View>
+                  </XStack>
+
+                  {/* Warning Message */}
+                  {activityError && (
+                    <Text
+                      color="#ef4444"
+                      fontSize={11}
+                      fontWeight="500"
+                      paddingLeft={94}
+                    >
+                      Please select a match topic to continue
+                    </Text>
+                  )}
+                </YStack>
+
+                {/* Gender Field */}
+                <XStack
+                  width={SCREEN_WIDTH - 32}
+                  alignItems="center"
+                  justifyContent="space-between"
+                >
                   <Text
                     color="#9CA3AF"
                     fontSize={10}
                     fontWeight="600"
-                    marginRight="$3"
                     textTransform="uppercase"
+                    width={90}
                   >
-                    Request a match with:
+                    Match with:
                   </Text>
 
                   <XStack
+                    flex={1}
                     backgroundColor="#111827"
                     borderRadius={10}
                     padding={4}
                     borderWidth={1}
                     borderColor="rgba(255, 255, 255, 0.08)"
                     alignItems="center"
-                    gap="$1"
+                    justifyContent="space-between"
                     opacity={showTimerButtn ? 0.6 : 1}
                     pointerEvents={showTimerButtn ? "none" : "auto"}
                   >
@@ -225,14 +350,12 @@ const VideoPreviewStep: React.FC<VideoPreviewStepProps> = ({
                       return (
                         <View
                           key={item.value}
+                          flex={1}
                           pressStyle={{ opacity: 0.8 }}
                           onPress={() => setSelectedGender(item.value)}
-                          backgroundColor={
-                            isSelected ? "$greenMain" : "transparent"
-                          }
+                          backgroundColor={isSelected ? "$greenMain" : "transparent"}
                           paddingVertical={8}
-                          paddingHorizontal={18}
-                          borderRadius={10}
+                          borderRadius={8}
                           alignItems="center"
                           justifyContent="center"
                         >
@@ -248,6 +371,7 @@ const VideoPreviewStep: React.FC<VideoPreviewStepProps> = ({
                     })}
                   </XStack>
                 </XStack>
+
                 <View
                   width={SCREEN_WIDTH - 32}
                   height={1}
@@ -258,6 +382,7 @@ const VideoPreviewStep: React.FC<VideoPreviewStepProps> = ({
             </View>
           )}
         </View>
+
         <View
           shadowColor="#000000"
           shadowOffset={{ width: 0, height: -8 }}
@@ -276,10 +401,7 @@ const VideoPreviewStep: React.FC<VideoPreviewStepProps> = ({
               chromeless
               loading={isLoading}
               disabled={!!showTimerButtn}
-              onPress={() => {
-                dispatch(updateMovieData({ targetGender: selectedGender }));
-                onAccept(selectedGender);
-              }}
+              onPress={handleStartMatch}
             >
               {showTimerButtn ? (
                 <Spinner size="small" color="white" />
