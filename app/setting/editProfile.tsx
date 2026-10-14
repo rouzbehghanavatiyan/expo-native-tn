@@ -4,7 +4,11 @@ import { Icon } from "@/src/components/Icon";
 import ImageRank from "@/src/components/ImageRank";
 import MainTitle from "@/src/components/MainTitle";
 import { getThemeColor } from "@/src/hook/getThemeColor";
-import { addProfile } from "@/src/services/masterServices";
+import {
+  addProfile,
+  forgotPassword,
+  requestChangeEmail,
+} from "@/src/services/masterServices";
 import { useAppSelector } from "@/src/store/reduxHookType";
 import { getImageUrl } from "@/src/utils/fileHelper";
 import { logger } from "@/src/utils/logger";
@@ -19,41 +23,87 @@ import {
   ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Spinner, Text, TextArea, useTheme, XStack, YStack } from "tamagui";
+import { Text, TextArea, useTheme, XStack, YStack } from "tamagui";
+
+const EMAIL_REGEX = /^\S+@\S+\.\S+$/;
+
+const SectionCard = ({
+  icon,
+  title,
+  subtitle,
+  children,
+}: {
+  icon: string;
+  title: string;
+  subtitle?: string;
+  children: React.ReactNode;
+}) => (
+  <YStack
+    bg="$backgroundPaper"
+    borderRadius="$4"
+    borderWidth={1}
+    borderColor="$borderColor"
+    p="$4"
+    gap="$3"
+  >
+    <XStack ai="center" gap="$2">
+      <Icon name={icon as any} size={20} color="#6366f1" />
+      <Text fontSize="$4" fontWeight="700" color="$color">
+        {title}
+      </Text>
+    </XStack>
+    {subtitle ? (
+      <Text fontSize="$2" color="$colorMuted" lineHeight={18}>
+        {subtitle}
+      </Text>
+    ) : null}
+    {children}
+  </YStack>
+);
 
 export default function EditProfile() {
   const theme = useTheme();
   const router = useRouter();
   const userLogin = useAppSelector((state) => state?.main?.userLogin);
-  const [newEmail, setNewEmail] = useState("");
-  const [goBackOnClose, setGoBackOnClose] = useState(false);
 
-  // Theme Colors
   const inputBorderColor = getThemeColor(theme.borderColor, "#E0E0E0");
   const inputBgLabel = getThemeColor(theme.background, "#f4f4f4");
   const successColor = getThemeColor(theme.successMain, "#2e7d32");
   const errorColor = getThemeColor(theme.errorMain, "#d32f2f");
 
-  // Profile Form States
+  // Profile form
   const [bio, setBio] = useState(userLogin?.bio || "");
   const [location, setLocation] = useState(userLogin?.location || "");
-  const [mail, setMail] = useState(userLogin?.mail || "");
+  const [mail, setMail] = useState(userLogin?.mail || ""); // Social Link
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
-  // Status & Feedback States
-  const [isLoading, setIsLoading] = useState(false);
+  // Account email / password
+  const [resetEmail, setResetEmail] = useState(
+    (userLogin as any)?.email || (userLogin as any)?.mail || "",
+  );
+  const [newEmail, setNewEmail] = useState("");
+
+  // Loading states
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isEmailUpdating, setIsEmailUpdating] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
+
+  // Feedback modal
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [feedbackTitle, setFeedbackTitle] = useState("");
   const [feedbackMessage, setFeedbackMessage] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
+  const [goBackOnClose, setGoBackOnClose] = useState(false);
 
   useEffect(() => {
     if (userLogin) {
       setBio(userLogin.bio || "");
       setLocation(userLogin.location || "");
       setMail(userLogin.mail || "");
+      setResetEmail(
+        (prev: string) =>
+          prev || (userLogin as any)?.email || (userLogin as any)?.mail || "",
+      );
     }
   }, [userLogin]);
 
@@ -68,6 +118,14 @@ export default function EditProfile() {
     setIsSuccess(success);
     setGoBackOnClose(goBack);
     setFeedbackOpen(true);
+  };
+
+  const handleFeedbackClose = () => {
+    setFeedbackOpen(false);
+    if (goBackOnClose) {
+      setGoBackOnClose(false);
+      router.back();
+    }
   };
 
   const pickImage = async () => {
@@ -108,7 +166,7 @@ export default function EditProfile() {
       const res = await addProfile(postData);
       logger.info("resProfile", res);
 
-      if (res?.data?.status === 2 || res?.data?.status === 0) {
+      if (res?.data?.status === 0) {
         showFeedback(
           "Success",
           res?.data?.message || "Profile updated successfully.",
@@ -122,7 +180,7 @@ export default function EditProfile() {
         );
       }
     } catch (error) {
-      console.log("Error updating status:", error);
+      console.log("Error updating profile:", error);
       showFeedback(
         "Network Error",
         "Something went wrong. Please try again.",
@@ -133,40 +191,85 @@ export default function EditProfile() {
     }
   };
 
-  const handleFeedbackClose = () => {};
+  // ---------- Change password (sends reset link) ----------
+  const handleResetPassword = async () => {
+    if (isResetting) return;
 
+    const email = resetEmail.trim();
+    if (!EMAIL_REGEX.test(email)) {
+      showFeedback("Error", "Please enter a valid email address.", false);
+      return;
+    }
+
+    try {
+      setIsResetting(true);
+      const res: any = await forgotPassword({ email });
+
+      if (res?.data?.status === 0) {
+        showFeedback(
+          "Email Sent",
+          "If an account matches that email, a password reset link has been sent. Check your inbox.",
+          true,
+        );
+      } else {
+        showFeedback(
+          "Error",
+          res?.data?.message || "Failed to process request. Please try again.",
+          false,
+        );
+      }
+    } catch (error: any) {
+      console.log("Forgot Password Error:", error);
+      showFeedback(
+        "Network Error",
+        error?.response?.data?.message ||
+        "An error occurred. Please try again later.",
+        false,
+      );
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
+  // ---------- Change email (sends confirm link to NEW email) ----------
   const handleEmailChangeRequest = async () => {
-    // const email = newEmail.trim();
-    // if (!/^\S+@\S+\.\S+$/.test(email)) {
-    //   showFeedback("Error", "Please enter a valid email address.", false);
-    //   return;
-    // }
-    // try {
-    //   setIsEmailUpdating(true);
-    //   const res = await requestChangeEmail({ newEmail: email });
-    //   if (res?.data?.status === 0) {
-    //     showFeedback(
-    //       "Verification Sent",
-    //       `A confirmation link has been sent to ${email}. Your email will change after you confirm it.`,
-    //       true,
-    //     );
-    //     setNewEmail("");
-    //   } else {
-    //     showFeedback(
-    //       "Error",
-    //       res?.data?.message || "Failed to send verification email.",
-    //       false,
-    //     );
-    //   }
-    // } catch (error) {
-    //   showFeedback(
-    //     "Network Error",
-    //     "Something went wrong. Please try again.",
-    //     false,
-    //   );
-    // } finally {
-    //   setIsEmailUpdating(false);
-    // }
+    if (isEmailUpdating) return;
+
+    const email = newEmail.trim();
+    if (!EMAIL_REGEX.test(email)) {
+      showFeedback("Error", "Please enter a valid email address.", false);
+      return;
+    }
+
+    try {
+      setIsEmailUpdating(true);
+      const res: any = await requestChangeEmail({ newEmail: email });
+
+      if (res?.data?.status === 0) {
+        showFeedback(
+          "Verification Sent",
+          `A confirmation link has been sent to ${email}. Your email will change after you confirm it.`,
+          true,
+        );
+        setNewEmail("");
+      } else {
+        showFeedback(
+          "Error",
+          res?.data?.message || "Failed to send verification email.",
+          false,
+        );
+      }
+    } catch (error: any) {
+      console.log("Change email error:", error);
+      showFeedback(
+        "Network Error",
+        error?.response?.data?.message ||
+        "Something went wrong. Please try again.",
+        false,
+      );
+    } finally {
+      setIsEmailUpdating(false);
+    }
   };
 
   return (
@@ -179,10 +282,11 @@ export default function EditProfile() {
           style={{ flex: 1 }}
         >
           <ScrollView
-            contentContainerStyle={{ flexGrow: 1, paddingBottom: 24 }}
+            contentContainerStyle={{ flexGrow: 1, paddingBottom: 32 }}
             showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
           >
-            {/* Avatar Section */}
+            {/* Avatar */}
             <YStack ai="center" jc="center" my="$4" gap="$2">
               <Pressable onPress={pickImage}>
                 <YStack
@@ -214,106 +318,25 @@ export default function EditProfile() {
               </Pressable>
             </YStack>
 
-            {isLoading ? (
-              <YStack flex={1} jc="center" ai="center" bg="$background">
-                <Spinner size="large" color="$primaryMain" />
-              </YStack>
-            ) : (
-              <YStack flex={1} p="$4" gap="$4" bg="$background">
-                {/* <YStack gap="$1">
-                  <XStack ai="center" gap="$2">
-                    <YStack flex={1}>
-                      <BaseInput
-                        placeholder="Email"
-                        label="Change Password"
-                        value={mail}
-                        onChangeText={setMail}
-                        borderColor={inputBorderColor}
-                        baseColorLabel={inputBgLabel}
-                        keyboardType="email-address"
-                        autoCapitalize="none"
-                      />
-                    </YStack>
-                    <Pressable
-                      onPress={handleEmailChangeRequest}
-                      disabled={isEmailUpdating}
-                    >
-                      {isEmailUpdating ? (
-                        <Spinner size="small" color="$primaryMain" />
-                      ) : (
-                        <XStack ai="center" jc="center" gap="$1.5">
-                          <Icon name="check" size={22} color={successColor} />
-                          <Text
-                            marginStart={3}
-                            fontSize="$3"
-                            fontWeight="500"
-                            color="$successMain"
-                          >
-                            Send Email
-                          </Text>
-                        </XStack>
-                      )}
-                    </Pressable>
-                  </XStack>
-                </YStack>
+            <YStack flex={1} px="$4" gap="$4">
+              {/* Profile info */}
+              <SectionCard icon="person" title="Profile Info">
+                <BaseInput
+                  label="Social Link"
+                  value={mail}
+                  onChangeText={setMail}
+                  baseColorLabel={inputBgLabel}
+                  borderColor={inputBorderColor}
+                  autoCapitalize="none"
+                />
 
-                <YStack gap="$1">
-                  <XStack ai="center" gap="$2">
-                    <YStack flex={1}>
-                      <BaseInput
-                        label="Change Email"
-                        placeholder="New Email"
-                        value={mail}
-                        onChangeText={setMail}
-                        borderColor={inputBorderColor}
-                        baseColorLabel={inputBgLabel}
-                        keyboardType="email-address"
-                        autoCapitalize="none"
-                      />
-                    </YStack>
-                    <Pressable
-                      onPress={handleEmailChangeRequest}
-                      disabled={isEmailUpdating}
-                    >
-                      {isEmailUpdating ? (
-                        <Spinner size="small" color="$primaryMain" />
-                      ) : (
-                        <XStack ai="center" jc="center" gap="$1.5">
-                          <Icon name="check" size={22} color={successColor} />
-                          <Text
-                            marginStart={3}
-                            fontSize="$3"
-                            fontWeight="500"
-                            color="$successMain"
-                          >
-                            Send Email
-                          </Text>
-                        </XStack>
-                      )}
-                    </Pressable>
-                  </XStack>
-                </YStack> */}
-
-                <YStack gap="$2">
-                  <BaseInput
-                    label="Social Link"
-                    value={mail}
-                    onChangeText={setMail}
-                    baseColorLabel={inputBgLabel}
-                    borderColor={inputBorderColor}
-                    keyboardType="email-address"
-                  />
-                </YStack>
-
-                <YStack gap="$2">
-                  <BaseInput
-                    baseColorLabel={inputBgLabel}
-                    label="Location"
-                    borderColor={inputBorderColor}
-                    value={location}
-                    onChangeText={setLocation}
-                  />
-                </YStack>
+                <BaseInput
+                  baseColorLabel={inputBgLabel}
+                  label="Location"
+                  borderColor={inputBorderColor}
+                  value={location}
+                  onChangeText={setLocation}
+                />
 
                 <YStack gap="$2">
                   <Text color="$color">Status</Text>
@@ -321,7 +344,7 @@ export default function EditProfile() {
                     placeholderTextColor="$colorMuted"
                     value={bio}
                     onChangeText={setBio}
-                    bg="$backgroundPaper"
+                    bg="$background"
                     color="$color"
                     borderColor="$borderColor"
                     borderWidth={1}
@@ -333,7 +356,7 @@ export default function EditProfile() {
                   />
                 </YStack>
 
-                <XStack gap="$3" mt="$6" mb="$2">
+                <XStack gap="$3" mt="$2">
                   <BaseButton
                     flex={1}
                     appearance="outline"
@@ -342,7 +365,6 @@ export default function EditProfile() {
                   >
                     Cancel
                   </BaseButton>
-
                   <BaseButton
                     bg="$indigoDark"
                     flex={1}
@@ -354,10 +376,66 @@ export default function EditProfile() {
                     Save
                   </BaseButton>
                 </XStack>
-              </YStack>
-            )}
+              </SectionCard>
+
+              {/* Change email */}
+              <SectionCard
+                icon="mail-outline"
+                title="Change Email"
+                subtitle="We'll send a confirmation link to your new email. Your current email stays active until you confirm it."
+              >
+                <BaseInput
+                  label="New Email"
+                  placeholder="name@example.com"
+                  value={newEmail}
+                  onChangeText={setNewEmail}
+                  borderColor={inputBorderColor}
+                  baseColorLabel={inputBgLabel}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
+                <BaseButton
+                  fullWidth
+                  appearance="solid"
+                  colorType="primary"
+                  loading={isEmailUpdating}
+                  onPress={handleEmailChangeRequest}
+                >
+                  Send Confirmation Email
+                </BaseButton>
+              </SectionCard>
+
+              {/* Change password */}
+              <SectionCard
+                icon="lock-outline"
+                title="Change Password"
+                subtitle="Enter your account email and we'll send you a link to set a new password."
+              >
+                <BaseInput
+                  label="Account Email"
+                  placeholder="Your Email"
+                  value={resetEmail}
+                  onChangeText={setResetEmail}
+                  borderColor={inputBorderColor}
+                  baseColorLabel={inputBgLabel}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
+                <BaseButton
+                  fullWidth
+                  appearance="outline"
+                  colorType="primary"
+                  loading={isResetting}
+                  onPress={handleResetPassword}
+                >
+                  Send Reset Link
+                </BaseButton>
+              </SectionCard>
+            </YStack>
           </ScrollView>
         </KeyboardAvoidingView>
+
+        {/* Feedback modal */}
         <Modal
           visible={feedbackOpen}
           transparent

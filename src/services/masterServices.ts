@@ -195,3 +195,7 @@ export const reportVideo = async (data: any) => {
 export const supportConnect = async (data: any) => {
   return await api.post(`/supportConnect`, data);
 };
+
+export const requestChangeEmail = async (data: { newEmail: string }) => {
+  return await api.post(`/requestChangeEmail`, data);
+};
