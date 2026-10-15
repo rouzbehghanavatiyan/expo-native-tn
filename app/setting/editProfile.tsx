@@ -22,9 +22,11 @@ import {
   Pressable,
   ScrollView,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { Text, TextArea, useTheme, XStack, YStack } from "tamagui";
-
 const EMAIL_REGEX = /^\S+@\S+\.\S+$/;
 
 const SectionCard = ({
@@ -70,7 +72,7 @@ export default function EditProfile() {
   const inputBgLabel = getThemeColor(theme.background, "#f4f4f4");
   const successColor = getThemeColor(theme.successMain, "#2e7d32");
   const errorColor = getThemeColor(theme.errorMain, "#d32f2f");
-
+  const insets = useSafeAreaInsets();
   const [bio, setBio] = useState(userLogin?.bio || "");
   const [location, setLocation] = useState(userLogin?.location || "");
   const [mail, setMail] = useState(userLogin?.mail || "");
@@ -84,7 +86,6 @@ export default function EditProfile() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isEmailUpdating, setIsEmailUpdating] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
-
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [feedbackTitle, setFeedbackTitle] = useState("");
   const [feedbackMessage, setFeedbackMessage] = useState("");
@@ -272,15 +273,16 @@ export default function EditProfile() {
         <MainTitle handleBack={() => router.back()} title="Edit Profile" />
 
         <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={Platform.OS === "ios" ? insets.top : 0}
           style={{ flex: 1 }}
         >
           <ScrollView
             contentContainerStyle={{ flexGrow: 1, paddingBottom: 32 }}
-            showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
+            showsVerticalScrollIndicator={false}
           >
-            {/* Avatar */}
             <YStack ai="center" jc="center" my="$4" gap="$2">
               <Pressable onPress={pickImage}>
                 <YStack

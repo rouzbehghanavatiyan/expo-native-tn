@@ -8,7 +8,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Modal, Pressable, StyleSheet } from "react-native";
+import { ActivityIndicator, Modal, Platform, Pressable, StyleSheet } from "react-native";
 import { Text, View, XStack, YStack } from "tamagui";
 import { getImageUrl } from "../utils/fileHelper";
 import { logger } from "../utils/logger";
@@ -60,7 +60,10 @@ const OptionTop: React.FC<OptionTopProps> = ({
   // Block Modal States// Success Report Modal State
   const [blockModalOpen, setBlockModalOpen] = useState(false);
   const [isSubmittingBlock, setIsSubmittingBlock] = useState(false);
-
+  const [reportResult, setReportResult] = useState<{
+    success: boolean;
+    message: string;
+  } | null>(null);
   const currentUserId = main?.userLogin?.user?.id;
 
   const profile =
@@ -86,6 +89,15 @@ const OptionTop: React.FC<OptionTopProps> = ({
         : video?.isFollowedMeMatched;
     setLocalIsFollowed(!!isFollowed);
   }, [video, positionVideo]);
+
+  const getMovieId = (): number | null => {
+    const id =
+      video?.id ??
+      video?.movieId ??
+      (positionVideo === 0 ? video?.movieInsertedId : video?.movieMatchedId);
+    const n = Number(id);
+    return Number.isFinite(n) && n > 0 ? n : null;
+  };
 
   const handleFallowClick = async () => {
     if (isLoadingFollow) return;
@@ -124,10 +136,7 @@ const OptionTop: React.FC<OptionTopProps> = ({
     });
   };
 
-  const handleOpenBlockModal = () => {
-    setMenuOpen(false);
-    setBlockModalOpen(true);
-  };
+
 
   const handleConfirmBlock = async () => {
     try {
@@ -146,34 +155,76 @@ const OptionTop: React.FC<OptionTopProps> = ({
     }
   };
 
-  const handleOpenReportModal = () => {
+  const runAfterMenuClose = (action: () => void) => {
     setMenuOpen(false);
-    setSelectedReason(null);
-    setReportModalOpen(true);
+    setTimeout(action, Platform.OS === "ios" ? 350 : 0);
   };
 
+  const handleOpenBlockModal = () => {
+    runAfterMenuClose(() => setBlockModalOpen(true));
+  };
+
+  const handleOpenReportModal = () => {
+    runAfterMenuClose(() => {
+      setSelectedReason(null);
+      setReportResult(null);
+      setReportModalOpen(true);
+    });
+  };
+
+  const handleCloseReportModal = () => {
+    setReportModalOpen(false);
+    setReportResult(null);
+    setSelectedReason(null);
+  };
+
+
+
   const handleSubmitReport = async () => {
-    if (!selectedReason) return;
+    if (!selectedReason || isSubmittingReport) return;
+
+    const movieId = getMovieId();
+    if (!movieId || !userInfo?.id) {
+      setReportResult({
+        success: false,
+        message: "Unable to identify this video. Please try again.",
+      });
+      return;
+    }
+
     try {
       setIsSubmittingReport(true);
+
+      // reporterId عمداً ارسال نمی‌شود؛ سرور آن را از توکن می‌خواند
       const postData = {
-        reporterId: userIdLogin,
-        targetUserId: userInfo?.id,
-        MovieId: video?.id,
+        targetUserId: userInfo.id,
+        movieId,
         reason: selectedReason,
       };
 
       const res = await reportVideo(postData);
       logger.info("Report Submitted:", postData);
 
-      setReportModalOpen(false);
-      setSelectedReason(null);
-
-      if (res?.data?.code === 0 || res?.status === 200) {
-        setReportSuccessModalOpen(true);
+      if (res?.data?.status === 0) {
+        setReportResult({
+          success: true,
+          message:
+            "Thank you! Your report has been submitted and will be reviewed shortly.",
+        });
+      } else {
+        setReportResult({
+          success: false,
+          message: res?.data?.message || "Failed to submit the report.",
+        });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Report submission failed:", error);
+      setReportResult({
+        success: false,
+        message:
+          error?.response?.data?.message ||
+          "Something went wrong. Please check your connection and try again.",
+      });
     } finally {
       setIsSubmittingReport(false);
     }
@@ -300,83 +351,125 @@ const OptionTop: React.FC<OptionTopProps> = ({
                   visible={reportModalOpen}
                   transparent
                   animationType="fade"
-                  onRequestClose={() => setReportModalOpen(false)}
+                  onRequestClose={handleCloseReportModal}
                 >
                   <View style={styles.modalBackdrop}>
                     <View style={styles.modalContainer}>
-                      <XStack
-                        justifyContent="space-between"
-                        alignItems="center"
-                        mb="$3"
-                      >
-                        <Text fontSize="$4" fontWeight="bold" color="#111">
-                          Report Content
-                        </Text>
-                        <Pressable onPress={() => setReportModalOpen(false)}>
-                          <MaterialIcons name="close" size={24} color="#666" />
-                        </Pressable>
-                      </XStack>
-
-                      <Text fontSize="$2" color="#666" mb="$3" textAlign="left">
-                        Please select a reason for reporting:
-                      </Text>
-
-                      <YStack gap="$2" mb="$4">
-                        {REPORT_REASONS.map((reason) => {
-                          const isSelected = selectedReason === reason.id;
-                          return (
-                            <Pressable
-                              key={reason.id}
-                              onPress={() => setSelectedReason(reason.id)}
-                              style={[
-                                styles.reasonItem,
-                                isSelected && styles.reasonItemSelected,
-                              ]}
-                            >
-                              <XStack alignItems="center" gap="$3" width="100%">
-                                <MaterialIcons
-                                  name={
-                                    isSelected
-                                      ? "radio-button-checked"
-                                      : "radio-button-unchecked"
-                                  }
-                                  size={20}
-                                  color={isSelected ? "#2563EB" : "#9CA3AF"}
-                                />
-                                <Text
-                                  fontSize="$3"
-                                  color={isSelected ? "#2563EB" : "#374151"}
-                                  fontWeight={isSelected ? "bold" : "normal"}
-                                >
-                                  {reason.label}
-                                </Text>
-                              </XStack>
-                            </Pressable>
-                          );
-                        })}
-                      </YStack>
-
-                      <BaseButton
-                        colorType="primary"
-                        disabled={!selectedReason || isSubmittingReport}
-                        onPress={handleSubmitReport}
-                        borderRadius="$3"
-                      >
-                        {isSubmittingReport ? (
-                          <ActivityIndicator color="white" />
-                        ) : (
-                          <Text
-                            color={selectedReason ? "white" : "#ffffff"}
-                            fontWeight="bold"
+                      {reportResult ? (
+                        <YStack ai="center" gap="$3" py="$2">
+                          <View
+                            backgroundColor={reportResult.success ? "#ECFDF5" : "#FEF2F2"}
+                            p="$3"
+                            borderRadius={50}
                           >
-                            Submit
+                            <MaterialIcons
+                              name={reportResult.success ? "check-circle" : "error-outline"}
+                              size={48}
+                              color={reportResult.success ? "#10B981" : "#DC2626"}
+                            />
+                          </View>
+
+                          <Text fontSize="$4" fontWeight="bold" color="#111">
+                            {reportResult.success ? "Report Submitted" : "Report Failed"}
                           </Text>
-                        )}
-                      </BaseButton>
+
+                          <Text
+                            fontSize="$3"
+                            color="#6B7280"
+                            textAlign="center"
+                            lineHeight={22}
+                          >
+                            {reportResult.message}
+                          </Text>
+
+                          <BaseButton
+                            colorType="primary"
+                            onPress={handleCloseReportModal}
+                            borderRadius="$3"
+                            w="100%"
+                          >
+                            <Text color="white" fontWeight="bold">
+                              OK
+                            </Text>
+                          </BaseButton>
+                        </YStack>
+                      ) : (
+                        <>
+                          <XStack
+                            justifyContent="space-between"
+                            alignItems="center"
+                            mb="$3"
+                          >
+                            <Text fontSize="$4" fontWeight="bold" color="#111">
+                              Report Content
+                            </Text>
+                            <Pressable
+                              onPress={handleCloseReportModal}
+                              disabled={isSubmittingReport}
+                            >
+                              <MaterialIcons name="close" size={24} color="#666" />
+                            </Pressable>
+                          </XStack>
+
+                          <Text fontSize="$2" color="#666" mb="$3" textAlign="left">
+                            Please select a reason for reporting:
+                          </Text>
+
+                          <YStack gap="$2" mb="$4">
+                            {REPORT_REASONS.map((reason) => {
+                              const isSelected = selectedReason === reason.id;
+                              return (
+                                <Pressable
+                                  key={reason.id}
+                                  disabled={isSubmittingReport}
+                                  onPress={() => setSelectedReason(reason.id)}
+                                  style={[
+                                    styles.reasonItem,
+                                    isSelected && styles.reasonItemSelected,
+                                  ]}
+                                >
+                                  <XStack alignItems="center" gap="$3" width="100%">
+                                    <MaterialIcons
+                                      name={
+                                        isSelected
+                                          ? "radio-button-checked"
+                                          : "radio-button-unchecked"
+                                      }
+                                      size={20}
+                                      color={isSelected ? "#2563EB" : "#9CA3AF"}
+                                    />
+                                    <Text
+                                      fontSize="$3"
+                                      color={isSelected ? "#2563EB" : "#374151"}
+                                      fontWeight={isSelected ? "bold" : "normal"}
+                                    >
+                                      {reason.label}
+                                    </Text>
+                                  </XStack>
+                                </Pressable>
+                              );
+                            })}
+                          </YStack>
+
+                          <BaseButton
+                            colorType="primary"
+                            disabled={!selectedReason || isSubmittingReport}
+                            onPress={handleSubmitReport}
+                            borderRadius="$3"
+                          >
+                            {isSubmittingReport ? (
+                              <ActivityIndicator color="white" />
+                            ) : (
+                              <Text color="white" fontWeight="bold">
+                                Submit
+                              </Text>
+                            )}
+                          </BaseButton>
+                        </>
+                      )}
                     </View>
                   </View>
                 </Modal>
-
                 {/* Block Confirmation Modal */}
                 <Modal
                   visible={blockModalOpen}
@@ -456,7 +549,7 @@ const OptionTop: React.FC<OptionTopProps> = ({
                     <View
                       style={[
                         styles.modalContainer,
-                        { alignItems: "center", py: "$4" },
+                        { alignItems: "center", padding: "$4" },
                       ]}
                     >
                       <View
