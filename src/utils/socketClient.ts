@@ -7,7 +7,7 @@ export const socketClient = io(socketIp, {
   reconnection: true,
   forceNew: true,
   reconnectionAttempts: Infinity,
-  reconnectionDelay: 1000,
-  timeout: 20000,
-  transports: ["polling"],
+  reconnectionDelay: 2000,
+  timeout: 60000,
+  transports: ["websocket", "polling"],
 });

@@ -71,24 +71,20 @@ export default function EditProfile() {
   const successColor = getThemeColor(theme.successMain, "#2e7d32");
   const errorColor = getThemeColor(theme.errorMain, "#d32f2f");
 
-  // Profile form
   const [bio, setBio] = useState(userLogin?.bio || "");
   const [location, setLocation] = useState(userLogin?.location || "");
-  const [mail, setMail] = useState(userLogin?.mail || ""); // Social Link
+  const [mail, setMail] = useState(userLogin?.mail || "");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
-  // Account email / password
   const [resetEmail, setResetEmail] = useState(
     (userLogin as any)?.email || (userLogin as any)?.mail || "",
   );
   const [newEmail, setNewEmail] = useState("");
 
-  // Loading states
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isEmailUpdating, setIsEmailUpdating] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
 
-  // Feedback modal
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [feedbackTitle, setFeedbackTitle] = useState("");
   const [feedbackMessage, setFeedbackMessage] = useState("");
@@ -191,7 +187,6 @@ export default function EditProfile() {
     }
   };
 
-  // ---------- Change password (sends reset link) ----------
   const handleResetPassword = async () => {
     if (isResetting) return;
 
@@ -231,7 +226,6 @@ export default function EditProfile() {
     }
   };
 
-  // ---------- Change email (sends confirm link to NEW email) ----------
   const handleEmailChangeRequest = async () => {
     if (isEmailUpdating) return;
 

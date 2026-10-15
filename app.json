@@ -33,6 +33,7 @@
       [
         "expo-notifications",
         {
+          "enableBackgroundRemoteNotifications": false,
           "icon": "./src/assets/images/logocircle.png",
           "color": "#ffffff"
         }
