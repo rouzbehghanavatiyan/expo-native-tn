@@ -119,17 +119,17 @@ const ProfileBio: React.FC<ProfileBioProps> = ({
   const activeMail = fetchedBioData?.mail ?? userLogin?.mail;
 
   const hasProfileInfo = Boolean(activeBio || activeLocation || activeMail);
-  const shouldShowDetails = hasProfileInfo || isFetched;
 
   const getProfileUser = async () => {
-    const targetUserId = userLogin?.user?.id || userLogin?.userId;
+    const targetUserId = userLogin?.user?.id || userLogin?.userId || userLogin?.id;
     if (!targetUserId) return;
     try {
       setLoadingProfile(true);
       const res = await showProfileByUser(targetUserId);
       if (res?.data || res) {
         logger.info("|res?.datares?.data", res?.data);
-        setFetchedBioData(res?.data?.data || res);
+        const resolvedData = res?.data?.data ?? res?.data ?? res;
+        setFetchedBioData(resolvedData);
       }
     } catch (error) {
       console.error("Error fetching profile info:", error);
@@ -138,6 +138,37 @@ const ProfileBio: React.FC<ProfileBioProps> = ({
       setIsFetched(true);
     }
   };
+
+  const renderBioDetails = () => (
+    <YStack w="100%" gap="$2" mt="$2">
+      {activeBio ? (
+        <Text color="$textPrimary" fontSize="$3" lineHeight={20} mb="$1">
+          {activeBio}
+        </Text>
+      ) : null}
+      {activeLocation ? (
+        <XStack alignItems="center" gap="$2">
+          <Icon name="location-on" size={16} color="#777777" />
+          <Text color="$textSecondary" fontSize="$3">
+            {activeLocation}
+          </Text>
+        </XStack>
+      ) : null}
+      {activeMail ? (
+        <XStack alignItems="center" gap="$2">
+          <Icon name="language" size={16} color="#007aff" />
+          <Text fontWeight="600" color="$infoMain" fontSize="$3">
+            {activeMail}
+          </Text>
+        </XStack>
+      ) : null}
+      {!hasProfileInfo && (
+        <Text color="$textSecondary" fontSize="$3" fontStyle="italic">
+          No bio information available.
+        </Text>
+      )}
+    </YStack>
+  );
 
   return (
     <YStack px="$4" alignItems="center" w="100%">
@@ -343,67 +374,38 @@ const ProfileBio: React.FC<ProfileBioProps> = ({
 
       <YStack w="100%" mt="$5" alignItems="flex-start" gap="$3">
         {isMyProfile ? (
-          <TouchableOpacity
-            onPress={() => router.push("/setting/editProfile")}
-            style={{ width: "100%" }}
-          >
-            <YStack w="100%" alignItems="center">
-              <XStack
-                px="$2"
-                py="$1"
-                borderRadius="$2"
-                borderWidth={1}
-                borderColor="$pinkDark"
-                ai="center"
-                jc="center"
-                pressStyle={{ opacity: 0.7 }}
-                cursor="pointer"
-                onPress={() => {
-                  router.push("/setting/editProfile");
-                }}
-              >
-                <Icon name="edit" size={14} color="$pinkDark" />
-                <Text
-                  marginStart={3}
-                  fontSize="$3"
-                  fontWeight="500"
-                  color="$pinkDark"
-                >
-                  Edit Profile
-                </Text>
-              </XStack>
-            </YStack>
-          </TouchableOpacity>
-        ) : shouldShowDetails ? (
           <>
-            {activeBio ? (
-              <Text color="$textPrimary" fontSize="$3" lineHeight={20} mb="$1">
-                {activeBio}
-              </Text>
-            ) : null}
-            {activeLocation ? (
-              <XStack alignItems="center" gap="$2">
-                <Icon name="location-on" size={16} color="#777777" />
-                <Text color="$textSecondary" fontSize="$3">
-                  {activeLocation}
-                </Text>
-              </XStack>
-            ) : null}
-            {activeMail ? (
-              <XStack alignItems="center" gap="$2">
-                <Icon name="language" size={16} color="#007aff" />
-                <Text fontWeight="600" color="$infoMain" fontSize="$3">
-                  {activeMail}
-                </Text>
-              </XStack>
-            ) : null}
-            {!hasProfileInfo && (
-              <Text color="$textSecondary" fontSize="$3" fontStyle="italic">
-                No bio information available.
-              </Text>
-            )}
+            <TouchableOpacity
+              onPress={() => router.push("/setting/editProfile")}
+              style={{ width: "100%" }}
+            >
+              <YStack w="100%" alignItems="center">
+                <XStack
+                  px="$2"
+                  py="$1"
+                  borderRadius="$2"
+                  borderWidth={1}
+                  borderColor="$pinkDark"
+                  ai="center"
+                  jc="center"
+                  pressStyle={{ opacity: 0.7 }}
+                  cursor="pointer"
+                >
+                  <Icon name="edit" size={14} color="$pinkDark" />
+                  <Text
+                    marginStart={3}
+                    fontSize="$3"
+                    fontWeight="500"
+                    color="$pinkDark"
+                  >
+                    Edit Profile
+                  </Text>
+                </XStack>
+              </YStack>
+            </TouchableOpacity>
+            {renderBioDetails()}
           </>
-        ) : (
+        ) : !isFetched ? (
           <TouchableOpacity
             onPress={getProfileUser}
             disabled={loadingProfile}
@@ -436,6 +438,8 @@ const ProfileBio: React.FC<ProfileBioProps> = ({
               </YStack>
             </YStack>
           </TouchableOpacity>
+        ) : (
+          renderBioDetails()
         )}
       </YStack>
     </YStack>

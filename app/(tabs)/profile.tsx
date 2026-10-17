@@ -87,7 +87,7 @@ const Profile: React.FC = () => {
   const expireTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
   );
-  const onRefreshRef = useRef<() => void>(() => {});
+  const onRefreshRef = useRef<() => void>(() => { });
 
   const handleMatchExpired = useCallback(() => {
     clearTimeout(expireTimerRef.current);
@@ -331,7 +331,7 @@ const Profile: React.FC = () => {
     };
   }, []);
 
-  const handlePickMedia = () => {};
+  const handlePickMedia = () => { };
 
   useEffect(() => {
     const score = userIdWhantToShow?.score || userLogin?.score || 0;

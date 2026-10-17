@@ -288,7 +288,6 @@ const OptionTop: React.FC<OptionTopProps> = ({
                   <MaterialIcons name="more-vert" size={22} color="white" />
                 </Pressable>
 
-                {/* Dropdown Menu Modal */}
                 <Modal
                   visible={menuOpen}
                   transparent
@@ -470,7 +469,7 @@ const OptionTop: React.FC<OptionTopProps> = ({
                     </View>
                   </View>
                 </Modal>
-                {/* Block Confirmation Modal */}
+
                 <Modal
                   visible={blockModalOpen}
                   transparent
@@ -538,7 +537,6 @@ const OptionTop: React.FC<OptionTopProps> = ({
                   </View>
                 </Modal>
 
-                {/* Report Success Modal */}
                 <Modal
                   visible={reportSuccessModalOpen}
                   transparent

@@ -157,7 +157,7 @@ const config = createTamagui({
   tokens,
   themes,
   shorthands,
-  defaultTheme: "light", // ✅ این خط را اضافه کن
+  defaultTheme: "light",
 });
 
 export type AppConfig = typeof config;

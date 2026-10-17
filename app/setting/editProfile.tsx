@@ -77,10 +77,7 @@ export default function EditProfile() {
   const [location, setLocation] = useState(userLogin?.location || "");
   const [mail, setMail] = useState(userLogin?.mail || "");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
-
-  const [resetEmail, setResetEmail] = useState(
-    (userLogin as any)?.email || (userLogin as any)?.mail || "",
-  );
+  const [resetEmail, setResetEmail] = useState("");
   const [newEmail, setNewEmail] = useState("");
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -97,10 +94,6 @@ export default function EditProfile() {
       setBio(userLogin.bio || "");
       setLocation(userLogin.location || "");
       setMail(userLogin.mail || "");
-      setResetEmail(
-        (prev: string) =>
-          prev || (userLogin as any)?.email || (userLogin as any)?.mail || "",
-      );
     }
   }, [userLogin]);
 
@@ -188,6 +181,7 @@ export default function EditProfile() {
     }
   };
 
+
   const handleResetPassword = async () => {
     if (isResetting) return;
 
@@ -200,7 +194,7 @@ export default function EditProfile() {
     try {
       setIsResetting(true);
       const res: any = await forgotPassword({ email });
-
+      logger.info("res?.datares?.datares?.datares?.data", res?.data)
       if (res?.data?.status === 0) {
         showFeedback(
           "Email Sent",
@@ -239,7 +233,7 @@ export default function EditProfile() {
     try {
       setIsEmailUpdating(true);
       const res: any = await requestChangeEmail({ newEmail: email });
-
+      logger.info("requestChangeEmail requestChangeEmail", res?.data)
       if (res?.data?.status === 0) {
         showFeedback(
           "Verification Sent",
@@ -278,9 +272,10 @@ export default function EditProfile() {
           style={{ flex: 1 }}
         >
           <ScrollView
-            contentContainerStyle={{ flexGrow: 1, paddingBottom: 32 }}
+            contentContainerStyle={{ flexGrow: 1, paddingBottom: 200 }}
             keyboardShouldPersistTaps="handled"
-            keyboardDismissMode="on-drag"
+            keyboardDismissMode="none"
+            automaticallyAdjustKeyboardInsets={true}
             showsVerticalScrollIndicator={false}
           >
             <YStack ai="center" jc="center" my="$4" gap="$2">
@@ -374,7 +369,6 @@ export default function EditProfile() {
                 </XStack>
               </SectionCard>
 
-              {/* Change email */}
               <SectionCard
                 icon="mail-outline"
                 title="Change Email"
@@ -400,8 +394,6 @@ export default function EditProfile() {
                   Send Confirmation Email
                 </BaseButton>
               </SectionCard>
-
-              {/* Change password */}
               <SectionCard
                 icon="lock-outline"
                 title="Change Password"
@@ -431,7 +423,6 @@ export default function EditProfile() {
           </ScrollView>
         </KeyboardAvoidingView>
 
-        {/* Feedback modal */}
         <Modal
           visible={feedbackOpen}
           transparent
@@ -480,6 +471,7 @@ export default function EditProfile() {
 
                 <BaseButton
                   appearance="solid"
+                  bg={"$textPrimary"}
                   colorType={isSuccess ? "primary" : "error"}
                   fullWidth
                   mt="$2"

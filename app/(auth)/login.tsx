@@ -305,7 +305,6 @@ const LoginScreen: React.FC<any> = () => {
               </YStack>
             </YStack>
 
-            {/* Error Modal */}
             <Modal
               visible={showErrorModal}
               transparent

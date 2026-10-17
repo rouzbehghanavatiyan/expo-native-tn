@@ -140,8 +140,9 @@ export default function SignUpScreen() {
         style={{ flex: 1 }}
       >
         <ScrollView
-          contentContainerStyle={{ flexGrow: 1 }}
+          contentContainerStyle={{ flexGrow: 1, paddingBottom: 32 }}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="none"
           showsVerticalScrollIndicator={false}
         >
           <YStack
@@ -510,6 +511,7 @@ export default function SignUpScreen() {
                     colorType={
                       modalState.type === "success" ? "success" : "primary"
                     }
+                    bg={"green"}
                     onPress={handleCloseModal}
                     width="100%"
                   >
