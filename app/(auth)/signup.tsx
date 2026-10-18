@@ -87,6 +87,7 @@ export default function SignUpScreen() {
         username: inputs.username,
         email: inputs.email,
         password: inputs.password,
+        userTypeId: 1,
         confirmPassword: inputs.passwordConfirmation,
         userGender: Number(inputs.gender),
       });
