@@ -44,9 +44,9 @@ export default function SettingLayout() {
       case "Profile":
         router.push("/setting/editProfile");
         break;
-      case "Learning":
-        router.push("/learning");
-        break;
+      // case "Learning":
+      //   router.push("/learning");
+      //   break;
       case "Support":
         router.push("/support");
         break;

@@ -21,6 +21,8 @@ export default function ShowWatchSlide({
   showResult,
   showLiked,
   showCountLiked,
+  enableTour,
+
 }: any) {
   const findeVideoInTournomentTop = video?.attachmentMatched?.insertDate;
   const findeVideoInTournomentBott = video?.attachmentInserted?.insertDate;
@@ -28,7 +30,6 @@ export default function ShowWatchSlide({
   const colors = getColors(isDark);
   const isOpen = useMatchOpen(video?.matchEndAt);
   const votingOpen = isOpen && !video?.isFinished;
-
   const styles = useMemo(() => createStyles(colors), [isDark]);
   const getTimestamp = (dateString: any) => {
     if (!dateString) return 0;
@@ -65,6 +66,7 @@ export default function ShowWatchSlide({
     <>
       <View style={styles.half}>
         <VideoSection
+          enableTour={enableTour} 
           itsHome={itsHome}
           inviteWatch={inviteWatch}
           score={showScore ? video?.scoreInserted : null}

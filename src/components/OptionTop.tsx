@@ -30,6 +30,7 @@ interface OptionTopProps {
   dropdownItems?: (video: any) => any[];
   userIdLogin: string | null;
   main: any;
+  enableTour: any
 }
 
 const REPORT_REASONS = [
@@ -47,8 +48,9 @@ const OptionTop: React.FC<OptionTopProps> = ({
   positionVideo,
   score,
   userIdLogin,
-  main,
   onBoldPress,
+  main,
+  enableTour
 }) => {
   const router = useRouter();
   const [localIsFollowed, setLocalIsFollowed] = useState(false);
@@ -57,15 +59,12 @@ const OptionTop: React.FC<OptionTopProps> = ({
   const [description, setDescription] = useState("");
   const insets = useSafeAreaInsets();
   const [keyboardHeight, setKeyboardHeight] = useState(0);
-
-  // Report Modal States
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [selectedReason, setSelectedReason] = useState<number | null>(null);
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
 
   const [reportSuccessModalOpen, setReportSuccessModalOpen] = useState(false);
 
-  // Block Modal States// Success Report Modal State
   const [blockModalOpen, setBlockModalOpen] = useState(false);
   const [isSubmittingBlock, setIsSubmittingBlock] = useState(false);
   const [reportResult, setReportResult] = useState<{
@@ -73,6 +72,8 @@ const OptionTop: React.FC<OptionTopProps> = ({
     message: string;
   } | null>(null);
   const currentUserId = main?.userLogin?.user?.id;
+
+
 
   const profile =
     positionVideo === 0
@@ -263,6 +264,7 @@ const OptionTop: React.FC<OptionTopProps> = ({
   ];
 
   const isTopPosition = positionVideo === 0;
+  const tourActive = isTopPosition && !!enableTour;
 
   return (
     <View position="absolute" top={0} left={0} right={0} zIndex={1}>
@@ -290,30 +292,55 @@ const OptionTop: React.FC<OptionTopProps> = ({
           </View>
           <View flex={2} alignItems="center">
             {checkMyVideo && (
-              <Follows
-                title={localIsFollowed ? "Unfollow" : "Follow"}
-                onFollowClick={handleFallowClick}
-              />
+              <Step
+                active={tourActive}
+                order={1}
+                name="follow"
+                text="You can follow or unfollow this user anytime."
+              >
+                <WView>
+                  <Follows
+                    title={localIsFollowed ? "Unfollow" : "Follow"}
+                    onFollowClick={handleFallowClick}
+                  />
+                </WView>
+              </Step>
             )}
           </View>
-          <Pressable
-            hitSlop={10}
-            style={{ paddingHorizontal: 6, paddingVertical: 4 }}
-            onPress={onBoldPress}
+
+
+          <Step
+            active={tourActive}
+            order={2}
+            name="fullscreen"
+            text="Tap here to watch the video in full screen."
           >
-            <Icon name="fullscreen" size={26} color="white" />
-          </Pressable>
+            <WPressable
+              hitSlop={10}
+              style={{ paddingHorizontal: 6, paddingVertical: 4 }}
+              onPress={onBoldPress}
+            >
+              <Icon name="fullscreen" size={26} color="white" />
+            </WPressable>
+          </Step>
+
           <View flex={1} alignItems="flex-end">
             {checkMyVideo && (
               <>
-                <Pressable
-                  hitSlop={10}
-                  style={{ padding: 4 }}
-                  onPress={() => setMenuOpen(true)}
+                <Step
+                  active={tourActive}
+                  order={3}
+                  name="menu"
+                  text="Tap here to send a message, report, or block this user."
                 >
-                  <MaterialIcons name="more-vert" size={22} color="white" />
-                </Pressable>
-
+                  <WPressable
+                    hitSlop={10}
+                    style={{ padding: 4 }}
+                    onPress={() => setMenuOpen(true)}
+                  >
+                    <MaterialIcons name="more-vert" size={22} color="white" />
+                  </WPressable>
+                </Step>
                 <Modal
                   visible={menuOpen}
                   transparent
@@ -321,18 +348,11 @@ const OptionTop: React.FC<OptionTopProps> = ({
                   onRequestClose={() => setMenuOpen(false)}
                 >
                   <Pressable
-                    style={[
-                      styles.backdrop,
-                      !isTopPosition && styles.backdropCenter,
-                    ]}
+                    style={[styles.backdrop, !isTopPosition && styles.backdropCenter]}
                     onPress={() => setMenuOpen(false)}
                   >
                     <View
-                      style={
-                        isTopPosition
-                          ? styles.menuContainerTop
-                          : styles.menuContainerCenter
-                      }
+                      style={isTopPosition ? styles.menuContainerTop : styles.menuContainerCenter}
                     >
                       <View
                         backgroundColor="white"
@@ -451,7 +471,6 @@ const OptionTop: React.FC<OptionTopProps> = ({
                             <Text fontSize="$2" color="#666" mb="$3" textAlign="left">
                               Please select a reason for reporting:
                             </Text>
-
                             <YStack gap="$2" mb="$3">
                               {REPORT_REASONS.map((reason) => {
                                 const isSelected = selectedReason === reason.id;
