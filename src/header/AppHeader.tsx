@@ -162,6 +162,7 @@ const AppHeader = () => {
   const getInitialCount = async () => {
     try {
       const count = await unreadCount(currentUser?.id);
+      logger.info("count count", count)
       dispatch(setUnreadMessagesCount(count?.count));
     } catch (error) {
       logger.error("خطا در دریافت تعداد پیام‌های خوانده نشده", error);
@@ -171,7 +172,7 @@ const AppHeader = () => {
   useEffect(() => {
     if (!currentUser) return;
     getInitialCount();
-  }, [currentUser, dispatch]);
+  }, []);
 
   const ActionIcons = () => {
     return (

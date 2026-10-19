@@ -95,11 +95,6 @@ export const markAsRead = async (payload: {
   messageId?: number;
 }) => {
   try {
-    if (!payload.senderId || !payload.receiveId) {
-      console.warn("⚠️ اخطار: senderId یا receiveId نامعتبر است", payload);
-      return;
-    }
-
     const response = await chatApi.patch("api/chat/markAsRead", payload);
     return response.data;
   } catch (error: any) {
