@@ -3,7 +3,6 @@ import { StyleSheet, View } from "react-native";
 import { useAppTheme } from "../hook/ThemeContext";
 import { getColors } from "../hook/themeColors";
 import { useMatchOpen } from "../hook/useMatchOpen";
-import { logger } from "../utils/logger";
 import VideoSection from "./VideoSection";
 const ONE_HOUR_MS = 60 * 60 * 1000; // 3,600,000 میلی‌ثانیه (۱ ساعت)
 
@@ -61,8 +60,6 @@ export default function ShowWatchSlide({
       : video?.likeInserted > video?.likeMatched
         ? "Loss"
         : "Draw";
-
-  logger.info("vvvvvvvvvvvvvvvvvvvvvvvvvvvvv", video);
 
   return (
     <>
