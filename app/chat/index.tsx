@@ -108,6 +108,8 @@ const ChatRoom: React.FC = () => {
     });
   };
 
+  logger.info("unreadCount", main?.unreadMessagesCount)
+
   return (
     <UserListLayout
       title="Messages"
@@ -123,9 +125,7 @@ const ChatRoom: React.FC = () => {
       onRefresh={handleRefresh}
       keyExtractor={(item: MessageData) => String(item.sender)}
       renderRight={(user: MessageData) => {
-        const showBadge =
-          (user?.unreadCount && user.unreadCount > 0) ||
-          user?.isReadChat === false;
+        const showBadge = user?.unreadCount && user.unreadCount > 0
         if (!showBadge) return null;
         return <View width={10} height={10} borderRadius={10} bg="#FF3040" />;
       }}

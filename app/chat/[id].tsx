@@ -8,7 +8,6 @@ import { useAppDispatch, useAppSelector } from "@/src/store/reduxHookType";
 import { getImageUrl } from "@/src/utils/fileHelper";
 import { logger } from "@/src/utils/logger";
 import { socketClient } from "@/src/utils/socketClient";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Stack, useLocalSearchParams } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { FlatList, KeyboardAvoidingView, Platform } from "react-native";
@@ -102,8 +101,15 @@ export default function PrivateChat() {
         sender: reciveUserId,
         receiver: userIdLogin,
       });
-      await markAsRead(reciveUserId, userIdLogin);
-      await AsyncStorage.setItem(`message_read_${reciveUserId}`, "true");
+
+      const postData = {
+        senderId: reciveUserId,
+        receiveId: userIdLogin,
+        // messageId?: number;
+      }
+
+      const resRead = await markAsRead(postData);
+      logger.info("resRead resRead", resRead)
       dispatch(markSenderAsRead(String(reciveUserId)));
     } catch (err) {
       logger.error("Error triggering markAsRead:", err);
@@ -153,12 +159,12 @@ export default function PrivateChat() {
       prev.map((msg) =>
         msg.tempId === data.tempId
           ? {
-              ...msg,
-              id: data.id,
-              // زمان واقعی سرور جایگزین زمان محلیِ optimistic می‌شود
-              createdAt: data.createdAt || msg.createdAt,
-              time: data.createdAt ? formatTime(data.createdAt) : msg.time,
-            }
+            ...msg,
+            id: data.id,
+            // زمان واقعی سرور جایگزین زمان محلیِ optimistic می‌شود
+            createdAt: data.createdAt || msg.createdAt,
+            time: data.createdAt ? formatTime(data.createdAt) : msg.time,
+          }
           : msg,
       ),
     );
@@ -196,8 +202,6 @@ export default function PrivateChat() {
       if (sender === currentOther) {
         triggerMarkAsRead();
       }
-
-      // پیام جدید باید ابتدای آرایه اضافه شود چون آرایه نزولی (جدید -> قدیم) است
       setMessages((prev) => [normalizedMsg, ...prev]);
       scrollToBottom();
     },
