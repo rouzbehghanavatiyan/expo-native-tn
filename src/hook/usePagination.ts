@@ -24,7 +24,6 @@ export const usePagination = <T = any>(
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [hasMore, setHasMore] = useState<boolean>(true);
 
-  // 🔒 قفل synchronous — بر خلاف state، بلافاصله و بدون تاخیر رندر آپدیت می‌شود
   const isFetchingRef = useRef(false);
   const hasMoreRef = useRef(true);
 
@@ -32,7 +31,6 @@ export const usePagination = <T = any>(
 
   const fetchData = useCallback(
     async (currentPage: number, isRefresh: boolean = false) => {
-      // اگر همین الان در حال فچ هستیم، اجازه ورود مجدد نده
       if (isFetchingRef.current) return;
       isFetchingRef.current = true;
       setIsLoading(true);
@@ -52,7 +50,10 @@ export const usePagination = <T = any>(
           fetchedItems = response.data;
         } else if (response?.data?.data && Array.isArray(response.data.data)) {
           fetchedItems = response.data.data;
-        } else if (response?.data?.items && Array.isArray(response.data.items)) {
+        } else if (
+          response?.data?.items &&
+          Array.isArray(response.data.items)
+        ) {
           fetchedItems = response.data.items;
         }
 
@@ -79,11 +80,9 @@ export const usePagination = <T = any>(
 
   useEffect(() => {
     fetchData(page, page === 1);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, fetchData]);
 
   const fetchNextPage = useCallback(() => {
-    // چک روی ref، نه روی state — چون state با تاخیر یک رندر آپدیت می‌شود
     if (isFetchingRef.current || !hasMoreRef.current) return;
     setPage((prevPage) => prevPage + 1);
   }, []);
@@ -93,7 +92,6 @@ export const usePagination = <T = any>(
     hasMoreRef.current = true;
     setHasMore(true);
     setPage(1);
-    // اگر صفحه از قبل 1 بوده، useEffect دوباره اجرا نمی‌شود، پس دستی صدا بزن
     fetchData(1, true);
   }, [fetchData]);
 

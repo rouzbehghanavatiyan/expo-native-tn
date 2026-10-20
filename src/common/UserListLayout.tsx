@@ -22,7 +22,6 @@ interface UserListLayoutProps {
   onUnblock?: (id: any) => void;
   unblockText?: string;
   imgSize?: number;
-  // --- pagination (اختیاری) ---
   onEndReached?: () => void;
   isLoadingMore?: boolean;
   refreshing?: boolean;
@@ -157,7 +156,6 @@ const UserListLayout: React.FC<UserListLayoutProps> = ({
         </XStack>
       );
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [
       isDark,
       imgSize,
@@ -175,7 +173,7 @@ const UserListLayout: React.FC<UserListLayoutProps> = ({
       style={{ flex: 1, backgroundColor: isDark ? "#121212" : "#fff" }}
     >
       <View f={1} bg="$backgroundPaper">
-        {title && <MainTitle handleBack={onBack || (() => {})} title={title} />}
+        {title && <MainTitle handleBack={onBack || (() => { })} title={title} />}
 
         {isLoading ? (
           <YStack f={1} ai="center" jc="center">
@@ -186,7 +184,6 @@ const UserListLayout: React.FC<UserListLayoutProps> = ({
             data={data}
             renderItem={renderItem}
             keyExtractor={keyExtractor ?? defaultKeyExtractor}
-            // pagination
             onEndReached={handleEndReached}
             onEndReachedThreshold={0.1}
             onScrollBeginDrag={() => {
@@ -208,7 +205,6 @@ const UserListLayout: React.FC<UserListLayoutProps> = ({
               </YStack>
             }
             ListFooterComponent={
-              // یک ارتفاع ثابت همیشه وجود دارد؛ فقط اسپینر شرطی است
               <YStack height={50} ai="center" jc="center">
                 {isLoadingMore ? (
                   <Spinner size="small" color="$indigoMain" />

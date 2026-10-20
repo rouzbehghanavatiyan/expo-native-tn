@@ -35,7 +35,6 @@ export function useCountdown(
 
     const id = setInterval(tick, 1000);
     tick();
-    // وقتی اپ از بک‌گراند برگشت، فوراً همگام شود
     const sub = AppState.addEventListener(
       "change",
       (s) => s === "active" && tick(),

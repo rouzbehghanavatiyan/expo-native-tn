@@ -59,8 +59,9 @@ export const useShowWatch = ({
     if (!params.inviteId) return [];
 
     try {
-      const { attachmentListByInviteId }: any =
-        await import("../services/masterServices");
+      const { attachmentListByInviteId }: any = await import(
+        "../services/masterServices"
+      );
 
       const res = await attachmentListByInviteId(params);
 
@@ -92,15 +93,12 @@ export const useShowWatch = ({
         inviteId,
       });
 
-      // اگر fetcher والد void برگرداند، newData آرایه خالی در نظر گرفته می‌شود
       const newData = result || [];
 
       if (newData.length > 0 && appendAction) {
         dispatch(appendAction(newData));
       }
 
-      // در صورتی که آپدیت‌های ریداکس در خود والد هندل شوند (مثل کدهای شما)،
-      // newData در اینجا خالی خواهد بود و شرط پایین مانع تداخل در pagination می‌شود.
       if (newData.length > 0) {
         dispatch(
           paginationAction({

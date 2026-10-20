@@ -75,7 +75,6 @@ export const BaseButton = forwardRef<any, BaseButtonProps>(
         }
       }
 
-      // ۲. دکمه‌های رنگی اصلی (Primary, Error, Success, ...)
       const mainToken = `$${colorType}Main` as any;
 
       switch (appearance) {

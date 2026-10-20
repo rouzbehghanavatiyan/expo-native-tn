@@ -5,7 +5,7 @@ import { View, XStack, YStack } from "tamagui";
 import StickerOverlay from "./StickerOverlay";
 
 interface MessageInputProps {
-  title: string; // همان متن پیام
+  title: string; 
   setTitle: React.Dispatch<React.SetStateAction<string>>;
   handleSendMessage: () => void;
   titleInputRef?: React.RefObject<TextInput>;
@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: "row",
     alignItems: "flex-end",
-    backgroundColor: "#f3f4f6", // رنگ پس‌زمینه ملایم برای اینپوت
+    backgroundColor: "#f3f4f6", 
     borderRadius: 20,
     paddingRight: 10,
     borderWidth: 1,
@@ -132,23 +132,23 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
     fontSize: 15,
     color: "#111827",
-    textAlignVertical: "center", // برای اندروید که متن وسط بماند
+    textAlignVertical: "center", 
   },
   emojiButton: {
     paddingBottom: 8,
     paddingLeft: 5,
   },
   sendButton: {
-    backgroundColor: "#2563eb", // رنگ آبی برای دکمه ارسال
+    backgroundColor: "#2563eb", 
     width: 40,
     height: 40,
     borderRadius: 20,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 2, // هم‌تراز کردن با اینپوت
+    marginBottom: 2, 
   },
   sendButtonDisabled: {
-    backgroundColor: "#e5e7eb", // رنگ خاکستری وقتی متنی نیست
+    backgroundColor: "#e5e7eb", 
   },
 });
 

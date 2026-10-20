@@ -42,7 +42,7 @@ export default function TabLayout() {
       const permission =
         await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permission.granted) {
-        Alert.alert("دسترسی لازم است", "لطفاً دسترسی به گالری را تایید کنید.");
+        Alert.alert("Permission Required", "Please allow access to the gallery.");
         return;
       }
 

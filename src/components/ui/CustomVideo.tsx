@@ -26,7 +26,7 @@ interface CustomVideoProps {
   backgroundColor?: string;
   positionVideo: any;
   resizeMode?: any;
-  isFullScreen?: boolean; // <--- این پراپ اضافه شد
+  isFullScreen?: boolean; 
 }
 
 const CustomVideo = memo(
@@ -38,9 +38,8 @@ const CustomVideo = memo(
     positionVideo,
     backgroundColor = "black",
     resizeMode = "contain",
-    isFullScreen = false, // مقدار پیش‌فرض
+    isFullScreen = false, 
   }: CustomVideoProps) => {
-    // در حالت فول‌اسکرین، هیچ‌گونه استرچ یا حاشیه‌ای اعمال نمی‌کنیم
     const isStretch =
       !isFullScreen && (resizeMode === 4 || resizeMode === "stretch");
     const fixResizeMode = isFullScreen

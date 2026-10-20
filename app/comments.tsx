@@ -262,8 +262,8 @@ const Comments: React.FC<CommentsProps> = ({
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
-  const pageRef = useRef(1); // تعداد صفحه‌های لودشده
-  const loadingMoreRef = useRef(false); // جلوگیری از onEndReached تکراری
+  const pageRef = useRef(1); 
+  const loadingMoreRef = useRef(false); 
   const inputRef = useRef<TextInput>(null);
   const flatListRef = useRef<FlatList<any>>(null);
 

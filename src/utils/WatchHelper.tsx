@@ -120,7 +120,6 @@ function Spotlight({
             <View style={[styles.dim, { top, left: 0, width: left, height: h }]} />
             <View style={[styles.dim, { top, left: right, right: 0, height: h }]} />
 
-            {/* حلقه دور دو عکس */}
             <View
                 pointerEvents="none"
                 style={[styles.ring, { top, left, width: w, height: h }]}

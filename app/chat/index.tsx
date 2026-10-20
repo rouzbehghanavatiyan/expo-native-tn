@@ -34,9 +34,9 @@ const ChatRoom: React.FC = () => {
   const hasMore = useAppSelector((state) => state.chat.hasMore);
   const userIdLogin = main?.userLogin?.user?.id;
 
-  const [isLoading, setIsLoading] = useState(false); // لود اولیه
-  const [isLoadingMore, setIsLoadingMore] = useState(false); // صفحه بعد
-  const [isRefreshing, setIsRefreshing] = useState(false); // pull to refresh
+  const [isLoading, setIsLoading] = useState(false); 
+  const [isLoadingMore, setIsLoadingMore] = useState(false); 
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const fetchingRef = useRef(false);
 

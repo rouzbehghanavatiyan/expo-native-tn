@@ -1,9 +1,9 @@
 import React from "react";
 import {
-    Text as RNText,
-    TextProps as RNTextProps,
-    StyleProp,
-    TextStyle,
+  Text as RNText,
+  TextProps as RNTextProps,
+  StyleProp,
+  TextStyle,
 } from "react-native";
 const PERSIAN_ARABIC_RANGE = [
   [0x0600, 0x06ff],
@@ -12,28 +12,22 @@ const PERSIAN_ARABIC_RANGE = [
   [0xfe70, 0xfeff],
 ];
 
-// لاتین پایه + لاتین گسترش‌یافته (اروپایی، ویتنامی و ...) + علائم نگارشی رایج
-// Vazirmatn این بازه‌ها را هم پوشش می‌دهد، پس همان فونت اپ استفاده می‌شود
 const LATIN_RANGE = [
-  [0x0000, 0x024f], // ASCII + Latin-1 Supplement + Latin Extended A/B
-  [0x1e00, 0x1eff], // Latin Extended Additional (ویتنامی و ...)
-  [0x2000, 0x206f], // علائم نگارشی عمومی (–, ", ' و ...)
+  [0x0000, 0x024f],
+  [0x1e00, 0x1eff],
+  [0x2000, 0x206f],
 ];
 
 function inRanges(code: number, ranges: number[][]): boolean {
   return ranges.some(([start, end]) => code >= start && code <= end);
 }
 
-/** فونت مناسب برای یک کاراکتر را برمی‌گرداند؛ undefined یعنی «فونت پیش‌فرض سیستم» */
 function getFontForCodePoint(code: number): string | undefined {
   if (inRanges(code, PERSIAN_ARABIC_RANGE)) return "Vazirmatn";
   if (inRanges(code, LATIN_RANGE)) return "Vazirmatn";
-  // سیریلیک، چینی/ژاپنی/کره‌ای، تایلندی، دواناگری، عبری، ایموجی و بقیه‌ی زبان‌ها
   return undefined;
 }
 
-// کاراکترهای خنثی (فاصله، اعداد، علائم رایج) را به بخش قبلی می‌چسبانیم
-// تا بی‌خودی متن به تکه‌های ریز و بی‌مورد تقسیم نشود
 const NEUTRAL_REGEX = /[\s\d.,!?;:'"()\-_/@#]/;
 
 interface Segment {

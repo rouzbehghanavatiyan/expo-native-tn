@@ -33,7 +33,7 @@ export const uploadToNestJS = async (
       const percent = Math.round(
         (progressEvent.loaded * 100) / (progressEvent.total ?? 1),
       );
-      console.log(`آپلود: ${percent}%`);
+      console.log(`upload: ${percent}%`);
     },
   });
 };
@@ -98,10 +98,7 @@ export const markAsRead = async (payload: {
     const response = await chatApi.patch("api/chat/markAsRead", payload);
     return response.data;
   } catch (error: any) {
-    console.error(
-      "❌ خطای API در markAsRead:",
-      error.response?.data || error.message,
-    );
+    console.error(error.response?.data || error.message);
     throw error;
   }
 };

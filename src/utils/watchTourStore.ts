@@ -12,7 +12,7 @@ type State = {
 };
 
 let state: State = { step: null };
-let dismissed = false; // در همین session دوباره نمایش داده نشود
+let dismissed = false;
 const listeners = new Set<() => void>();
 
 const emit = () => listeners.forEach((l) => l());

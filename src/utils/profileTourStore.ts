@@ -7,7 +7,6 @@ export type ProfileTourStep = ProfileTourKey | null;
 export type Rect = { x: number; y: number; width: number; height: number };
 
 const STORAGE_KEY = "profile_intro_seen_v2";
-// جابجایی استپ ۱ و ۴
 export const ORDER: ProfileTourKey[] = ["match", "rank"];
 
 type State = {

@@ -5,7 +5,6 @@ import { useAppSelector } from "@/src/store/reduxHookType";
 import asyncWrapper from "@/src/utils/asyncWrapper";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-// 1. اضافه کردن BackHandler از react-native
 import { BackHandler } from "react-native";
 
 const Following = () => {

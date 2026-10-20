@@ -97,7 +97,7 @@ export const uploadFullProcessThunk = createAsyncThunk(
         resizeMode: currentResizeMode,
         description: allFormData?.description || movieMeta?.desc || "",
         title: allFormData?.title || movieMeta?.title || "",
-        subSubCategoryId: Number(selectedSubSubCategoryId), // <-- مقدار داینامیک
+        subSubCategoryId: Number(selectedSubSubCategoryId),
         modeId: 3,
         userGender: userGender || 1,
         reqMatchToGender: reqMatchToGender || 94,

@@ -1,7 +1,5 @@
 export const storage = {
-  setToken: async (token: string) => {
-    // فعلاً expo-secure-store
-  },
+  setToken: async (token: string) => {},
   getToken: async () => {
     return null;
   },

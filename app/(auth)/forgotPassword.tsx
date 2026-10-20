@@ -7,7 +7,6 @@ import React, { useState } from "react";
 import { Modal } from "react-native";
 import { Image, Text, View, XStack, YStack } from "tamagui";
 
-// تعریف تایپ‌های مربوط به استیت مودال
 interface ModalState {
   visible: boolean;
   type: "success" | "error";

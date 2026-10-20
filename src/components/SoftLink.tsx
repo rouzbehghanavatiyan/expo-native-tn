@@ -55,7 +55,6 @@ const SoftLink: FC<SoftLinkProps> = ({
               py="$2"
               px="$2"
             >
-              {/* بخش آیکون و عنوان سمت چپ */}
               <XStack alignItems="center" justifyContent="flex-start">
                 <View
                   minWidth={32}
@@ -70,7 +69,6 @@ const SoftLink: FC<SoftLinkProps> = ({
                 </Text>
               </XStack>
 
-              {/* المان سمت راست (مثل Switch یا کنترل‌های اختصاصی) */}
               {category.renderRight && category.renderRight()}
             </XStack>
           </View>

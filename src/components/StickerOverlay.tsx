@@ -17,15 +17,12 @@ const StickerOverlay: React.FC<PropsType> = ({
       open={showStickers}
       onClose={() => setShowStickers(false)}
       onEmojiSelected={(emojiObject) => {
-        // آبجکت ایموجی به تابع شما پاس داده می‌شود
-        // معمولاً در این کتابخانه، خود ایموجی در ویژگی emojiObject.emoji قرار دارد
         if (onEmojiSelect) {
           onEmojiSelect(emojiObject);
         }
       }}
-      // تنظیمات ظاهری (اختیاری)
       theme={{
-        backdrop: "#00000050", // همان bg-opacity-50 شما در وب
+        backdrop: "#00000050", 
       }}
     />
   );

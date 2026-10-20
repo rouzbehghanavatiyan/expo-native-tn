@@ -69,7 +69,6 @@ export const syncPushToken = async (userId: string | number) => {
         expoPushToken: deviceToken,
       });
 
-      // فقط اگه واقعاً موفق بود کش کن
       if (res?.status === 200 || res?.status === 201) {
         await AsyncStorage.setItem(cacheKey, deviceToken);
         console.log("✅ Token successfully synced and cached.");

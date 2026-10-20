@@ -27,7 +27,6 @@ example log: "logFiles": [
 ],
 eas build:view 208f3bf8-8e06-48a2-af42-3e1f1320f12d
 
-فقط تازمانی که مچ تمام نشده میتوان لایک کرد
 
 your connection to this site is not scure
 

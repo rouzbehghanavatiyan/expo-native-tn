@@ -196,12 +196,10 @@ const mainSlice = createSlice({
       state.unreadMessagesCount = action.payload;
     },
 
-    // 🟢 اضافه شدن اکشن برای افزایش تعداد پیام‌های خوانده نشده
     incrementUnreadCount: (state) => {
       state.unreadMessagesCount += 1;
     },
 
-    // 🟢 اضافه شدن اکشن برای صفر کردن شمارنده
     clearUnreadCount: (state) => {
       state.unreadMessagesCount = 0;
     },
@@ -240,26 +238,22 @@ const mainSlice = createSlice({
 });
 
 export const {
-  // watch
   setPaginationWatch,
   setWatchData,
   appendWatchData,
 
-  // home
   setPaginationHome,
   setHomeData,
   appendHomeData,
 
-  // showWatch
   setPaginationShowWatch,
   setShowWatchData,
   appendShowWatch,
   RsetProfileVideo,
 
-  // other
   setUnreadMessagesCount,
-  incrementUnreadCount, // 🟢 اضافه شد
-  clearUnreadCount, // 🟢 اضافه شد
+  incrementUnreadCount,
+  clearUnreadCount,
   setSelectedStep,
   setLastMatch,
   setShowTimerButton,

@@ -4,7 +4,6 @@ import { useAppTheme } from "../hook/ThemeContext";
 import { getColors } from "../hook/themeColors";
 import { useMatchOpen } from "../hook/useMatchOpen";
 import VideoSection from "./VideoSection";
-const ONE_HOUR_MS = 60 * 60 * 1000; // 3,600,000 میلی‌ثانیه (۱ ساعت)
 
 export default function ShowWatchSlide({
   video,
@@ -69,7 +68,7 @@ export default function ShowWatchSlide({
           itsHome={itsHome}
           inviteWatch={inviteWatch}
           score={showScore ? video?.scoreInserted : null}
-          result={showResult || !votingOpen ? resultInserted : null} // پایینی: resultMatched
+          result={showResult || !votingOpen ? resultInserted : null} 
           endTime={votingOpen}
           showLiked={showLiked}
           countLiked={showCountLiked ? video?.likeInserted : null}

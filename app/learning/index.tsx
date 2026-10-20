@@ -67,7 +67,6 @@ const LearningScreen: React.FC = () => {
             ))}
           </XStack>
 
-          {/* دکمه‌ها */}
           <XStack gap="$3" w="100%" jc="center">
             <BaseButton onPress={handleSkip}>Skip</BaseButton>
 

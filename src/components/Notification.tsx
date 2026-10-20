@@ -104,7 +104,6 @@ const Notification = () => {
   const main = useAppSelector((state) => state?.main);
   const userId = main?.userLogin?.user?.id || main?.userLogin?.userId;
 
-  // ۱. دریافت و نمایش توکن در کامپوننت
   useEffect(() => {
     const fetchToken = async () => {
       const token = await registerForPushNotifications();
@@ -115,19 +114,18 @@ const Notification = () => {
     fetchToken();
   }, []);
 
-  // ۲. متد ارسال تست لوکال (سریع‌ترین راه تست ظاهر و عملکرد هندلر نوتیفیکیشن روی گوشی)
   const handleSendLocalTest = async () => {
     await Notifications.scheduleNotificationAsync({
       content: {
-        title: "تست نوتیفیکیشن لوکال 🔔",
-        body: "این یک پیام آزمایشی درون‌برنامه‌ای است.",
+        title: "Local Notification Test 🔔",
+        body: "This is a test in-app message.",
         data: { type: "test", userId },
       },
-      trigger: null, // ارسال آنی
+      trigger: null,
     });
   };
 
-  // ۳. ارسال تست از طریق سرور
+
   const handleSendServerTest = async () => {
     if (!userId) {
       logger.error("User ID not found!");
@@ -156,7 +154,6 @@ const Notification = () => {
 
   return (
     <YStack f={1} bg="$background">
-      {/* دکمه تست سروری */}
       <YStack
         p="$4"
         gap="$2"
@@ -165,7 +162,7 @@ const Notification = () => {
         pressStyle={{ opacity: 0.8 }}
       >
         <Text textAlign="center" fontWeight="bold">
-          ارسال تست از سرور (Tap to send server test)
+          (Tap to send server test)
         </Text>
         {expoToken ? (
           <Text fontSize="$2" color="$green9" textAlign="center">
@@ -178,7 +175,6 @@ const Notification = () => {
         )}
       </YStack>
 
-      {/* دکمه تست لوکال فوری جهت اطمینان از تنظیمات دستگاه */}
       <YStack
         p="$2"
         mt="$2"
@@ -187,7 +183,7 @@ const Notification = () => {
         pressStyle={{ opacity: 0.8 }}
       >
         <Text textAlign="center" color="white" fontWeight="600">
-          تست آنی نوتیفیکیشن لوکال (بدون نیاز به سرور)
+          test notif
         </Text>
       </YStack>
 

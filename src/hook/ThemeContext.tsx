@@ -1,10 +1,10 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
-    createContext,
-    ReactNode,
-    useContext,
-    useEffect,
-    useState,
+  createContext,
+  ReactNode,
+  useContext,
+  useEffect,
+  useState,
 } from "react";
 
 const THEME_STORAGE_KEY = "@app_theme";
@@ -79,7 +79,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 export function useAppTheme() {
   const ctx = useContext(ThemeContext);
   if (!ctx) {
-    throw new Error("useAppTheme باید داخل ThemeProvider استفاده بشه");
+    throw new Error("useAppTheme ");
   }
   return ctx;
 }

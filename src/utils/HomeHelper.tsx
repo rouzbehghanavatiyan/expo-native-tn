@@ -106,12 +106,10 @@ export default function HomeHelper({ enabled }: Props) {
     );
 }
 
-/* ------------------------- Step 1: Top / Bottom ------------------------- */
 
 function RolesStep({ onNext }: { onNext: () => void }) {
     return (
         <SafeAreaView style={{ flex: 1 }}>
-            {/* لایه تیره کلی که کل صفحه را تاریک می‌کند */}
             <View style={styles.rolesRoot}>
                 <View style={[styles.half, styles.halfTop]}>
                     {/* <View style={styles.likesBadge} pointerEvents="none">
@@ -128,7 +126,6 @@ function RolesStep({ onNext }: { onNext: () => void }) {
                     <Text style={styles.title}>{TEXTS.roles.top.title}</Text>
                     <Text style={styles.desc}>{TEXTS.roles.top.desc}</Text>
 
-                    {/* بج نتیجه مسابقه: فقط بوردر و متن، بدون پس‌زمینه */}
                     {/* <View style={[styles.resultBadge, styles.resultBadgeTop]} pointerEvents="none">
                         <Text style={styles.resultBadgeText}>{TEXTS.roles.result}</Text>
                     </View> */}
@@ -139,7 +136,6 @@ function RolesStep({ onNext }: { onNext: () => void }) {
                     <Text style={styles.desc}>{TEXTS.roles.bottom.desc}</Text>
                     <Text style={styles.arrow}>↓</Text>
 
-                    {/* بج نتیجه مسابقه: فقط بوردر و متن، بدون پس‌زمینه */}
                     {/* <View style={[styles.resultBadge, styles.resultBadgeBottom]} pointerEvents="none">
                         <Text style={styles.resultBadgeText}>{TEXTS.roles.result}</Text>
                     </View> */}
@@ -241,7 +237,7 @@ const styles = StyleSheet.create({
     dim: { position: "absolute", backgroundColor: DIM },
     rolesRoot: {
         flex: 1,
-        backgroundColor: DIM, // سایه تیره کلی روی تمام صفحه اعمال می‌شود
+        backgroundColor: DIM, 
     },
     half: {
         height: "50%",
@@ -251,7 +247,7 @@ const styles = StyleSheet.create({
         borderWidth: 2,
         borderStyle: "dashed",
         borderColor: "rgba(255,255,255,0.7)",
-        backgroundColor: "transparent", // داخل نیمه‌ها رنگ جداگانه ندارد
+        backgroundColor: "transparent", 
     },
     halfTop: { height: "48%", borderBottomWidth: 1 },
     halfBottom: { height: "52%", borderTopWidth: 1 },
@@ -284,7 +280,7 @@ const styles = StyleSheet.create({
         bottom: 48,
         right: 12,
         maxWidth: "58%",
-        backgroundColor: "transparent", // پشت متن لایک کاملاً شفاف است
+        backgroundColor: "transparent", 
         borderWidth: 1.5,
         borderColor: "#ffffff",
         borderRadius: 12,
@@ -302,7 +298,7 @@ const styles = StyleSheet.create({
     resultBadge: {
         position: "absolute",
         alignSelf: "center",
-        backgroundColor: "transparent", // پشت متن برنده/بازنده کاملاً شفاف است
+        backgroundColor: "transparent", 
         borderWidth: 1.5,
         borderColor: "#FFD54A",
         borderRadius: 20,

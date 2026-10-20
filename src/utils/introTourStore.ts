@@ -19,7 +19,7 @@ type State = {
 
 let state: State = { step: null, rects: {} };
 const listeners = new Set<() => void>();
-let dismissed = false; // در همین session دوباره نمایش داده نشود
+let dismissed = false;
 
 const emit = () => listeners.forEach((l) => l());
 const set = (patch: Partial<State>) => {

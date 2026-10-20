@@ -19,8 +19,6 @@ export const useFollow = (userIdLogin: number) => {
     return followState[userId] ?? reduxFollowed ?? false;
   };
 
-  // مقداردهی اولیه‌ی گروهی، مثلا وقتی از سرویس followingList لیستی می‌آید
-  // که همه‌ی آن‌ها از قبل فالو شده‌اند
   const initFollowState = useCallback(
     (userIds: (number | string)[], value: boolean) => {
       setFollowState((prev) => {

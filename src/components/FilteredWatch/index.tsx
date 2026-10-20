@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
     fontSize: 8,
     color: "#999",
     fontWeight: "bold",
-    textAlign: "center", // وسط‌چین کردن متن زیر دایره
+    textAlign: "center", 
   },
   selectedLabel: {
     color: "#3953",

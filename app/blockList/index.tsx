@@ -44,7 +44,6 @@ export default function BlockListScreen() {
       logger.info("unblock res", data);
 
       if (status === 0) {
-        // حذف مستقیم کاربر از لیست جاری در استیت
         setBlockList((prev) =>
           prev.filter((user: any) => {
             const id =

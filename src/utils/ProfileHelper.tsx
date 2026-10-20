@@ -50,7 +50,6 @@ export default function ProfileHelper({ enabled }: { enabled: boolean }) {
     const rect = step ? rects[step] : undefined;
 
     useEffect(() => {
-        // استپ match نیازی به منتظر ماندن برای تارگت ندارد
         if (step && step !== "match" && !rect) {
             const t = setTimeout(() => profileTour.next(), 2000);
             return () => clearTimeout(t);
@@ -127,7 +126,6 @@ export default function ProfileHelper({ enabled }: { enabled: boolean }) {
     );
 }
 
-// کامپوننت تمام صفحه و دکمه فیکس شده برای استپ match
 function FullScreenMatchModal({
     title,
     desc,
@@ -281,7 +279,6 @@ const styles = StyleSheet.create({
     dim: { position: "absolute", backgroundColor: DIM },
     ring: { position: "absolute", borderWidth: 2, borderColor: "#fff" },
 
-    // استایل‌های حالت فول‌اسکرین برای استپ match
     fullScreenContainer: {
         backgroundColor: DIM,
         justifyContent: "center",
@@ -320,7 +317,6 @@ const styles = StyleSheet.create({
     dotLight: { backgroundColor: "rgba(255,255,255,0.4)" },
     dotActiveLight: { backgroundColor: "#fff" },
 
-    // تولتیپ‌های اسپات‌لایت
     tooltip: {
         position: "absolute",
         left: 20,

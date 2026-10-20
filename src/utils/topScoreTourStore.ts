@@ -63,7 +63,6 @@ export const useTopScoreTour = () =>
     topScoreTour.getState,
   );
 
-/** ref و onLayout را روی المان هدف (ردیف اول) بگذار */
 export function useTopScoreTarget() {
   const ref = useRef<RNView>(null);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);

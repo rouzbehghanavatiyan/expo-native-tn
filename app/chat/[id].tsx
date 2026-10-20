@@ -55,7 +55,7 @@ function mergeDescending(
   return merged.sort((a, b) => {
     const timeA = new Date(a.createdAt || a.time).getTime();
     const timeB = new Date(b.createdAt || b.time).getTime();
-    return timeB - timeA; // نزولی: جدید -> قدیم
+    return timeB - timeA;
   });
 }
 
@@ -105,7 +105,7 @@ export default function PrivateChat() {
       const postData = {
         senderId: reciveUserId,
         receiveId: userIdLogin,
-        // messageId?: number;
+
       }
 
       const resRead = await markAsRead(postData);
@@ -145,14 +145,12 @@ export default function PrivateChat() {
 
     socketClient?.emit("send_message", serverMessage);
 
-    // پیام جدید باید ابتدای آرایه اضافه شود چون آرایه نزولی (جدید -> قدیم) است
     setMessages((prev) => [optimisticMessage, ...prev]);
     setTitle("");
     setShowStickers(false);
     scrollToBottom();
   };
 
-  // وقتی سرور پیام را ذخیره کرد، id واقعی دیتابیس را جایگزین tempId می‌کند
   const handleMessageSentAck = useCallback((data: any) => {
     if (!data?.tempId) return;
     setMessages((prev) =>
@@ -161,7 +159,6 @@ export default function PrivateChat() {
           ? {
             ...msg,
             id: data.id,
-            // زمان واقعی سرور جایگزین زمان محلیِ optimistic می‌شود
             createdAt: data.createdAt || msg.createdAt,
             time: data.createdAt ? formatTime(data.createdAt) : msg.time,
           }
@@ -182,7 +179,6 @@ export default function PrivateChat() {
         (receiver === currentLogin && sender === currentOther);
 
       if (!shouldShow) return;
-      // پیام‌های خودمان قبلا به صورت optimistic اضافه شده‌اند
       if (sender === currentLogin) return;
 
       const createdAt = data.createdAt || data.time || new Date().toISOString();
@@ -487,7 +483,7 @@ export default function PrivateChat() {
               onScroll={({ nativeEvent }) => {
                 const { contentOffset, contentSize, layoutMeasurement } =
                   nativeEvent;
-                const paddingToEnd = 60; // فاصله‌ی حساسیت قبل از رسیدن به انتهای دیتا (بالای صفحه در حالت inverted)
+                const paddingToEnd = 60;
                 const isCloseToEnd =
                   contentOffset.y + layoutMeasurement.height >=
                   contentSize.height - paddingToEnd;

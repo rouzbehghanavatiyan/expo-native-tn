@@ -94,7 +94,7 @@ const AppHeader = () => {
         const items = response?.data?.data?.items || [];
         setSearchResults(items);
       } catch (error) {
-        logger.error("خطا در سرچ کاربر:", error);
+        logger.error("Error for searching:", error);
         setSearchResults([]);
       } finally {
         setIsLoading(false);
@@ -165,7 +165,7 @@ const AppHeader = () => {
       logger.info("count count", count)
       dispatch(setUnreadMessagesCount(count?.count));
     } catch (error) {
-      logger.error("خطا در دریافت تعداد پیام‌های خوانده نشده", error);
+      logger.error("Error for read count", error);
     }
   };
 
@@ -177,7 +177,6 @@ const AppHeader = () => {
   const ActionIcons = () => {
     return (
       <XStack alignItems="center" gap="$3">
-        {/* دکمه پیام‌ها */}
         <TouchableOpacity
           activeOpacity={0.7}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -341,7 +340,8 @@ const AppHeader = () => {
                         {item?.userName ||
                           item?.fullName ||
                           item?.title ||
-                          "کاربر"}
+                          "User"}
+
                       </Text>
                     </TouchableOpacity>
                   )}

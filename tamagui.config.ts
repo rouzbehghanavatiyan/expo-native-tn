@@ -77,14 +77,14 @@ const tokens = createTokens({
   },
   radius: {
     0: 0,
-    1: 4, // MUI default borderRadius is usually 4px
+    1: 4,
     2: 8,
     3: 12,
     4: 16,
     round: 9999,
   },
   zIndex: {
-    ...defaultTokens.zIndex, // <--- این خط مشکل را حل می‌کند (آوردن $0, $1 و...)
+    ...defaultTokens.zIndex,
     appBar: 1100,
     drawer: 1200,
     modal: 1300,
@@ -94,7 +94,7 @@ const tokens = createTokens({
   color: {
     white: "#FFFFFF",
     black: "#000000",
-    // Grey Palette
+
     grey50: "#fafafa",
     grey100: "#f5f5f5",
     grey200: "#eeeeee",
@@ -105,14 +105,14 @@ const tokens = createTokens({
     grey700: "#616161",
     grey800: "#424242",
     grey900: "#212121",
-    // Base Brand Colors
+
     indigoMain: "#3f51b5",
     indigoLight: "#757de8",
     indigoDark: "#002984",
     pinkMain: "#e91e63",
     pinkLight: "#ff6090",
     pinkDark: "#b0003a",
-    // Semantic Base Colors
+
     redMain: "#f44336",
     orangeMain: "#ff9800",
     blueMain: "#2196f3",
@@ -124,7 +124,7 @@ const themes = {
   light: {
     background: tokens.color.grey50,
     color: "rgba(0, 0, 0, 0.87)",
-    borderColor: "rgba(0, 0, 0, 0.12)", // 👈 این خط حتماً اضافه شود
+    borderColor: "rgba(0, 0, 0, 0.12)",
 
     backgroundDefault: tokens.color.grey50,
     backgroundPaper: tokens.color.white,
@@ -132,18 +132,18 @@ const themes = {
     textSecondary: "rgba(0, 0, 0, 0.6)",
     textDisabled: "rgba(0, 0, 0, 0.38)",
     primaryMain: tokens.color.indigoMain,
-    // ... بقیه موارد
+
     divider: "rgba(0, 0, 0, 0.12)",
   },
   dark: {
     background: "#121212",
     color: tokens.color.white,
-    borderColor: "rgba(255, 255, 255, 0.12)", // 👈 این خط حتماً اضافه شود
+    borderColor: "rgba(255, 255, 255, 0.12)",
 
     backgroundDefault: "#121212",
     backgroundPaper: "#1e1e1e",
     textPrimary: tokens.color.white,
-    // ... بقیه موارد
+
     divider: "rgba(255, 255, 255, 0.12)",
   },
 };

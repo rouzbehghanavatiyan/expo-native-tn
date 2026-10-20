@@ -195,7 +195,6 @@ const OptionTop: React.FC<OptionTopProps> = ({
     try {
       setIsSubmittingReport(true);
 
-      // reporterId عمداً ارسال نمی‌شود؛ سرور آن را از توکن می‌خواند
       const postData = {
         targetUserId: userInfo.id,
         movieId,

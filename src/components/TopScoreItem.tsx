@@ -159,7 +159,7 @@ const TopScoreItem: React.FC<any> = () => {
                 imgSize={46}
                 score={userTop?.score}
                 imgSrc={getImageUrl(userTop?.profile)}
-                onClickDisable={true} // کلیک از روی کل سطر هندل می‌شود
+                onClickDisable={true} 
               />
               <YStack flex={1} jc="center" gap="$0.5">
                 <Text

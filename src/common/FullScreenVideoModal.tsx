@@ -167,14 +167,12 @@ const FullScreenVideoModal = ({
       onRequestClose={onClose}
     >
       <View style={styles.container}>
-        {/* لودینگ ویدیو */}
         {isVideoLoading && (
           <View style={[StyleSheet.absoluteFill, styles.loadingOverlay]}>
             <ActivityIndicator size="large" color="#ffffff" />
           </View>
         )}
 
-        {/* پلیر ویدیو */}
         {!!cachedUri && !isBlocked && (
           <Video
             ref={videoRef}
@@ -190,22 +188,18 @@ const FullScreenVideoModal = ({
           />
         )}
 
-        {/* لایه لمس کلی صفحه برای نمایش/مخفی کردن کنترل‌ها */}
         <Pressable style={StyleSheet.absoluteFill} onPress={toggleControls} />
 
-        {/* کنترل‌های روی صفحه */}
         <Animated.View
           pointerEvents={showControls ? "box-none" : "none"}
           style={[styles.controlsOverlay, { opacity: controlsOpacity }]}
         >
-          {/* هدر: دکمه بستن فول‌اسکرین */}
           <SafeAreaView edges={["top", "right"]} style={styles.header}>
             <Pressable hitSlop={12} style={styles.iconButton} onPress={onClose}>
               <Icon name="fullscreenExit" size={24} color="#ffffff" />
             </Pressable>
           </SafeAreaView>
 
-          {/* دکمه وسط صفحه: پخش / توقف */}
           <View style={styles.centerPlayButtonContainer}>
             <Pressable style={styles.playButton} onPress={togglePlayPause}>
               <FontAwesome5
@@ -217,12 +211,10 @@ const FullScreenVideoModal = ({
             </Pressable>
           </View>
 
-          {/* فوتر چسبیده به پایین صفحه */}
           <SafeAreaView edges={["bottom"]} style={styles.footerContainer}>
             <View style={styles.progressRow}>
               <Text style={styles.timeText}>{formatTime(currentTime)}</Text>
 
-              {/* نوار پیشرفت / اسکرول بار */}
               <View
                 style={styles.timelineArea}
                 onLayout={(e) => {
