@@ -3,7 +3,6 @@ import { StyleSheet, View } from "react-native";
 import { useAppTheme } from "../hook/ThemeContext";
 import { getColors } from "../hook/themeColors";
 import { useMatchOpen } from "../hook/useMatchOpen";
-import { logger } from "../utils/logger";
 import VideoSection from "./VideoSection";
 const ONE_HOUR_MS = 60 * 60 * 1000; // 3,600,000 میلی‌ثانیه (۱ ساعت)
 
@@ -22,6 +21,8 @@ export default function ShowWatchSlide({
   showResult,
   showLiked,
   showCountLiked,
+  enableTour,
+
 }: any) {
   const findeVideoInTournomentTop = video?.attachmentMatched?.insertDate;
   const findeVideoInTournomentBott = video?.attachmentInserted?.insertDate;
@@ -29,7 +30,6 @@ export default function ShowWatchSlide({
   const colors = getColors(isDark);
   const isOpen = useMatchOpen(video?.matchEndAt);
   const votingOpen = isOpen && !video?.isFinished;
-
   const styles = useMemo(() => createStyles(colors), [isDark]);
   const getTimestamp = (dateString: any) => {
     if (!dateString) return 0;
@@ -62,12 +62,11 @@ export default function ShowWatchSlide({
         ? "Loss"
         : "Draw";
 
-  logger.info("vvvvvvvvvvvvvvvvvvvvvvvvvvvvv", video);
-
   return (
     <>
       <View style={styles.half}>
         <VideoSection
+          enableTour={enableTour} 
           itsHome={itsHome}
           inviteWatch={inviteWatch}
           score={showScore ? video?.scoreInserted : null}

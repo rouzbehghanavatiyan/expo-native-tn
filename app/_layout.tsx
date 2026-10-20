@@ -8,6 +8,7 @@ import { StatusBar } from "expo-status-bar";
 import * as SystemUI from "expo-system-ui";
 import { useEffect } from "react";
 import { ActivityIndicator } from "react-native";
+import { CopilotProvider } from "react-native-copilot";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Provider } from "react-redux";
@@ -61,7 +62,13 @@ function AppShell() {
             <GorhomPortalProvider>
               <BottomSheetModalProvider>
                 <AppInitializer>
-                  <Slot />
+                  <CopilotProvider
+                    animated
+                    backdropColor="rgba(0,0,0,0.78)"
+                    labels={{ previous: "Back", next: "Next", skip: "Skip", finish: "Got it" }}
+                  >
+                    <Slot />
+                  </CopilotProvider>
                 </AppInitializer>
               </BottomSheetModalProvider>
             </GorhomPortalProvider>

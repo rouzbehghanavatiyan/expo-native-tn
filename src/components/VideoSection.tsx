@@ -33,6 +33,8 @@ const VideoSection = ({
   isPlaying,
   positionVideo,
   handleToggleComments,
+  enableTour,
+
   itsHome,
 }: any) => {
   const main = useAppSelector((state) => state.main);
@@ -82,6 +84,8 @@ const VideoSection = ({
         positionVideo={positionVideo}
         openDropdowns={openDropdowns}
         score={score}
+        enableTour={enableTour}   // ← اضافه
+
         setOpenDropdowns={setOpenDropdowns}
         toggleDropdown={toggleDropdown}
         dropdownItems={dropdownItems}
