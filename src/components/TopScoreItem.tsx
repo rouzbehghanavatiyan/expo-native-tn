@@ -7,6 +7,7 @@ import { useAppTheme } from "../hook/ThemeContext";
 import { topScoreList } from "../services/masterServices";
 import { getImageUrl } from "../utils/fileHelper";
 import { logger } from "../utils/logger";
+import { useTopScoreTarget } from "../utils/topScoreTourStore";
 import ImageRank from "./ImageRank";
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -40,7 +41,7 @@ const TopScoreItem: React.FC<any> = () => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const { isDark } = useAppTheme();
-
+  const firstRowTarget = useTopScoreTarget();
   const [categories, setCategories] = useState<Category[]>([
     {
       id: "sport",
@@ -61,9 +62,9 @@ const TopScoreItem: React.FC<any> = () => {
           prev.map((cat) =>
             cat.id === "sport"
               ? {
-                  ...cat,
-                  users: data,
-                }
+                ...cat,
+                users: data,
+              }
               : cat,
           ),
         );
@@ -142,6 +143,7 @@ const TopScoreItem: React.FC<any> = () => {
           return (
             <XStack
               key={userTop?.userId ? String(userTop.userId) : String(index)}
+              {...(index === 0 ? firstRowTarget : {})}
               ai="center"
               m={2}
               py={15}

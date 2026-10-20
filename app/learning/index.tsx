@@ -5,8 +5,8 @@ import { useRouter } from "expo-router";
 import { useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { View, XStack, YStack } from "tamagui";
-import LearningStepOne from "./LearningStepOne";
-import LearningStepTwo from "./LearningStepTwo";
+import LearningStepOne from "../about/LearningStepOne";
+import LearningStepTwo from "../about/LearningStepTwo";
 
 const LearningScreen: React.FC = () => {
   const router = useRouter();

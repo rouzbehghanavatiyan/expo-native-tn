@@ -1,6 +1,7 @@
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import React, { forwardRef, useCallback, useEffect, useState } from "react";
+import { View as RNView } from "react-native";
 import { Text, View, XStack, YStack } from "tamagui";
 import {
   addAttachment,
@@ -11,6 +12,7 @@ import {
 import { RsetUserLogin } from "../slices/main";
 import { useAppDispatch, useAppSelector } from "../store/reduxHookType";
 import { getImageUrl } from "../utils/fileHelper";
+import { useTourTarget } from "../utils/profileTourStore";
 import ImageRank from "./ImageRank";
 import Follows from "./ui/Follows";
 
@@ -47,7 +49,7 @@ const ProfileHeader = forwardRef(
     const main = useAppSelector((state) => state?.main);
     const userId = main?.userLogin?.user?.id;
     const router = useRouter();
-
+    const badgeTarget = useTourTarget("badge");
     const [localIsFollowed, setLocalIsFollowed] = useState<boolean>(
       Boolean(currentProfile?.isFollowedByMe),
     );
@@ -167,12 +169,15 @@ const ProfileHeader = forwardRef(
               ml="$2"
               justifyContent="center"
             >
-              <ImageRank
-                iconClass="text-gray-200"
-                score={score}
-                imgSrc={userImage}
-                imgSize={100}
-              />
+              <RNView {...badgeTarget} style={{ alignSelf: "flex-start" }}>
+
+                <ImageRank
+                  iconClass="text-gray-200"
+                  score={score}
+                  imgSrc={userImage}
+                  imgSize={100}
+                />
+              </RNView>
             </YStack>
           </View>
 

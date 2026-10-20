@@ -11,6 +11,7 @@ import {
   setWatchData,
 } from "@/src/slices/main";
 import { useAppDispatch, useAppSelector } from "@/src/store/reduxHookType";
+import WatchHelper from "@/src/utils/WatchHelper";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { FlatList, RefreshControl } from "react-native";
@@ -141,6 +142,7 @@ export default function WatchScreen() {
             <VideoGroup
               group={item}
               index={index}
+              measureForTour={index === 0}
               onPress={() => handleShowMatch(item)}
             />
           )}
@@ -154,7 +156,21 @@ export default function WatchScreen() {
             ) : null
           }
         />
+
+        {/* {__DEV__ && (
+          <Button
+            position="absolute"
+            bottom={80}
+            right={20}
+            bg="$red9"
+            onPress={() => watchTour.reset()}
+            zIndex={9999}
+          >
+            Reset Tour
+          </Button>
+        )} */}
       </View>
+      <WatchHelper enabled={true} />
       {showTimeout && <MatchTimeoutModal />}
       {showDeactivatedModal && <DeactivatedModal />}
     </>

@@ -10,14 +10,13 @@ import {
   setPaginationHomeMatch,
 } from "@/src/slices/main";
 import { useAppDispatch, useAppSelector } from "@/src/store/reduxHookType";
+import HomeHelper from "@/src/utils/HomeHelper";
 import { logger } from "@/src/utils/logger";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { FlashList } from "@shopify/flash-list";
 import { useRouter } from "expo-router";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import { Platform, useWindowDimensions } from "react-native";
-import { useCopilot } from "react-native-copilot";
 import {
   Button,
   Paragraph,
@@ -45,14 +44,12 @@ const HomeScreen: React.FC = () => {
 
   const usableHeight =
     height - headerHeight - (Platform.OS === "android" ? 30 : 0);
-  const { start, copilotEvents } = useCopilot();
 
   const [refreshing, setRefreshing] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [commentPosition, setCommentPosition] = useState(0);
   const [selectedVideo, setSelectedVideo] = useState<any>(null);
   const dispatch = useAppDispatch();
-  const tourStartedRef = useRef(false);
 
   const handleOpenComments = useCallback((video: any, position: number) => {
     setSelectedVideo(video);
@@ -94,9 +91,6 @@ const HomeScreen: React.FC = () => {
       setRefreshing(false);
     }
   };
-
-
-
 
   const customFetchNextPage = useCallback(
     async (params: {
@@ -170,31 +164,6 @@ const HomeScreen: React.FC = () => {
   const handleRedirectWatch = () => {
     router.replace("/(tabs)/watch");
   };
-
-  const hasData = !!data && data.length > 0;
-
-  useEffect(() => {
-    if (!hasData || tourStartedRef.current) return;
-    let cancelled = false;
-    let timer: ReturnType<typeof setTimeout>;
-
-    (async () => {
-      const seen = await AsyncStorage.getItem("home_match_intro_seen_v3");
-      if (seen || cancelled) return;
-      timer = setTimeout(() => {
-        if (cancelled) return;
-        tourStartedRef.current = true;
-        start();
-      }, 1500);
-    })();
-
-    return () => {
-      cancelled = true;
-      clearTimeout(timer);
-    };
-  }, [hasData]);
-  AsyncStorage.removeItem("home_match_intro_seen_v3");
-  const firstId = data?.[0]?.id;
 
   return (
     <View flex={1} bg="$background">
@@ -314,6 +283,20 @@ const HomeScreen: React.FC = () => {
               </View>
             )}
           />
+          {/* {__DEV__ && (
+            <Button
+              position="absolute"
+              bottom={80}
+              right={20}
+              bg="$red9"
+              onPress={() => introTour.reset()}
+              zIndex={9999}
+            >
+              Reset Tour
+            </Button>
+          )} */}
+
+          <HomeHelper enabled={data.length > 0} />
         </View>
       )}
       {showComments && (

@@ -47,6 +47,9 @@ export default function SettingLayout() {
       // case "Learning":
       //   router.push("/learning");
       //   break;
+      case "About":
+        router.push("/about");
+        break;
       case "Support":
         router.push("/support");
         break;
@@ -144,7 +147,7 @@ export default function SettingLayout() {
               ),
             },
             { name: "Block list", id: 6, icon: "block" },
-            { name: "Learning", id: 7, icon: "school" },
+            // { name: "About", id: 7, icon: "info" },
           ]}
           isLoading={false}
         />

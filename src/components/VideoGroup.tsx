@@ -1,8 +1,12 @@
 import { getImageUrl } from "@/src/utils/fileHelper";
+import { useRef } from "react";
 import { Image, StyleSheet, TouchableOpacity, View } from "react-native";
+import { watchTour } from "../utils/watchTourStore";
 import { Icon } from "./Icon";
 
-const VideoGroup = ({ group, onPress }: any) => {
+const VideoGroup = ({ group, onPress, measureForTour }: any) => {
+  const ref = useRef<View>(null);
+
   const imageTop = getImageUrl(group?.attachmentInserted);
   const imageBottom = getImageUrl(group?.attachmentMatched);
 
@@ -16,28 +20,23 @@ const VideoGroup = ({ group, onPress }: any) => {
     hasValidInsertDate(matchedInsertDate) ||
     hasValidInsertDate(insertedInsertDate);
 
+  const handleLayout = () => {
+    if (!measureForTour) return;
+    setTimeout(() => {
+      ref.current?.measureInWindow((x, y, width, height) => {
+        if (width && height) watchTour.setRect({ x, y, width, height });
+      });
+    }, 300);
+  };
+
   return (
-    <TouchableOpacity style={styles.container} onPress={onPress}>
-      {/* <View style={styles.centerContainer} pointerEvents="none">
-        {matchTime ? (
-          <>
-            <View style={styles.iconCircle}>
-              <Icon name="hourglassBottom" size={20} color="white" />
-            </View>
-            {group?.icon && (
-              <View style={styles.iconCircle}>
-                <Icon name={group.icon} size={20} color="white" />
-              </View>
-            )}
-          </>
-        ) : (
-          group?.icon && (
-            <View style={styles.iconCircle}>
-              <Icon name={group.icon} size={20} color="white" />
-            </View>
-          )
-        )}
-      </View> */}
+    <TouchableOpacity
+      ref={ref as any}
+      collapsable={false}
+      onLayout={handleLayout}
+      style={styles.container}
+      onPress={onPress}
+    >
       <View style={styles.centerContainer} pointerEvents="none">
         {matchTime && (
           <View style={styles.iconCircle}>
@@ -108,3 +107,29 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
 });
+
+
+
+
+
+
+{/* <View style={styles.centerContainer} pointerEvents="none">
+        {matchTime ? (
+          <>
+            <View style={styles.iconCircle}>
+              <Icon name="hourglassBottom" size={20} color="white" />
+            </View>
+            {group?.icon && (
+              <View style={styles.iconCircle}>
+                <Icon name={group.icon} size={20} color="white" />
+              </View>
+            )}
+          </>
+        ) : (
+          group?.icon && (
+            <View style={styles.iconCircle}>
+              <Icon name={group.icon} size={20} color="white" />
+            </View>
+          )
+        )}
+      </View> */}

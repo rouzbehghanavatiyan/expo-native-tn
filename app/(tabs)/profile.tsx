@@ -41,6 +41,7 @@ import { socketClient } from "@/src/utils/socketClient";
 import { Icon } from "@/src/components/Icon";
 import { getThemeColor } from "@/src/hook/getThemeColor";
 import { isMatchActive, withMatchEndAt } from "@/src/utils/matchTimer";
+import ProfileHelper from "@/src/utils/ProfileHelper";
 import Comments from "../comments";
 import VideosProfileItem from "../profile/VideosProfileItem";
 
@@ -516,6 +517,19 @@ const Profile: React.FC = () => {
           maxToRenderPerBatch={6}
           windowSize={5}
         />
+        {/* {__DEV__ && (
+          <Button
+            position="absolute"
+            bottom={80}
+            right={20}
+            bg="$red9"
+            onPress={() => profileTour.reset()}
+            zIndex={9999}
+          >
+            Reset Tour
+          </Button>
+        )} */}
+        <ProfileHelper enabled={true} />
       </YStack>
       {showComments && (
         <View

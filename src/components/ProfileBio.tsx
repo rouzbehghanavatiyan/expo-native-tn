@@ -11,6 +11,7 @@ import {
 import { Progress, ScrollView, Text, View, XStack, YStack } from "tamagui";
 import { showProfileByUser } from "../services/masterServices";
 import { logger } from "../utils/logger";
+import { useTourTarget } from "../utils/profileTourStore";
 import { Icon } from "./Icon";
 
 const Started = require("../assets/ranks/starter.png");
@@ -107,6 +108,8 @@ const ProfileBio: React.FC<ProfileBioProps> = ({
   userLogin,
   isMyProfile,
 }) => {
+  const rankTarget = useTourTarget("rank");
+  const bioTarget = useTourTarget("bio");
   const [showRanksModal, setShowRanksModal] = useState(false);
   const [zoomedRank, setZoomedRank] = useState<any>(null);
   const [loadingProfile, setLoadingProfile] = useState(false);
@@ -171,7 +174,8 @@ const ProfileBio: React.FC<ProfileBioProps> = ({
   );
 
   return (
-    <YStack px="$4" alignItems="center" w="100%">
+    <YStack {...rankTarget} px="$4" alignItems="center" w="100%">
+
       <Pressable
         style={{ width: "100%" }}
         onPress={() => setShowRanksModal(true)}
@@ -372,7 +376,7 @@ const ProfileBio: React.FC<ProfileBioProps> = ({
         </View>
       </Modal>
 
-      <YStack w="100%" mt="$5" alignItems="flex-start" gap="$3">
+      <YStack w="100%" mt="$5" alignItems="flex-start" gap="$3" {...bioTarget}>
         {isMyProfile ? (
           <>
             <TouchableOpacity
