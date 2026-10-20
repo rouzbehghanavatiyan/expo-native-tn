@@ -66,7 +66,6 @@ export default function ShowWatchSlide({
     <>
       <View style={styles.half}>
         <VideoSection
-          enableTour={enableTour} 
           itsHome={itsHome}
           inviteWatch={inviteWatch}
           score={showScore ? video?.scoreInserted : null}

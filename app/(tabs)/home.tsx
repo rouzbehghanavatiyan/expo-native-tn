@@ -298,7 +298,6 @@ const HomeScreen: React.FC = () => {
                   itemHeight={usableHeight}
                   showLiked={false}
                   showScore
-                  enableTour={!!firstId && item?.id === firstId}
                   showResult={true}
                   itsHome={true}
                   showCountLiked
