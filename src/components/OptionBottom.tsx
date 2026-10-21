@@ -5,7 +5,6 @@ import { Text, View, XStack } from "tamagui";
 import { useAppTheme } from "../hook/ThemeContext";
 import { addLike, removeLike } from "../services/masterServices";
 import { fixNumberCount } from "../utils/fileHelper";
-import { logger } from "../utils/logger";
 import { socketClient } from "../utils/socketClient";
 import { Icon } from "./Icon";
 
@@ -88,8 +87,6 @@ const OptionBottom: React.FC<OptionBottomProps> = ({
     if (!video) {
       return null;
     }
-
-    logger.info("video video video", video);
 
     return positionVideo === 0
       ? video?.attachmentInserted?.attachmentId
@@ -283,7 +280,7 @@ const OptionBottom: React.FC<OptionBottomProps> = ({
 
             {shouldShowWaitingLike && (
               <XStack gap={5} alignItems="center">
-                <Text marginTop={3} color="$textSecondary" fontSize="$3">
+                <Text marginTop={3} color="$grey500" fontSize="$3">
                   {fixNumberCount(localLikeCount)}
                 </Text>
                 <Icon name="thumb-up" color={disabledIconColor} size={20} />

@@ -1,5 +1,6 @@
 import TimerTornoment from "@/src/components/TimerTornoment";
 import VideoSection from "@/src/components/VideoSection";
+import { logger } from "@/src/utils/logger";
 import React, { memo, useMemo } from "react";
 import { Dimensions, StyleSheet, View } from "react-native";
 
@@ -23,6 +24,8 @@ const VideosProfileItem = ({
 }: any) => {
   const endAt = video?.matchEndAt ?? null;
   const showTimer = !!endAt;
+
+  logger.info("video video video",video)
 
   const resultInserted =
     video?.likeInserted > video?.likeMatched

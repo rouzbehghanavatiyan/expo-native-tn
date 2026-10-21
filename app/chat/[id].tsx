@@ -10,8 +10,9 @@ import { logger } from "@/src/utils/logger";
 import { socketClient } from "@/src/utils/socketClient";
 import { Stack, useLocalSearchParams } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { FlatList, KeyboardAvoidingView, Platform } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { FlatList } from "react-native";
+import { KeyboardAvoidingView, useKeyboardState } from "react-native-keyboard-controller";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text, XStack, YStack } from "tamagui";
 import ChatHeader from "./ChatHeader";
 import SmartText from "./SmartText";
@@ -78,7 +79,7 @@ export default function PrivateChat() {
   const userInfo = useAppSelector((state) => state.main?.userLogin);
   const userProfile = getImageUrl(userInfo?.profile);
   const otherUserProfile = profile ? getImageUrl(profile) : "";
-
+  const insets = useSafeAreaInsets();
   const isInitialLoadRef = useRef(true);
   const isLoadingMoreRef = useRef(false);
   const hasMoreRef = useRef(true);
@@ -88,6 +89,7 @@ export default function PrivateChat() {
   const dispatch = useAppDispatch();
   const paginationRef = useRef({ skip: 0, take: PAGE_SIZE });
 
+  const keyboardVisible = useKeyboardState((s) => s.isVisible);
   const scrollToBottom = (animated = true) => {
     requestAnimationFrame(() => {
       flatListRef.current?.scrollToOffset({ offset: 0, animated });
@@ -105,9 +107,7 @@ export default function PrivateChat() {
       const postData = {
         senderId: reciveUserId,
         receiveId: userIdLogin,
-
       }
-
       const resRead = await markAsRead(postData);
       logger.info("resRead resRead", resRead)
       dispatch(markSenderAsRead(String(reciveUserId)));
@@ -116,8 +116,9 @@ export default function PrivateChat() {
     }
   }, [userIdLogin, reciveUserId, dispatch]);
 
-  const handleSendMessage = async () => {
-    const trimmed = title.trim();
+
+  const sendMessage = (override?: string) => {
+    const trimmed = (override ?? title).trim();
     if (!trimmed || !userIdLogin || !reciveUserId) return;
 
     const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -144,11 +145,19 @@ export default function PrivateChat() {
     };
 
     socketClient?.emit("send_message", serverMessage);
-
     setMessages((prev) => [optimisticMessage, ...prev]);
-    setTitle("");
+
+    if (override === undefined) setTitle("");
     setShowStickers(false);
     scrollToBottom();
+  };
+
+  const handleEmojiSelect = (item: any) => {
+    const value =
+      typeof item === "string"
+        ? item
+        : (item?.emoji ?? item?.native ?? item?.url ?? item?.uri ?? "");
+    if (value) setTitle((prev) => prev + value);
   };
 
   const handleMessageSentAck = useCallback((data: any) => {
@@ -380,7 +389,7 @@ export default function PrivateChat() {
 
   const renderMessage = ({ item }: { item: MessageType }) => {
     const isOwn = String(item.senderId) === String(userIdLogin);
-
+    const emojiOnly = isEmojiOnly(item.content);
     const messageAvatar = isOwn
       ? userProfile
       : item.userProfile
@@ -405,18 +414,25 @@ export default function PrivateChat() {
 
         <YStack
           maxWidth="75%"
-          bg={isOwn ? "white" : "$grey100"}
+          bg={emojiOnly ? "transparent" : isOwn ? "white" : "$grey100"}
+
           borderRadius="$4"
           px="$3"
           py="$2"
           mx="$2"
           shadowColor="black"
           shadowOffset={{ width: 0, height: 1 }}
-          shadowOpacity={0.05}
+          shadowOpacity={emojiOnly ? 0 : 0.05}
           shadowRadius={3}
-          elevation={1.5}
+          elevation={emojiOnly ? 0 : 1.5}
         >
-          <SmartText style={{ writingDirection: "rtl", textAlign: "right" }}>
+          <SmartText
+            style={{
+              writingDirection: "rtl",
+              textAlign: "right",
+              ...(emojiOnly ? { fontSize: 32, lineHeight: 40 } : null),
+            }}
+          >
             {item.content}
           </SmartText>
 
@@ -442,15 +458,24 @@ export default function PrivateChat() {
     );
   };
 
+  const EMOJI_ONLY_REGEX =
+    /^(?:\p{Extended_Pictographic}|\p{Emoji_Presentation}|\u200d|\ufe0f|\p{Emoji_Modifier}|\s)+$/u;
+
+  const isEmojiOnly = (text: string) => {
+    const t = text?.trim();
+    return !!t && EMOJI_ONLY_REGEX.test(t);
+  };
+
   return (
     <SafeAreaView
+      edges={["top"]}
       style={{ flex: 1, backgroundColor: isDark ? "#121212" : "#fff" }}
     >
       <Stack.Screen options={{ headerShown: false }} />
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 33 : 33}
+        behavior="padding"
+        keyboardVerticalOffset={0}
       >
         <YStack flex={1} bg="$background">
           <ChatHeader
@@ -469,6 +494,8 @@ export default function PrivateChat() {
             </YStack>
           ) : (
             <FlatList
+              keyboardShouldPersistTaps="handled"
+              keyboardDismissMode="interactive"
               ref={flatListRef}
               data={messages}
               inverted
@@ -509,17 +536,20 @@ export default function PrivateChat() {
             />
           )}
           {!isInitialLoading && (
-            <MessageInput
-              title={title}
-              setTitle={setTitle}
-              handleSendMessage={handleSendMessage}
-              showStickers={showStickers}
-              setShowStickers={setShowStickers}
-              onAttachClick={() => console.log("Attach clicked")}
-            />
+            <YStack pb={keyboardVisible ? 0 : insets.bottom}>
+              <MessageInput
+                title={title}
+                setTitle={setTitle}
+                handleSendMessage={() => sendMessage()}
+                onEmojiSelect={handleEmojiSelect}
+                showStickers={showStickers}
+                setShowStickers={setShowStickers}
+                onAttachClick={() => console.log("Attach clicked")}
+              />
+            </YStack>
           )}
         </YStack>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </SafeAreaView >
   );
 }

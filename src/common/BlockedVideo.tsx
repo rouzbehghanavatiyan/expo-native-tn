@@ -1,7 +1,11 @@
 import React, { useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
+import { ActivityIndicator, Alert, Pressable, StyleSheet, View } from "react-native";
 import { Text, YStack } from "tamagui";
 import { Icon } from "../components/Icon";
+import { userUnBlock } from "../services/masterServices";
+import { logger } from "../utils/logger";
+// اگر از react-native-toast-message یا sonner استفاده می‌کنید آن را import کنید:
+// import Toast from "react-native-toast-message";
 
 interface BlockedVideoProps {
   userName?: any;
@@ -19,22 +23,58 @@ export const BlockedVideo: React.FC<BlockedVideoProps> = ({
   const [isUnblocking, setIsUnblocking] = useState(false);
 
   const handleUnblock = async () => {
-    if (!targetUserId || !userIdLogin || isUnblocking) return;
+    if (!userName?.id || !userIdLogin || isUnblocking) return;
 
     try {
       setIsUnblocking(true);
       const postData = {
         blockerId: userIdLogin,
-        targetUserId: targetUserId,
+        targetUserId: userName?.id,
       };
 
-      // const res = await userUnblock(postData);
+      logger.info("postDatapostDatapostDatapostData", postData);
+      const res = await userUnBlock(postData);
+      logger.info("userUnBlock userUnBlock", res?.data);
 
-      if (onUnblockSuccess) {
-        onUnblockSuccess();
+      const isSuccess =
+        res?.data?.status === 0 ||
+        res?.data === 0 ||
+        res?.data?.statusCode === 200;
+
+      if (isSuccess) {
+
+        Alert.alert("Success", "User unblocked successfully");
+
+        if (onUnblockSuccess) {
+          try {
+            onUnblockSuccess();
+          } catch (callbackErr) {
+            console.error("Error in onUnblockSuccess callback:", callbackErr);
+          }
+        }
+      } else {
+        Alert.alert("Error", res?.data?.message || "Failed to unblock user");
       }
-    } catch (error) {
-      console.error("Error unblocking user:", error);
+    } catch (error: any) {
+      const serverError = error?.response?.data;
+      console.error("Error unblocking user:", serverError || error?.message);
+
+      const errorMsg =
+        serverError?.message ||
+        serverError?.title ||
+        "Something went wrong while unblocking.";
+
+      if (
+        error?.response?.status === 400 &&
+        (typeof errorMsg === "string" &&
+          (errorMsg.toLowerCase().includes("not blocked") ||
+            errorMsg.toLowerCase().includes("not found")))
+      ) {
+        Alert.alert("Notice", "User is already unblocked.");
+        onUnblockSuccess?.();
+      } else {
+        Alert.alert("Error", errorMsg);
+      }
     } finally {
       setIsUnblocking(false);
     }

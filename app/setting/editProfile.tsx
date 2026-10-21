@@ -16,17 +16,17 @@ import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-  KeyboardAvoidingView,
   Modal,
-  Platform,
   Pressable,
-  ScrollView,
+  ScrollView
 } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 import { Text, TextArea, useTheme, XStack, YStack } from "tamagui";
+
 const EMAIL_REGEX = /^\S+@\S+\.\S+$/;
 
 const SectionCard = ({
@@ -265,10 +265,12 @@ export default function EditProfile() {
     <SafeAreaView style={{ flex: 1 }} edges={["top", "left", "right"]}>
       <YStack flex={1} bg="$background">
         <MainTitle handleBack={() => router.back()} title="Edit Profile" />
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          keyboardVerticalOffset={Platform.OS === "ios" ? insets.top : 0}
+        <KeyboardAwareScrollView
           style={{ flex: 1 }}
+          contentContainerStyle={{ flexGrow: 1, paddingBottom: insets.bottom + 24 }}
+          keyboardShouldPersistTaps="handled"
+          bottomOffset={24}
+          showsVerticalScrollIndicator={false}
         >
           <ScrollView
             contentContainerStyle={{ flexGrow: 1, paddingBottom: 200 }}
@@ -418,7 +420,7 @@ export default function EditProfile() {
               </SectionCard>
             </YStack>
           </ScrollView>
-        </KeyboardAvoidingView>
+        </KeyboardAwareScrollView>
 
         <Modal
           visible={feedbackOpen}

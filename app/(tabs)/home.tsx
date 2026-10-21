@@ -16,15 +16,15 @@ import { useHeaderHeight } from "@react-navigation/elements";
 import { FlashList } from "@shopify/flash-list";
 import { useRouter } from "expo-router";
 import React, { useCallback, useRef, useState } from "react";
-import { Platform, useWindowDimensions } from "react-native";
+import { Platform, RefreshControl, useWindowDimensions } from "react-native";
 import {
   Button,
   Paragraph,
+  ScrollView,
   Text,
   useTheme,
   View,
-  XStack,
-  YStack,
+  YStack
 } from "tamagui";
 import Comments from "../comments";
 
@@ -170,83 +170,141 @@ const HomeScreen: React.FC = () => {
       {showInitialLoader ? (
         <VideoSkeleton count={1} section="itsHome" isSwapper={false} />
       ) : showEmptyState ? (
-        <YStack flex={1} ai="center" jc="center" px="$6">
-          <YStack
-            w="100%"
-            maxWidth={360}
-            bg="$backgroundPaper"
-            borderRadius={50}
-            py="$6"
-            px="$6"
-            ai="center"
-          >
-            <View
-              w={80}
-              h={80}
-              borderRadius={40}
-              bg="$primaryLight"
+        <ScrollView
+          contentContainerStyle={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={primaryColor}
+              colors={[primaryColor]}
+            />
+          }
+        >
+          <YStack flex={1} ai="center" jc="center" px="$6" w="100%">
+            <YStack
+              w="100%"
+              maxWidth={360}
+              bg="$backgroundPaper"
+              borderRadius={50}
+              py="$6"
+              px="$6"
               ai="center"
-              jc="center"
-              mb="$5"
             >
               <View
-                w={60}
-                h={60}
-                borderRadius={30}
-                bg="$primaryHover"
+                w={80}
+                h={80}
+                borderRadius={40}
+                bg="$primaryLight"
                 ai="center"
                 jc="center"
+                mb="$5"
               >
-                <Icon name="locationSearching" size={32} color={primaryColor} />
+                <View
+                  w={60}
+                  h={60}
+                  borderRadius={30}
+                  bg="$primaryHover"
+                  ai="center"
+                  jc="center"
+                >
+                  <Icon name="locationSearching" size={32} color={primaryColor} />
+                </View>
               </View>
-            </View>
 
-            <Text
-              fontSize="$5"
-              fontWeight="700"
-              color="$color"
-              mb="$2"
-              textAlign="center"
-              letterSpacing={-0.3}
-            >
-              No Content Available
-            </Text>
+              <Text
+                fontSize="$5"
+                fontWeight="700"
+                color="$color"
+                mb="$2"
+                textAlign="center"
+                letterSpacing={-0.3}
+              >
+                No Content Available
+              </Text>
 
-            <Paragraph
-              fontSize="$3"
-              lineHeight={22}
-              color="$colorMuted"
-              textAlign="center"
-              mb="$6"
-            >
-              There are no posts from your followers right now. Visit the Watch
-              page to discover new content and creators!
-            </Paragraph>
+              <Paragraph
+                fontSize="$3"
+                lineHeight={22}
+                color="$colorMuted"
+                textAlign="center"
+                mb="$6"
+              >
+                There are no posts from your followers right now. Visit the Watch
+                page to discover new content and creators!
+              </Paragraph>
 
-            <Button
-              w="100%"
-              h={48}
-              bg="$indigoLight"
-              pressStyle={{ opacity: 0.8 }}
-              borderRadius="$4"
-              ai="center"
-              jc="center"
-              onPress={handleRedirectWatch}
-              shadowColor="$primary"
-              shadowOffset={{ width: 0, height: 4 }}
-              shadowOpacity={0.25}
-              shadowRadius={8}
-              elevation={3}
-            >
-              <XStack gap="$2" ai="center" jc="center">
-                <Icon name="start" color="$backgroundPaper" />
-                <Text fontSize={15} fontWeight="600" color="$backgroundPaper">
-                  Watch
-                </Text>
-              </XStack>
-            </Button>
+              {/* دکمه‌ها */}
+              <YStack w="100%" gap="$3">
+                {/* دکمه Watch */}
+                <Button
+                  w="100%"
+                  h={48}
+                  bg="$indigoLight"
+                  pressStyle={{ opacity: 0.8 }}
+                  borderRadius="$4"
+                  p={0}
+                  position="relative"
+                  jc="center"
+                  ai="center"
+                  onPress={handleRedirectWatch}
+                  shadowColor="$primary"
+                  shadowOffset={{ width: 0, height: 4 }}
+                  shadowOpacity={0.25}
+                  shadowRadius={8}
+                  elevation={3}
+                >
+                  <View position="absolute" left={16} jc="center" ai="center">
+                    <Icon name="start" color="$backgroundPaper" size={20} />
+                  </View>
+                  <Text
+                    fontSize={15}
+                    fontWeight="600"
+                    color="$backgroundPaper"
+                    textAlign="center"
+                    includeFontPadding={false}
+                  >
+                    Watch
+                  </Text>
+                </Button>
+
+                {/* دکمه Refresh */}
+                <Button
+                  w="100%"
+                  h={48}
+                  bg="transparent"
+                  borderWidth={1}
+                  borderColor="$borderColor"
+                  pressStyle={{ opacity: 0.7, bg: "$backgroundHover" }}
+                  borderRadius="$4"
+                  p={0}
+                  position="relative"
+                  jc="center"
+                  ai="center"
+                  disabled={refreshing}
+                  onPress={onRefresh}
+                >
+                  <View position="absolute" left={16} jc="center" ai="center">
+                    <Icon name="refresh" size={18} color="$color" />
+                  </View>
+                  <Text
+                    fontSize={15}
+                    fontWeight="600"
+                    color="$color"
+                    textAlign="center"
+                    includeFontPadding={false}
+                  >
+                    {refreshing ? "Refreshing..." : "Refresh"}
+                  </Text>
+                </Button>
+              </YStack>
+            </YStack>
           </YStack>
-        </YStack>
+        </ScrollView>
       ) : (
         <View flex={1} width={width} height={usableHeight}>
           <FlashList
@@ -295,7 +353,6 @@ const HomeScreen: React.FC = () => {
               Reset Tour
             </Button>
           )} */}
-
           <HomeHelper enabled={data.length > 0} />
         </View>
       )}

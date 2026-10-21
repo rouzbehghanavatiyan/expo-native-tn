@@ -16,13 +16,16 @@ const StickerOverlay: React.FC<PropsType> = ({
     <EmojiPicker
       open={showStickers}
       onClose={() => setShowStickers(false)}
-      onEmojiSelected={(emojiObject) => {
-        if (onEmojiSelect) {
-          onEmojiSelect(emojiObject);
-        }
-      }}
+      onEmojiSelected={(emojiObject) => onEmojiSelect?.(emojiObject)}
+      enableRecentlyUsed
       theme={{
-        backdrop: "#00000050", 
+        backdrop: "#00000050",
+        container: "#ffffff",
+      }}
+      styles={{
+        container: {
+          paddingBottom: 40,
+        },
       }}
     />
   );

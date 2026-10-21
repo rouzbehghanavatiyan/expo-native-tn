@@ -1,4 +1,4 @@
-import React, { memo, useState } from "react";
+import React, { memo, useEffect, useState } from "react";
 import { Dimensions, StyleSheet, View } from "react-native";
 import BlockedVideo from "../common/BlockedVideo";
 import FullScreenVideoModal from "../common/FullScreenVideoModal";
@@ -33,7 +33,6 @@ const VideoSection = ({
   isPlaying,
   positionVideo,
   handleToggleComments,
-
   itsHome,
 }: any) => {
   const main = useAppSelector((state) => state.main);
@@ -42,10 +41,20 @@ const VideoSection = ({
   const { isDark } = useAppTheme();
   const colors = getColors(isDark);
 
-  const isBlocked =
+  const initialBlocked =
     positionVideo === 0
       ? Boolean(video?.isBlockedInserted)
       : Boolean(video?.isBlockedMatched);
+
+  const [isBlocked, setIsBlocked] = useState(initialBlocked);
+
+  useEffect(() => {
+    setIsBlocked(
+      positionVideo === 0
+        ? Boolean(video?.isBlockedInserted)
+        : Boolean(video?.isBlockedMatched)
+    );
+  }, [video?.id, video?.isBlockedInserted, video?.isBlockedMatched, positionVideo]);
 
   const blockedUser =
     positionVideo === 0 ? video?.userInserted : video?.userMatched;
@@ -66,6 +75,11 @@ const VideoSection = ({
     } else if (handleVideoPlay) {
       handleVideoPlay(videoId);
     }
+  };
+
+  const handleUnblockSuccess = () => {
+    setIsBlocked(false);
+    handlePlayAction();
   };
 
   if (!videoUrl && !isBlocked) {
@@ -126,13 +140,7 @@ const VideoSection = ({
         <BlockedVideo
           userName={blockedUser}
           userIdLogin={userIdLogin}
-          onUnblockSuccess={() => {
-            if (positionVideo === 0) {
-              video.isBlockedInserted = false;
-            } else {
-              video.isBlockedMatched = false;
-            }
-          }}
+          onUnblockSuccess={handleUnblockSuccess}
         />
       )}
       <FullScreenVideoModal

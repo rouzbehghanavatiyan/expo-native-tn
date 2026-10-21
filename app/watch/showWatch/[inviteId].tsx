@@ -14,6 +14,7 @@ import {
 import { useAppDispatch, useAppSelector } from "@/src/store/reduxHookType";
 import { logger } from "@/src/utils/logger";
 import { withMatchEndAt } from "@/src/utils/matchTimer";
+import WatchDuelHelper from "@/src/utils/WatchDuelHelper";
 import { router, useLocalSearchParams } from "expo-router";
 import React, {
   useCallback,
@@ -261,6 +262,7 @@ export default function ShowWatchScreen() {
           </View>
         )}
       </View>
+      <WatchDuelHelper enabled={!showInitialLoader && !showEmptyState && (data?.length ?? 0) > 0} />
     </SafeAreaView>
   );
 }

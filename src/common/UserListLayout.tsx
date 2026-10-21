@@ -2,9 +2,10 @@ import ImageRank from "@/src/components/ImageRank";
 import MainTitle from "@/src/components/MainTitle";
 import Follows from "@/src/components/ui/Follows";
 import { getImageUrl } from "@/src/utils/fileHelper";
+import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useCallback, useRef } from "react";
-import { FlatList, Pressable } from "react-native";
+import { FlatList, Pressable, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Spinner, Text, View, XStack, YStack } from "tamagui";
 import { useAppTheme } from "../hook/ThemeContext";
@@ -27,6 +28,9 @@ interface UserListLayoutProps {
   refreshing?: boolean;
   onRefresh?: () => void;
   keyExtractor?: (item: any, index: number) => string;
+  ListEmptyComponent?: React.ReactElement | (() => React.ReactElement | null) | null;
+  onEmptyAction?: () => void;
+  emptyActionTitle?: string;
 }
 
 const getUserId = (user: any) =>
@@ -54,6 +58,9 @@ const UserListLayout: React.FC<UserListLayoutProps> = ({
   refreshing = false,
   onRefresh,
   keyExtractor,
+  ListEmptyComponent,
+  onEmptyAction,
+  emptyActionTitle = "Refresh",
 }) => {
   const { isDark } = useAppTheme();
   const router = useRouter();
@@ -168,12 +175,43 @@ const UserListLayout: React.FC<UserListLayoutProps> = ({
     ],
   );
 
+  const defaultEmptyAction = onEmptyAction || onRefresh;
+
+  const renderDefaultEmpty = () => (
+    <YStack f={1} ai="center" jc="center" p="$4" gap="$3">
+      <Text color="$textSecondary" fontSize="$5" fontWeight="600">
+        {emptyMessage}
+      </Text>
+      {defaultEmptyAction && (
+        <Pressable
+          onPress={defaultEmptyAction}
+          disabled={refreshing}
+          style={({ pressed }) => [
+            styles.emptyRefreshBtn,
+            (refreshing || pressed) && { opacity: 0.75 },
+          ]}
+        >
+          {refreshing ? (
+            <Spinner size="small" color="#fff" />
+          ) : (
+            <XStack ai="center" gap="$2">
+              <MaterialIcons name="refresh" size={18} color="#fff" />
+              <Text color="#fff" fontWeight="600" fontSize="$3">
+                {emptyActionTitle}
+              </Text>
+            </XStack>
+          )}
+        </Pressable>
+      )}
+    </YStack>
+  );
+
   return (
     <SafeAreaView
       style={{ flex: 1, backgroundColor: isDark ? "#121212" : "#fff" }}
     >
       <View f={1} bg="$backgroundPaper">
-        {title && <MainTitle handleBack={onBack || (() => { })} title={title} />}
+        {title && <MainTitle handleBack={onBack || (() => {})} title={title} />}
 
         {isLoading ? (
           <YStack f={1} ai="center" jc="center">
@@ -198,11 +236,11 @@ const UserListLayout: React.FC<UserListLayoutProps> = ({
               data.length === 0 ? { flexGrow: 1 } : { paddingBottom: 15 }
             }
             ListEmptyComponent={
-              <YStack f={1} ai="center" jc="center" p="$4">
-                <Text color="$textSecondary" fontSize="$5">
-                  {emptyMessage}
-                </Text>
-              </YStack>
+              ListEmptyComponent
+                ? typeof ListEmptyComponent === "function"
+                  ? ListEmptyComponent()
+                  : ListEmptyComponent
+                : renderDefaultEmpty()
             }
             ListFooterComponent={
               <YStack height={50} ai="center" jc="center">
@@ -223,3 +261,16 @@ const UserListLayout: React.FC<UserListLayoutProps> = ({
 };
 
 export default UserListLayout;
+
+const styles = StyleSheet.create({
+  emptyRefreshBtn: {
+    marginTop: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#2563eb",
+    paddingVertical: 9,
+    paddingHorizontal: 20,
+    borderRadius: 24,
+  },
+});

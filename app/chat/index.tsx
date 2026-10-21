@@ -4,9 +4,11 @@ import { markSenderAsRead, setChatUsersPage } from "@/src/slices/chat";
 import { useAppDispatch, useAppSelector } from "@/src/store/reduxHookType";
 import { getImageUrl } from "@/src/utils/fileHelper";
 import { logger } from "@/src/utils/logger";
+import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { View } from "tamagui";
+import { ActivityIndicator, Pressable, StyleSheet } from "react-native";
+import { Text, View, YStack } from "tamagui";
 
 const PAGE_SIZE = 10;
 
@@ -34,8 +36,8 @@ const ChatRoom: React.FC = () => {
   const hasMore = useAppSelector((state) => state.chat.hasMore);
   const userIdLogin = main?.userLogin?.user?.id;
 
-  const [isLoading, setIsLoading] = useState(false); 
-  const [isLoadingMore, setIsLoadingMore] = useState(false); 
+  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const fetchingRef = useRef(false);
@@ -108,7 +110,39 @@ const ChatRoom: React.FC = () => {
     });
   };
 
-  logger.info("unreadCount", main?.unreadMessagesCount)
+  logger.info("unreadCount", main?.unreadMessagesCount);
+
+  // کامپوننت سفارشی حالت خالی همراه با دکمه Refresh
+  const renderEmptyComponent = () => (
+    <YStack flex={1} alignItems="center" justifyContent="center" py="$8" gap="$3">
+      <MaterialIcons name="chat-bubble-outline" size={48} color="#9ca3af" />
+      <Text color="#6b7280" fontSize="$4" fontWeight="600">
+        Empty messages
+      </Text>
+      <Text color="#9ca3af" fontSize="$2">
+        No conversations found yet
+      </Text>
+      <Pressable
+        onPress={handleRefresh}
+        disabled={isRefreshing}
+        style={({ pressed }) => [
+          styles.refreshButton,
+          (isRefreshing || pressed) && { opacity: 0.75 },
+        ]}
+      >
+        {isRefreshing ? (
+          <ActivityIndicator size="small" color="#ffffff" />
+        ) : (
+          <View flexDirection="row" alignItems="center" gap="$2">
+            <MaterialIcons name="refresh" size={18} color="#ffffff" />
+            <Text color="#ffffff" fontWeight="600" fontSize="$3">
+              Refresh
+            </Text>
+          </View>
+        )}
+      </Pressable>
+    </YStack>
+  );
 
   return (
     <UserListLayout
@@ -116,6 +150,7 @@ const ChatRoom: React.FC = () => {
       isLoading={isLoading}
       data={userSender}
       emptyMessage="Empty messages"
+      ListEmptyComponent={renderEmptyComponent}
       onBack={() => router.back()}
       onItemPress={handleRedirect}
       imgSize={50}
@@ -125,7 +160,7 @@ const ChatRoom: React.FC = () => {
       onRefresh={handleRefresh}
       keyExtractor={(item: MessageData) => String(item.sender)}
       renderRight={(user: MessageData) => {
-        const showBadge = user?.unreadCount && user.unreadCount > 0
+        const showBadge = user?.unreadCount && user.unreadCount > 0;
         if (!showBadge) return null;
         return <View width={10} height={10} borderRadius={10} bg="#FF3040" />;
       }}
@@ -134,3 +169,16 @@ const ChatRoom: React.FC = () => {
 };
 
 export default ChatRoom;
+
+const styles = StyleSheet.create({
+  refreshButton: {
+    marginTop: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#2563eb",
+    paddingVertical: 10,
+    paddingHorizontal: 22,
+    borderRadius: 24,
+  },
+});

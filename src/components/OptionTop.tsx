@@ -91,10 +91,7 @@ const OptionTop: React.FC<OptionTopProps> = ({
   }, [video, positionVideo]);
 
   const getMovieId = (): number | null => {
-    const id =
-      video?.id ??
-      video?.movieId ??
-      (positionVideo === 0 ? video?.movieInsertedId : video?.movieMatchedId);
+    const id = positionVideo === 0 ? video?.inviteInserted?.movieId : video?.inviteMatched?.movieId;
     const n = Number(id);
     return Number.isFinite(n) && n > 0 ? n : null;
   };
@@ -181,9 +178,10 @@ const OptionTop: React.FC<OptionTopProps> = ({
 
 
   const handleSubmitReport = async () => {
-    if (!selectedReason || isSubmittingReport) return;
+    if (!selectedReason) return;
 
     const movieId = getMovieId();
+    logger.info("Report Submitted:", movieId);
     if (!movieId || !userInfo?.id) {
       setReportResult({
         success: false,
@@ -570,7 +568,6 @@ const OptionTop: React.FC<OptionTopProps> = ({
                       >
                         Report Submitted
                       </Text>
-
                       <Text
                         fontSize="$3"
                         color="#6B7280"

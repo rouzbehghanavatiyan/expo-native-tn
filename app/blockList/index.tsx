@@ -37,7 +37,8 @@ export default function BlockListScreen() {
         blockerId: userLoginId,
         targetUserId: targetUserId,
       };
-
+      logger.info("postData", postData);
+      
       setIsLoading(true);
       const res = await userUnBlock(postData);
       const { data, status } = res?.data || {};
