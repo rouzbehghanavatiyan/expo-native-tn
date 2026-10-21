@@ -379,34 +379,34 @@ const ProfileBio: React.FC<ProfileBioProps> = ({
       <YStack w="100%" mt="$5" alignItems="flex-start" gap="$3" {...bioTarget}>
         {isMyProfile ? (
           <>
-            <TouchableOpacity
-              onPress={() => router.push("/setting/editProfile")}
-              style={{ width: "100%" }}
-            >
-              <YStack w="100%" alignItems="center">
-                <XStack
-                  px="$2"
-                  py="$1"
-                  borderRadius="$2"
-                  borderWidth={1}
-                  borderColor="$pinkDark"
-                  ai="center"
-                  jc="center"
-                  pressStyle={{ opacity: 0.7 }}
-                  cursor="pointer"
+
+            <YStack w="100%" alignItems="center">
+              <XStack
+                px="$3"
+                py="$2"
+                borderRadius="$2"
+                borderWidth={1}
+                borderColor="$pinkDark"
+                ai="center"
+                jc="center"
+                pressStyle={{ opacity: 0.7, scale: 0.97 }}
+                cursor="pointer"
+                onPress={() => {
+                  console.log("Edit Profile Clicked");
+                  router.push("/setting/editProfile");
+                }}
+              >
+                <Icon name="edit" size={14} color="$pinkDark" />
+                <Text
+                  marginStart={6}
+                  fontSize="$3"
+                  fontWeight="500"
+                  color="$pinkDark"
                 >
-                  <Icon name="edit" size={14} color="$pinkDark" />
-                  <Text
-                    marginStart={3}
-                    fontSize="$3"
-                    fontWeight="500"
-                    color="$pinkDark"
-                  >
-                    Edit Profile
-                  </Text>
-                </XStack>
-              </YStack>
-            </TouchableOpacity>
+                  Edit Profile
+                </Text>
+              </XStack>
+            </YStack>
             {renderBioDetails()}
           </>
         ) : !isFetched ? (

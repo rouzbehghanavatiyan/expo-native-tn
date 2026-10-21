@@ -66,9 +66,7 @@ export default function SettingLayout() {
   };
 
   return (
-    <SafeAreaView
-      style={{ flex: 1, backgroundColor: isDark ? "#121212" : "#fff" }}
-    >
+    <SafeAreaView style={{ flex: 1 }}>
       <MainTitle title="Setting" handleBack={handleBack} />
       <View flex={1} px="$2" py="$2" bg="$backgroundPaper">
         <SoftLink
@@ -112,8 +110,6 @@ export default function SettingLayout() {
                       Light
                     </Text>
                   </XStack>
-
-                  {/* Dark Button */}
                   <XStack
                     tag="button"
                     onPress={() => setThemeMode("dark")}

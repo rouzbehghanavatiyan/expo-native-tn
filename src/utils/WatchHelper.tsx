@@ -99,7 +99,7 @@ function Spotlight({
     screenH: number;
     onClose: () => void;
 }) {
-    const top = Math.max(rect.y - PAD, 0);
+    const top = Math.max(rect.y - PAD, 65);
     const left = Math.max(rect.x - PAD, 0);
     const w = rect.width + PAD * 2;
     const h = rect.height + PAD * 2;

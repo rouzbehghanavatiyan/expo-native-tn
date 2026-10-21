@@ -7,8 +7,10 @@ import { useAppTheme } from "../hook/ThemeContext";
 import { topScoreList } from "../services/masterServices";
 import { getImageUrl } from "../utils/fileHelper";
 import { logger } from "../utils/logger";
+import TopScoreHelper from "../utils/TopScoreHelper";
 import { useTopScoreTarget } from "../utils/topScoreTourStore";
 import ImageRank from "./ImageRank";
+
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 export interface TopUser {
@@ -39,7 +41,7 @@ interface Category {
 
 const TopScoreItem: React.FC<any> = () => {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const { isDark } = useAppTheme();
   const firstRowTarget = useTopScoreTarget();
   const [categories, setCategories] = useState<Category[]>([
@@ -108,6 +110,7 @@ const TopScoreItem: React.FC<any> = () => {
     });
   };
 
+  // منتظر ماندن تا اتمام فراخوانی API
   if (isLoading) {
     return (
       <YStack py="$4" ai="center" jc="center">
@@ -159,7 +162,7 @@ const TopScoreItem: React.FC<any> = () => {
                 imgSize={46}
                 score={userTop?.score}
                 imgSrc={getImageUrl(userTop?.profile)}
-                onClickDisable={true} 
+                onClickDisable={true}
               />
               <YStack flex={1} jc="center" gap="$0.5">
                 <Text
@@ -188,6 +191,7 @@ const TopScoreItem: React.FC<any> = () => {
           );
         })}
       </YStack>
+      <TopScoreHelper enabled={true} />
     </Theme>
   );
 };

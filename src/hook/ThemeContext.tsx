@@ -19,7 +19,7 @@ interface ThemeContextValue {
   toggleTheme: () => void;
 }
 
-const DEFAULT_THEME: ThemeMode = "dark";
+const DEFAULT_THEME: ThemeMode = "light";
 
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 

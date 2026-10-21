@@ -9,6 +9,7 @@ import * as SystemUI from "expo-system-ui";
 import { useEffect } from "react";
 import { ActivityIndicator } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Provider } from "react-redux";
 import { TamaguiProvider, Theme, View } from "tamagui";
@@ -75,9 +76,11 @@ function AppShell() {
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <ThemeProvider>
-        <AppShell />
-      </ThemeProvider>
+      <KeyboardProvider>
+        <ThemeProvider>
+          <AppShell />
+        </ThemeProvider>
+      </KeyboardProvider>
     </GestureHandlerRootView>
   );
 }

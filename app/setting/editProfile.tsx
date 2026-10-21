@@ -46,7 +46,7 @@ const SectionCard = ({
     borderWidth={1}
     borderColor="$borderColor"
     p="$4"
-    gap="$3"
+    gap="$5"
   >
     <XStack ai="center" gap="$2">
       <Icon name={icon as any} size={20} color="#6366f1" />
@@ -265,7 +265,6 @@ export default function EditProfile() {
     <SafeAreaView style={{ flex: 1 }} edges={["top", "left", "right"]}>
       <YStack flex={1} bg="$background">
         <MainTitle handleBack={() => router.back()} title="Edit Profile" />
-
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           keyboardVerticalOffset={Platform.OS === "ios" ? insets.top : 0}
@@ -310,9 +309,9 @@ export default function EditProfile() {
             </YStack>
 
             <YStack flex={1} px="$4" gap="$4">
-              {/* Profile info */}
               <SectionCard icon="person" title="Profile Info">
                 <BaseInput
+
                   label="Social Link"
                   value={mail}
                   onChangeText={setMail}
@@ -320,7 +319,6 @@ export default function EditProfile() {
                   borderColor={inputBorderColor}
                   autoCapitalize="none"
                 />
-
                 <BaseInput
                   baseColorLabel={inputBgLabel}
                   label="Location"
@@ -328,7 +326,6 @@ export default function EditProfile() {
                   value={location}
                   onChangeText={setLocation}
                 />
-
                 <YStack gap="$2">
                   <Text color="$color">Status</Text>
                   <TextArea

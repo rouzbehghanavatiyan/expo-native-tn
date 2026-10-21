@@ -1,6 +1,5 @@
 import MainTitle from "@/src/components/MainTitle";
 import TopScoreItem from "@/src/components/TopScoreItem";
-import TopScoreHelper from "@/src/utils/TopScoreHelper";
 import React, { useState } from "react";
 import { ScrollView, YStack } from "tamagui";
 
@@ -67,7 +66,6 @@ export default function TopScoreScreen() {
           </YStack>
         )}
       </ScrollView>
-      <TopScoreHelper enabled />
     </YStack>
   );
 }

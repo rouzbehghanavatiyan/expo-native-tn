@@ -170,7 +170,7 @@ export default function WatchScreen() {
           </Button>
         )} */}
       </View>
-      <WatchHelper enabled={true} />
+      {!loading && data?.length > 0 && <WatchHelper enabled={true} />}
       {showTimeout && <MatchTimeoutModal />}
       {showDeactivatedModal && <DeactivatedModal />}
     </>
