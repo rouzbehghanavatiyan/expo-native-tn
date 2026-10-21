@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import {
   ActivityIndicator,
   Image,
+  Linking,
   Modal,
   Pressable,
   StyleSheet,
@@ -120,11 +121,32 @@ const ProfileBio: React.FC<ProfileBioProps> = ({
   const activeBio = fetchedBioData?.bio ?? userLogin?.bio;
   const activeLocation = fetchedBioData?.location ?? userLogin?.location;
   const activeMail = fetchedBioData?.mail ?? userLogin?.mail;
-
   const hasProfileInfo = Boolean(activeBio || activeLocation || activeMail);
 
+  // سایر ایمپورت‌ها...
+
+  const handleOpenLink = async (url: string | undefined | null) => {
+    if (!url) return;
+
+    const trimmed = url.trim();
+    // اضافه کردن پروتکل در صورت نبودن
+    const formattedUrl = /^https?:\/\//i.test(trimmed)
+      ? trimmed
+      : `https://${trimmed}`;
+
+    try {
+      const supported = await Linking.canOpenURL(formattedUrl);
+      if (supported) {
+        await Linking.openURL(formattedUrl);
+      }
+    } catch (error) {
+      console.error("Failed to open URL:", error);
+    }
+  };
+
   const getProfileUser = async () => {
-    const targetUserId = userLogin?.user?.id || userLogin?.userId || userLogin?.id;
+    const targetUserId =
+      userLogin?.user?.id || userLogin?.userId || userLogin?.id;
     if (!targetUserId) return;
     try {
       setLoadingProfile(true);
@@ -158,12 +180,18 @@ const ProfileBio: React.FC<ProfileBioProps> = ({
         </XStack>
       ) : null}
       {activeMail ? (
-        <XStack alignItems="center" gap="$2">
-          <Icon name="language" size={16} color="#007aff" />
-          <Text fontWeight="600" color="$infoMain" fontSize="$3">
-            {activeMail}
-          </Text>
-        </XStack>
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={() => handleOpenLink(activeMail)}
+          disabled={!activeMail}
+        >
+          <XStack alignItems="center" gap="$2">
+            <Icon name="language" size={16} color="#007aff" />
+            <Text fontWeight="600" color="$blueMain" fontSize="$3">
+              {activeMail}
+            </Text>
+          </XStack>
+        </TouchableOpacity>
       ) : null}
       {!hasProfileInfo && (
         <Text color="$textSecondary" fontSize="$3" fontStyle="italic">
@@ -175,7 +203,6 @@ const ProfileBio: React.FC<ProfileBioProps> = ({
 
   return (
     <YStack {...rankTarget} px="$4" alignItems="center" w="100%">
-
       <Pressable
         style={{ width: "100%" }}
         onPress={() => setShowRanksModal(true)}
@@ -379,7 +406,6 @@ const ProfileBio: React.FC<ProfileBioProps> = ({
       <YStack w="100%" mt="$5" alignItems="flex-start" gap="$3" {...bioTarget}>
         {isMyProfile ? (
           <>
-
             <YStack w="100%" alignItems="center">
               <XStack
                 px="$3"

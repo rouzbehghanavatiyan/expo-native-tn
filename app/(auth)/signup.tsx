@@ -21,10 +21,9 @@ interface ModalState {
   visible: boolean;
   type: "success" | "error";
   title: string;
-  description: string;
+  description: React.ReactNode; // تغییر از string به React.ReactNode
   onConfirm?: () => void;
 }
-
 export default function SignUpScreen() {
   const router = useRouter();
   const { isDark } = useAppTheme();
@@ -99,8 +98,15 @@ export default function SignUpScreen() {
           visible: true,
           type: "success",
           title: "Registration Successful",
-          description:
-            "Dear user, please check your email to verify your account.",
+          description: (
+            <Text fontSize="$4" color="$textSecondary" textAlign="center">
+              Please check your inbox email, and make sure to check your{" "}
+              <Text fontWeight="bold" color={isDark ? "#ffffff" : "#000000"}>
+                spam
+              </Text>{" "}
+              folder as well!
+            </Text>
+          ),
           onConfirm: () => {
             router.replace("/");
           },
@@ -264,10 +270,10 @@ export default function SignUpScreen() {
                             isSelected
                               ? "$primaryMain"
                               : errors.gender
-                                ? "$errorMain"
-                                : isDark
-                                  ? "#383838"
-                                  : "#e0e0e0"
+                              ? "$errorMain"
+                              : isDark
+                              ? "#383838"
+                              : "#e0e0e0"
                           }
                           backgroundColor={
                             isSelected
@@ -468,8 +474,8 @@ export default function SignUpScreen() {
                           ? "#1b3820"
                           : "$green4Light"
                         : isDark
-                          ? "#3d1b1b"
-                          : "$red4Light"
+                        ? "#3d1b1b"
+                        : "$red4Light"
                     }
                     justifyContent="center"
                     alignItems="center"
@@ -496,14 +502,19 @@ export default function SignUpScreen() {
                     {modalState.title}
                   </Text>
 
-                  <Text
-                    fontSize="$4"
-                    color="$textSecondary"
-                    textAlign="center"
-                    mb="$2"
-                  >
-                    {modalState.description}
-                  </Text>
+                  <View mb="$2">
+                    {typeof modalState.description === "string" ? (
+                      <Text
+                        fontSize="$4"
+                        color="$textSecondary"
+                        textAlign="center"
+                      >
+                        {modalState.description}
+                      </Text>
+                    ) : (
+                      modalState.description
+                    )}
+                  </View>
 
                   <BaseButton
                     appearance="solid"

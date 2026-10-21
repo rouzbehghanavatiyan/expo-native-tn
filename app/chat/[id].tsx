@@ -11,8 +11,14 @@ import { socketClient } from "@/src/utils/socketClient";
 import { Stack, useLocalSearchParams } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { FlatList } from "react-native";
-import { KeyboardAvoidingView, useKeyboardState } from "react-native-keyboard-controller";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  KeyboardAvoidingView,
+  useKeyboardState,
+} from "react-native-keyboard-controller";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { Text, XStack, YStack } from "tamagui";
 import ChatHeader from "./ChatHeader";
 import SmartText from "./SmartText";
@@ -107,15 +113,14 @@ export default function PrivateChat() {
       const postData = {
         senderId: reciveUserId,
         receiveId: userIdLogin,
-      }
+      };
       const resRead = await markAsRead(postData);
-      logger.info("resRead resRead", resRead)
+      logger.info("resRead resRead", resRead);
       dispatch(markSenderAsRead(String(reciveUserId)));
     } catch (err) {
       logger.error("Error triggering markAsRead:", err);
     }
   }, [userIdLogin, reciveUserId, dispatch]);
-
 
   const sendMessage = (override?: string) => {
     const trimmed = (override ?? title).trim();
@@ -156,7 +161,7 @@ export default function PrivateChat() {
     const value =
       typeof item === "string"
         ? item
-        : (item?.emoji ?? item?.native ?? item?.url ?? item?.uri ?? "");
+        : item?.emoji ?? item?.native ?? item?.url ?? item?.uri ?? "";
     if (value) setTitle((prev) => prev + value);
   };
 
@@ -166,11 +171,11 @@ export default function PrivateChat() {
       prev.map((msg) =>
         msg.tempId === data.tempId
           ? {
-            ...msg,
-            id: data.id,
-            createdAt: data.createdAt || msg.createdAt,
-            time: data.createdAt ? formatTime(data.createdAt) : msg.time,
-          }
+              ...msg,
+              id: data.id,
+              createdAt: data.createdAt || msg.createdAt,
+              time: data.createdAt ? formatTime(data.createdAt) : msg.time,
+            }
           : msg,
       ),
     );
@@ -263,8 +268,8 @@ export default function PrivateChat() {
             const rawContent = m.content;
             const contentText =
               rawContent && typeof rawContent === "object"
-                ? (rawContent.text ?? "")
-                : (rawContent ?? m.title ?? "");
+                ? rawContent.text ?? ""
+                : rawContent ?? m.title ?? "";
             return {
               id: m.id,
               senderId: m.senderId ?? m.sender,
@@ -393,14 +398,17 @@ export default function PrivateChat() {
     const messageAvatar = isOwn
       ? userProfile
       : item.userProfile
-        ? getImageUrl(item.userProfile)
-        : profile;
+      ? getImageUrl(item.userProfile)
+      : profile;
 
-    // const messageAvatar = isOwn
-    //   ? userProfile
-    //   : item.userProfile
-    //     ? getImageUrl(item.userProfile)
-    //     : otherUserProfile;
+    const otherUserInfo = {
+      userProfile: item.userProfile ? getImageUrl(item.userProfile) : profile,
+      user: userName,
+      score: userScore,
+      email: "",
+      location: "",
+      bio: "",
+    };
 
     return (
       <XStack
@@ -410,12 +418,17 @@ export default function PrivateChat() {
         py="$2"
         width="100%"
       >
-        {!isOwn && <ImageRank imgSrc={messageAvatar} imgSize={35} />}
+        {!isOwn && (
+          <ImageRank
+            userInfo={otherUserInfo}
+            imgSrc={messageAvatar}
+            imgSize={35}
+          />
+        )}
 
         <YStack
           maxWidth="75%"
           bg={emojiOnly ? "transparent" : isOwn ? "white" : "$grey100"}
-
           borderRadius="$4"
           px="$3"
           py="$2"
@@ -550,6 +563,6 @@ export default function PrivateChat() {
           )}
         </YStack>
       </KeyboardAvoidingView>
-    </SafeAreaView >
+    </SafeAreaView>
   );
 }

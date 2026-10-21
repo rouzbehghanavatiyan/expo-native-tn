@@ -3,16 +3,20 @@ import { usePathname, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   FlatList,
-  Modal,
+  Keyboard,
   Pressable,
   StyleSheet,
   TouchableOpacity,
   View,
 } from "react-native";
+import {
+  KeyboardAvoidingView,
+  useKeyboardState,
+} from "react-native-keyboard-controller";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text, useTheme, XStack } from "tamagui";
 import AppLoading from "../components/AppLoading";
 import BaseInput from "../components/BaseInput";
-import { Icon } from "../components/Icon";
 import ImageRank from "../components/ImageRank";
 import { getThemeColor } from "../hook/getThemeColor";
 import { searchUser } from "../services/masterServices";
@@ -28,6 +32,9 @@ const AppHeader = () => {
   const pathname: any = usePathname();
   const dispatch = useAppDispatch();
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
+  const keyboardVisible = useKeyboardState((s) => s.isVisible);
+
   const currentUser = useAppSelector((state) => state.main.userLogin?.user);
   const unreadMessagesCount = useAppSelector(
     (state) => state?.main?.unreadMessagesCount,
@@ -80,15 +87,15 @@ const AppHeader = () => {
       return;
     }
 
-    const timer = setTimeout(async () => {
-      setIsLoading(true);
-      setShowDropdown(true);
+    setShowDropdown(true);
+    setIsLoading(true);
 
+    const timer = setTimeout(async () => {
       try {
         const response: any = await searchUser({
           userNameReq: searchQuery.trim(),
           pageNumber: 1,
-          pageSize: 10,
+          pageSize: 5,
         });
 
         const items = response?.data?.data?.items || [];
@@ -99,12 +106,13 @@ const AppHeader = () => {
       } finally {
         setIsLoading(false);
       }
-    }, 1500);
+    }, 600);
 
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
   const handleSelectUser = (user: any) => {
+    Keyboard.dismiss();
     setShowDropdown(false);
     setSearchQuery("");
     const targetData = {
@@ -119,7 +127,6 @@ const AppHeader = () => {
       bio: user?.bio ?? user?.user?.bio ?? "",
       isFollowedByMe: user?.isFollowedByMe,
     };
-    logger.info("Selected user:", user);
     router.push({
       pathname: "/profile",
       params: {
@@ -162,7 +169,6 @@ const AppHeader = () => {
   const getInitialCount = async () => {
     try {
       const count = await unreadCount(currentUser?.id);
-      logger.info("count count", count)
       dispatch(setUnreadMessagesCount(count?.count));
     } catch (error) {
       logger.error("Error for read count", error);
@@ -197,102 +203,75 @@ const AppHeader = () => {
             />
           )}
         </TouchableOpacity>
-        {/* <TouchableOpacity
-          activeOpacity={0.7}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          onPress={() => router.push("/tickets")}
-          style={styles.iconWrapper}
-        >
-          <Ionicons
-            name="ticket-outline"
-            size={22}
-            color={colors.textSecondary}
-          />
-        </TouchableOpacity> */}
       </XStack>
     );
   };
+
   if (routes.isShowWatch) return null;
 
   return (
-    <View style={[styles.container]}>
-      <View style={[styles.header, { backgroundColor: colors.background }]}>
-        <View
-          style={[
-            styles.leftSection,
-            routes.isWatch && { flex: 1, marginRight: 12 },
-          ]}
-        >
-          {routes.isWatch ? (
-            <BaseInput
-              height={30}
-              variant="filled"
-              placeholder="Search by username"
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              returnKeyType="search"
-              fontSize={13}
-              backgroundColor={colors.backgroundPaper}
-              borderColor={colors.borderColor}
-              placeholderTextColor={colors.textSecondary}
-              color={colors.textPrimary}
-              rightIcon={
-                <TouchableOpacity
-                  onPress={() => {
-                    setShowDropdown(false);
-                    router.push({
-                      pathname: "/searchListUser",
-                      params: { query: searchQuery.trim() },
-                    });
-                  }}
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                >
-                  <Icon name="search" size={16} color={colors.textSecondary} />
-                </TouchableOpacity>
-              }
-            />
+    <>
+      <View style={[styles.container]}>
+        <View style={[styles.header, { backgroundColor: colors.background }]}>
+          <View
+            style={[
+              styles.leftSection,
+              routes.isWatch && { flex: 1, marginRight: 12 },
+            ]}
+          >
+            {routes.isWatch ? (
+              <BaseInput
+                height={34}
+                variant="filled"
+                placeholder="Search by username"
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                returnKeyType="search"
+                fontSize={13}
+                backgroundColor={colors.backgroundPaper}
+                borderColor={colors.borderColor}
+                placeholderTextColor={colors.textSecondary}
+                color={colors.textPrimary}
+              />
+            ) : (
+              <Text
+                fontSize={20}
+                color="$textPrimary"
+                style={{ fontFamily: "OswaldLight" }}
+              >
+                {headerTitle}
+              </Text>
+            )}
+          </View>
+          {routes.isProfile ? (
+            <TouchableOpacity onPress={() => router.push("/setting")}>
+              <Ionicons
+                name="settings-outline"
+                size={22}
+                color={colors.textPrimary}
+              />
+            </TouchableOpacity>
           ) : (
-            // <H2
-            //   fontFamily="$logo"
-            //   fontSize={20}
-            //   fontWeight="bold"
-            //   color="$textPrimary"
-            // >
-            // </H2>
-            <Text
-              fontSize={20}
-              color="$textPrimary"
-              style={{ fontFamily: "OswaldLight" }}
-            >
-              {headerTitle}
-            </Text>
+            <ActionIcons />
           )}
         </View>
-        {routes.isProfile ? (
-          <TouchableOpacity onPress={() => router.push("/setting")}>
-            <Ionicons
-              name="settings-outline"
-              size={22}
-              color={colors.textPrimary}
-            />
-          </TouchableOpacity>
-        ) : (
-          <ActionIcons />
-        )}
       </View>
 
       {routes.isWatch && showDropdown && (
-        <Modal
-          visible={showDropdown}
-          transparent={true}
-          animationType="none"
-          onRequestClose={() => setShowDropdown(false)}
-        >
-          <View style={styles.modalOverlay}>
-            <Pressable
-              style={StyleSheet.absoluteFill}
-              onPress={() => setShowDropdown(false)}
-            />
+        <View style={[styles.overlayContainer, { top: 40 + insets.top }]}>
+          <Pressable
+            style={StyleSheet.absoluteFill}
+            onPress={() => {
+              Keyboard.dismiss();
+              setShowDropdown(false);
+            }}
+          />
+
+          <KeyboardAvoidingView
+            behavior="padding"
+            style={styles.keyboardAvoid}
+            pointerEvents="box-none"
+          >
             <View
               style={[
                 styles.dropdownBox,
@@ -314,8 +293,8 @@ const AppHeader = () => {
                   }
                   style={styles.dropdownList}
                   contentContainerStyle={styles.listContentContainer}
-                  keyboardShouldPersistTaps="always"
-                  nestedScrollEnabled={true}
+                  keyboardShouldPersistTaps="handled"
+                  keyboardDismissMode="on-drag"
                   showsVerticalScrollIndicator={true}
                   renderItem={({ item }) => (
                     <TouchableOpacity
@@ -329,7 +308,8 @@ const AppHeader = () => {
                       <ImageRank
                         iconClass="text-gray-200"
                         imgSrc={getImageUrl(item?.profile)}
-                        imgSize={35}
+                        imgSize={50}
+                        score={item?.score}
                       />
                       <Text
                         style={[
@@ -341,7 +321,6 @@ const AppHeader = () => {
                           item?.fullName ||
                           item?.title ||
                           "User"}
-
                       </Text>
                     </TouchableOpacity>
                   )}
@@ -359,10 +338,10 @@ const AppHeader = () => {
                 </View>
               )}
             </View>
-          </View>
-        </Modal>
+          </KeyboardAvoidingView>
+        </View>
       )}
-    </View>
+    </>
   );
 };
 
@@ -395,10 +374,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
   },
-  iconContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
   badge: {
     position: "absolute",
     top: -2,
@@ -406,48 +381,44 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: "red",
   },
-  modalOverlay: {
-    flex: 1,
-    paddingTop: 70,
+  overlayContainer: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 9999,
     paddingHorizontal: 16,
   },
+  keyboardAvoid: {
+    flex: 1,
+  },
   dropdownBox: {
-    borderEndEndRadius: 10,
-    borderBottomLeftRadius: 10,
-    maxHeight: 260,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
+    borderRadius: 12,
+    maxHeight: 450,
+    marginTop: 0,
     elevation: 12,
-    borderWidth: 1,
     overflow: "hidden",
   },
   dropdownList: {
     flexGrow: 0,
   },
   listContentContainer: {
-    paddingBottom: 10,
+    paddingBottom: 6,
   },
   resultItem: {
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 10,
     paddingHorizontal: 12,
-    borderBottomWidth: 1,
-    gap: 8,
+    gap: 10,
   },
   resultText: {
     fontSize: 14,
+    fontWeight: "500",
   },
   dropdownLoading: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     padding: 16,
-    gap: 8,
   },
   dropdownEmpty: {
     padding: 16,

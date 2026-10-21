@@ -74,8 +74,16 @@ const CommentsSkeleton = () => {
   useEffect(() => {
     const loop = Animated.loop(
       Animated.sequence([
-        Animated.timing(pulse, { toValue: 1, duration: 700, useNativeDriver: true }),
-        Animated.timing(pulse, { toValue: 0.4, duration: 700, useNativeDriver: true }),
+        Animated.timing(pulse, {
+          toValue: 1,
+          duration: 700,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulse, {
+          toValue: 0.4,
+          duration: 700,
+          useNativeDriver: true,
+        }),
       ]),
     );
     loop.start();
@@ -83,13 +91,20 @@ const CommentsSkeleton = () => {
   }, [pulse]);
 
   return (
-    <Animated.View style={{ opacity: pulse, paddingHorizontal: 16, paddingTop: 8 }}>
+    <Animated.View
+      style={{ opacity: pulse, paddingHorizontal: 16, paddingTop: 8 }}
+    >
       {[0, 1, 2, 3, 4, 5, 6].map((i) => (
         <XStack key={i} gap={12} py={10} alignItems="flex-start">
           <View width={38} height={38} borderRadius={19} bg="$divider" />
           <YStack flex={1} gap={8}>
             <View height={12} width="30%" borderRadius={6} bg="$divider" />
-            <View height={12} width={i % 2 ? "70%" : "90%"} borderRadius={6} bg="$divider" />
+            <View
+              height={12}
+              width={i % 2 ? "70%" : "90%"}
+              borderRadius={6}
+              bg="$divider"
+            />
           </YStack>
         </XStack>
       ))}
@@ -105,101 +120,124 @@ interface CommentRowProps {
   onReply: (rootId: any, userName?: string) => void;
 }
 
-const CommentRow = memo(({ item, expanded, onToggle, onReply }: CommentRowProps) => {
-  const replies: any[] = item?.replies ?? [];
-  return (
-    <XStack gap={10} py={8} alignItems="flex-start">
-      <ImageRank imgSrc={getImageUrl(item?.profile)} imgSize={38} score={item?.score} />
+const CommentRow = memo(
+  ({ item, expanded, onToggle, onReply }: CommentRowProps) => {
+    const replies: any[] = item?.replies ?? [];
+    return (
+      <XStack gap={10} py={8} alignItems="flex-start">
+        <ImageRank
+          imgSrc={getImageUrl(item?.profile)}
+          imgSize={38}
+          score={item?.score}
+        />
 
-      <YStack flex={1} gap={6}>
-        <YStack
-          bg="$backgroundPaper"
-          borderWidth={1}
-          borderColor="$divider"
-          borderRadius={16}
-          px={12}
-          py={8}
-          gap={2}
-        >
-          <Text color="$textPrimary" fontSize={13} fontWeight="700">
-            {item?.userName || "Anonymous"}
-          </Text>
-          <Text color="$textPrimary" fontSize={14} lineHeight={20}>
-            {item?.desc}
-          </Text>
-        </YStack>
-
-        <XStack px={6} alignItems="center" gap={16}>
-          <TouchableOpacity onPress={() => onReply(item?.id, item?.userName)} hitSlop={HIT_SLOP}>
-            <Text color="$textSecondary" fontSize={12} fontWeight="700">
-              Reply
+        <YStack flex={1} gap={6}>
+          <YStack
+            bg="$backgroundPaper"
+            borderWidth={1}
+            borderColor="$divider"
+            borderRadius={16}
+            px={12}
+            py={8}
+            gap={2}
+          >
+            <Text color="$textPrimary" fontSize={13} fontWeight="700">
+              {item?.userName || "Anonymous"}
             </Text>
-          </TouchableOpacity>
-        </XStack>
-
-        {replies.length > 0 && (
-          <TouchableOpacity onPress={() => onToggle(item?.id)} hitSlop={HIT_SLOP}>
-            <XStack alignItems="center" gap={8} px={6}>
-              <View width={22} height={1} bg="$divider" />
-              <Text color="$textSecondary" fontSize={12} fontWeight="700">
-                {expanded
-                  ? "Hide replies"
-                  : `View ${replies.length} ${replies.length === 1 ? "reply" : "replies"}`}
-              </Text>
-            </XStack>
-          </TouchableOpacity>
-        )}
-
-        {expanded && replies.length > 0 && (
-          <YStack gap={10} mt={4}>
-            {replies.map((reply: any) => (
-              <XStack key={reply.id} gap={8} alignItems="flex-start">
-                <ImageRank
-                  imgSrc={getImageUrl(reply?.profile)}
-                  imgSize={28}
-                  userName={reply?.userName}
-                  score={reply?.score}
-                />
-                <YStack flex={1} gap={4}>
-                  <YStack
-                    bg="$backgroundPaper"
-                    borderWidth={1}
-                    borderColor="$divider"
-                    borderRadius={14}
-                    px={10}
-                    py={6}
-                    gap={2}
-                  >
-                    <Text color="$textPrimary" fontSize={12} fontWeight="700">
-                      {reply?.userName || "Anonymous"}
-                    </Text>
-                    <Text color="$textPrimary" fontSize={13} lineHeight={18}>
-                      {reply?.desc}
-                    </Text>
-                  </YStack>
-                  <XStack px={6}>
-                    <TouchableOpacity
-                      onPress={() => onReply(item?.id, reply?.userName)}
-                      hitSlop={HIT_SLOP}
-                    >
-                      <Text color="$textSecondary" fontSize={11.5} fontWeight="700">
-                        Reply
-                      </Text>
-                    </TouchableOpacity>
-                  </XStack>
-                </YStack>
-              </XStack>
-            ))}
+            <Text color="$textPrimary" fontSize={14} lineHeight={20}>
+              {item?.desc}
+            </Text>
           </YStack>
-        )}
-      </YStack>
-    </XStack>
-  );
-});
+
+          <XStack px={6} alignItems="center" gap={16}>
+            <TouchableOpacity
+              onPress={() => onReply(item?.id, item?.userName)}
+              hitSlop={HIT_SLOP}
+            >
+              <Text color="$textSecondary" fontSize={12} fontWeight="700">
+                Reply
+              </Text>
+            </TouchableOpacity>
+          </XStack>
+
+          {replies.length > 0 && (
+            <TouchableOpacity
+              onPress={() => onToggle(item?.id)}
+              hitSlop={HIT_SLOP}
+            >
+              <XStack alignItems="center" gap={8} px={6}>
+                <View width={22} height={1} bg="$divider" />
+                <Text color="$textSecondary" fontSize={12} fontWeight="700">
+                  {expanded
+                    ? "Hide replies"
+                    : `View ${replies.length} ${
+                        replies.length === 1 ? "reply" : "replies"
+                      }`}
+                </Text>
+              </XStack>
+            </TouchableOpacity>
+          )}
+
+          {expanded && replies.length > 0 && (
+            <YStack gap={10} mt={4}>
+              {replies.map((reply: any) => (
+                <XStack key={reply.id} gap={8} alignItems="flex-start">
+                  <ImageRank
+                    imgSrc={getImageUrl(reply?.profile)}
+                    imgSize={28}
+                    userName={reply?.userName}
+                    score={reply?.score}
+                  />
+                  <YStack flex={1} gap={4}>
+                    <YStack
+                      bg="$backgroundPaper"
+                      borderWidth={1}
+                      borderColor="$divider"
+                      borderRadius={14}
+                      px={10}
+                      py={6}
+                      gap={2}
+                    >
+                      <Text color="$textPrimary" fontSize={12} fontWeight="700">
+                        {reply?.userName || "Anonymous"}
+                      </Text>
+                      <Text color="$textPrimary" fontSize={13} lineHeight={18}>
+                        {reply?.desc}
+                      </Text>
+                    </YStack>
+                    <XStack px={6}>
+                      <TouchableOpacity
+                        onPress={() => onReply(item?.id, reply?.userName)}
+                        hitSlop={HIT_SLOP}
+                      >
+                        <Text
+                          color="$textSecondary"
+                          fontSize={11.5}
+                          fontWeight="700"
+                        >
+                          Reply
+                        </Text>
+                      </TouchableOpacity>
+                    </XStack>
+                  </YStack>
+                </XStack>
+              ))}
+            </YStack>
+          )}
+        </YStack>
+      </XStack>
+    );
+  },
+);
 CommentRow.displayName = "CommentRow";
 
 /* ------------------------------ Main ------------------------------ */
-const Comments: React.FC<CommentsProps> = ({ visible, onClose, video, positionVideo }) => {
+const Comments: React.FC<CommentsProps> = ({
+  visible,
+  onClose,
+  video,
+  positionVideo,
+}) => {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const keyboardVisible = useKeyboardState((s) => s.isVisible);
@@ -266,7 +304,11 @@ const Comments: React.FC<CommentsProps> = ({ visible, onClose, video, positionVi
         friction: 14,
         useNativeDriver: true,
       }),
-      Animated.timing(backdrop, { toValue: 1, duration: 220, useNativeDriver: true }),
+      Animated.timing(backdrop, {
+        toValue: 1,
+        duration: 220,
+        useNativeDriver: true,
+      }),
     ]).start();
   }, [visible, translateY, backdrop]);
 
@@ -339,8 +381,16 @@ const Comments: React.FC<CommentsProps> = ({ visible, onClose, video, positionVi
     closingRef.current = true;
     Keyboard.dismiss();
     Animated.parallel([
-      Animated.timing(translateY, { toValue: SHEET_HEIGHT, duration: 200, useNativeDriver: true }),
-      Animated.timing(backdrop, { toValue: 0, duration: 200, useNativeDriver: true }),
+      Animated.timing(translateY, {
+        toValue: SHEET_HEIGHT,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(backdrop, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
     ]).start(() => {
       resetCommentsState();
       onClose();
@@ -377,7 +427,10 @@ const Comments: React.FC<CommentsProps> = ({ visible, onClose, video, positionVi
           if (g.dy > 120 || g.vy > 0.9) {
             handleCloseRef.current();
           } else {
-            Animated.spring(translateY, { toValue: 0, useNativeDriver: true }).start();
+            Animated.spring(translateY, {
+              toValue: 0,
+              useNativeDriver: true,
+            }).start();
           }
         },
       }),
@@ -403,7 +456,7 @@ const Comments: React.FC<CommentsProps> = ({ visible, onClose, video, positionVi
   const handleSend = useCallback(async () => {
     const trimmed = text.trim();
     if (!trimmed || !movieId || sending) return;
-    setSendError(false)
+    setSendError(false);
     setSending(true);
     try {
       const res = await addComment({
@@ -423,12 +476,20 @@ const Comments: React.FC<CommentsProps> = ({ visible, onClose, video, positionVi
         if (!isReply) scrollToTop();
       }
     } catch (error) {
-      setSendError(true)
+      setSendError(true);
       console.error("Error sending comment:", error);
     } finally {
       setSending(false);
     }
-  }, [text, movieId, sending, loginUserId, answerData?.id, fetchComments, scrollToTop]);
+  }, [
+    text,
+    movieId,
+    sending,
+    loginUserId,
+    answerData?.id,
+    fetchComments,
+    scrollToTop,
+  ]);
 
   if (!visible) return null;
 
@@ -452,14 +513,22 @@ const Comments: React.FC<CommentsProps> = ({ visible, onClose, video, positionVi
         >
           <XStack alignItems="center" gap={10} flex={1}>
             <View width={3} height={22} borderRadius={2} bg={ACCENT} />
-            <Text color="$textSecondary" fontSize={12.5} numberOfLines={1} flex={1}>
+            <Text
+              color="$textSecondary"
+              fontSize={12.5}
+              numberOfLines={1}
+              flex={1}
+            >
               Replying to{" "}
               <Text fontWeight="700" color="$textPrimary">
                 @{answerData?.userName || "User"}
               </Text>
             </Text>
           </XStack>
-          <TouchableOpacity onPress={() => setAnswerData(null)} hitSlop={HIT_SLOP}>
+          <TouchableOpacity
+            onPress={() => setAnswerData(null)}
+            hitSlop={HIT_SLOP}
+          >
             <Icon name="close" size={16} color={colors.textSecondary} />
           </TouchableOpacity>
         </XStack>
@@ -488,7 +557,8 @@ const Comments: React.FC<CommentsProps> = ({ visible, onClose, video, positionVi
             onChangeText={(v) => {
               setText(v);
               if (sendError) setSendError(false);
-            }} onFocus={() => setIsFocused(true)}
+            }}
+            onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
             placeholder={
               answerData
@@ -588,7 +658,11 @@ const Comments: React.FC<CommentsProps> = ({ visible, onClose, video, positionVi
                 opacity={0.35}
                 mb={10}
               />
-              <XStack px={16} alignItems="center" justifyContent="space-between">
+              <XStack
+                px={16}
+                alignItems="center"
+                justifyContent="space-between"
+              >
                 <XStack alignItems="center" gap={8}>
                   <Text color="$textPrimary" fontSize={17} fontWeight="700">
                     Comments
@@ -602,7 +676,11 @@ const Comments: React.FC<CommentsProps> = ({ visible, onClose, video, positionVi
                       px={8}
                       py={2}
                     >
-                      <Text color="$textSecondary" fontSize={12} fontWeight="700">
+                      <Text
+                        color="$textSecondary"
+                        fontSize={12}
+                        fontWeight="700"
+                      >
                         {totalCount}
                       </Text>
                     </View>
@@ -636,7 +714,9 @@ const Comments: React.FC<CommentsProps> = ({ visible, onClose, video, positionVi
                 ref={flatListRef}
                 data={comments}
                 extraData={expanded}
-                keyExtractor={(item, index) => item?.id?.toString() || index.toString()}
+                keyExtractor={(item, index) =>
+                  item?.id?.toString() || index.toString()
+                }
                 onEndReached={fetchMore}
                 onEndReachedThreshold={0.3}
                 keyboardShouldPersistTaps="handled"
@@ -686,7 +766,11 @@ const Comments: React.FC<CommentsProps> = ({ visible, onClose, video, positionVi
                     <Text color="$textPrimary" fontSize={16} fontWeight="700">
                       No comments yet
                     </Text>
-                    <Text color="$textSecondary" fontSize={13} textAlign="center">
+                    <Text
+                      color="$textSecondary"
+                      fontSize={13}
+                      textAlign="center"
+                    >
                       Be the first to share your thoughts.
                     </Text>
                     <TouchableOpacity
