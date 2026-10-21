@@ -240,7 +240,7 @@ const styles = StyleSheet.create({
   },
   progress: {
     height: "100%",
-    backgroundColor: "#ffffff",
+    backgroundColor: "#7c7c7c",
   },
   thumb: {
     position: "absolute",

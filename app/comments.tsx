@@ -27,7 +27,10 @@ import {
   TouchableOpacity,
   TouchableWithoutFeedback,
 } from "react-native";
-import { KeyboardAvoidingView } from "react-native-keyboard-controller";
+import {
+  KeyboardAvoidingView,
+  useKeyboardState,
+} from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text, useTheme, View, XStack, YStack } from "tamagui";
 
@@ -199,6 +202,7 @@ CommentRow.displayName = "CommentRow";
 const Comments: React.FC<CommentsProps> = ({ visible, onClose, video, positionVideo }) => {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
+  const keyboardVisible = useKeyboardState((s) => s.isVisible);
 
   const colors = {
     background: getThemeColor(theme.background, "#fafafa"),
@@ -206,7 +210,7 @@ const Comments: React.FC<CommentsProps> = ({ visible, onClose, video, positionVi
     textSecondary: getThemeColor(theme.textSecondary, "#757575"),
     divider: getThemeColor(theme.divider, "rgba(0,0,0,0.12)"),
   };
-
+  const [sendError, setSendError] = useState(false);
   const [comments, setComments] = useState<any[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -399,6 +403,7 @@ const Comments: React.FC<CommentsProps> = ({ visible, onClose, video, positionVi
   const handleSend = useCallback(async () => {
     const trimmed = text.trim();
     if (!trimmed || !movieId || sending) return;
+    setSendError(false)
     setSending(true);
     try {
       const res = await addComment({
@@ -418,6 +423,7 @@ const Comments: React.FC<CommentsProps> = ({ visible, onClose, video, positionVi
         if (!isReply) scrollToTop();
       }
     } catch (error) {
+      setSendError(true)
       console.error("Error sending comment:", error);
     } finally {
       setSending(false);
@@ -434,7 +440,7 @@ const Comments: React.FC<CommentsProps> = ({ visible, onClose, video, positionVi
       bg="$backgroundPaper"
       borderTopWidth={1}
       borderTopColor="$divider"
-      pb={isFocused ? 0 : bottomPad}
+      pb={keyboardVisible ? 0 : bottomPad}
     >
       {answerData && (
         <XStack
@@ -479,8 +485,10 @@ const Comments: React.FC<CommentsProps> = ({ visible, onClose, video, positionVi
           <TextInput
             ref={inputRef}
             value={text}
-            onChangeText={setText}
-            onFocus={() => setIsFocused(true)}
+            onChangeText={(v) => {
+              setText(v);
+              if (sendError) setSendError(false);
+            }} onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
             placeholder={
               answerData
@@ -546,14 +554,14 @@ const Comments: React.FC<CommentsProps> = ({ visible, onClose, video, positionVi
         />
       </TouchableWithoutFeedback>
 
-      {/* Keyboard handling: pushes the sheet up and lets it shrink (flexShrink) */}
       <KeyboardAvoidingView
         behavior="padding"
-        pointerEvents="box-none"
         style={{ flex: 1, justifyContent: "flex-end" }}
+        pointerEvents="box-none"
       >
         <Animated.View
           style={{
+            maxHeight: SHEET_HEIGHT,
             height: SHEET_HEIGHT,
             flexShrink: 1,
             backgroundColor: colors.background,
@@ -563,7 +571,6 @@ const Comments: React.FC<CommentsProps> = ({ visible, onClose, video, positionVi
             transform: [{ translateY }],
           }}
         >
-          {/* Header (drag area) */}
           <RNView {...panResponder.panHandlers}>
             <YStack
               bg="$backgroundPaper"

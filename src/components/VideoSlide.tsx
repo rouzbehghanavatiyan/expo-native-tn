@@ -127,7 +127,7 @@ export default function ShowWatchSlide({
 const createStyles = (c: ReturnType<typeof getColors>) =>
   StyleSheet.create({
     half: {
-      height: "50%",
+      height: "30%",
       position: "relative",
       flex: 1,
       borderBottomWidth: 1,

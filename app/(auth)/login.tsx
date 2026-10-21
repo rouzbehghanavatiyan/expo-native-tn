@@ -188,8 +188,6 @@ const LoginScreen: React.FC<any> = () => {
               maxWidth={400}
               gap="$4"
               bg={isDark ? "#1e1e1e" : "#ffffff"}
-              borderWidth={1}
-              borderColor={isDark ? "#2c2c2c" : "#f0f0f0"}
               shadowColor={isDark ? "#000000" : "$shadowColor"}
               shadowOpacity={isDark ? 0.35 : 0.08}
               shadowRadius={12}

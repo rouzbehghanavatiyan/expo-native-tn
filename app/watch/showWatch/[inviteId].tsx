@@ -269,7 +269,6 @@ const createStyles = (c: ReturnType<typeof getColors>) =>
   StyleSheet.create({
     container: { flex: 1, backgroundColor: c.bg },
     page: { backgroundColor: c.bg },
-
     centerIcon: {
       position: "absolute",
       top: "50%",

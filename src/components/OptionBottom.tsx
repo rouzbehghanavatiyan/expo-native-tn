@@ -223,8 +223,8 @@ const OptionBottom: React.FC<OptionBottomProps> = ({
 
   const iconColor = isDark ? "#ffffff" : "#1f2937";
   const disabledIconColor = isDark
-    ? "rgba(255, 255, 255, 0.45)"
-    : "rgba(31, 41, 55, 0.45)";
+    ? "rgb(255, 255, 255)"
+    : "rgb(31, 41, 55)";
 
   return (
     <View position="absolute" bottom={10} left={0} right={0} zIndex={10}>

@@ -2,6 +2,7 @@
 
 npx eas-cli build --platform android --profile production --local
 npx eas-cli build --platform android --profile preview --local
+npx eas-cli build --platform android --profile development --local
 
 ## Get started
 
