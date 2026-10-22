@@ -19,7 +19,6 @@ export default function TabLayout() {
   const insets = useSafeAreaInsets();
   const userLoginId = userInfo?.user?.id || userInfo?.userId;
 
-  // Theme-aware color resolutions
   const activeColor = getThemeColor(theme.color, "#000000");
   const inactiveColor = getThemeColor(theme.primary, "#225db5");
   const tabBgColor = getThemeColor(theme.background, "#ffffff");
@@ -54,14 +53,31 @@ export default function TabLayout() {
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
         const selectedAsset = result.assets[0];
+        const isVideo =
+          selectedAsset.type === "video" ||
+          selectedAsset.uri.endsWith(".mp4") ||
+          selectedAsset.uri.endsWith(".mov");
 
+        if (isVideo && selectedAsset.duration) {
+          const durationInSeconds =
+            selectedAsset.duration > 1000
+              ? selectedAsset.duration / 1000
+              : selectedAsset.duration;
+
+          if (durationInSeconds > 60) {
+            Alert.alert(
+              "Video Too Long",
+              "Please limit your video duration to a maximum of 1 minute.",
+              [{ text: "OK" }]
+            );
+            return;
+          }
+        }
         router.push({
           pathname: "/(tabs)/clashTalent",
           params: {
             mediaUri: selectedAsset.uri,
-            mediaType:
-              selectedAsset.type ??
-              (selectedAsset.uri.endsWith(".mp4") ? "video" : "image"),
+            mediaType: isVideo ? "video" : "image",
             duration: selectedAsset.duration ?? 0,
           },
         });
@@ -70,6 +86,7 @@ export default function TabLayout() {
       console.error("Error picking media: ", error);
     }
   };
+
 
   return (
     <SafeAreaView style={{ flex: 1 }} edges={["top", "left", "right"]}>

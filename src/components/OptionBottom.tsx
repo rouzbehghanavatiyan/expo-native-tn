@@ -113,13 +113,35 @@ const OptionBottom: React.FC<OptionBottomProps> = ({
     return video.likes[movieId];
   }, [video, movieId]);
 
-  const resultStyle = useMemo(() => {
-    if (!result) {
-      return null;
-    }
+  const computedResult: MatchResult = useMemo(() => {
+    if (!video) return null;
 
-    return RESULT_STYLES[result];
-  }, [result]);
+    const insertedId = video?.attachmentInserted?.attachmentId;
+    const matchedId = video?.attachmentMatched?.attachmentId;
+
+    const insertedCount = Math.max(
+      0,
+      (video?.likeInserted ?? 0) + (insertedId ? videoLikes?.[insertedId] ?? 0 : 0),
+    );
+    const matchedCount = Math.max(
+      0,
+      (video?.likeMatched ?? 0) + (matchedId ? videoLikes?.[matchedId] ?? 0 : 0),
+    );
+
+    if (insertedCount === matchedCount) return "Draw";
+
+    const insertedWins = insertedCount > matchedCount;
+
+    if (positionVideo === 0) return insertedWins ? "Win" : "Loss";
+    return insertedWins ? "Loss" : "Win";
+  }, [video, videoLikes, positionVideo]);
+
+
+  const resultStyle = useMemo(() => {
+    if (!result || !computedResult) return null;
+    return RESULT_STYLES[computedResult];
+  }, [result, computedResult]);
+
 
   useEffect(() => {
     let baseCount = 0;
@@ -222,6 +244,7 @@ const OptionBottom: React.FC<OptionBottomProps> = ({
   const disabledIconColor = isDark
     ? "rgb(255, 255, 255)"
     : "rgb(31, 41, 55)";
+
 
   return (
     <View position="absolute" bottom={10} left={0} right={0} zIndex={10}>

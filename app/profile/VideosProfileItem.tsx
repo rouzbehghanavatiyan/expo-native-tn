@@ -1,8 +1,8 @@
 import TimerTornoment from "@/src/components/TimerTornoment";
 import VideoSection from "@/src/components/VideoSection";
-import { logger } from "@/src/utils/logger";
 import React, { memo, useMemo } from "react";
 import { Dimensions, StyleSheet, View } from "react-native";
+import MatchInfoCard, { MatchResult } from "./MatchInfoCard";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -21,109 +21,120 @@ const VideosProfileItem = ({
   handleToggleComments,
   isActive = true,
   onPlay,
+  onMatchExpired,
 }: any) => {
   const endAt = video?.matchEndAt ?? null;
   const showTimer = !!endAt;
 
-  logger.info("video video video",video)
+  const insertedId = video?.attachmentInserted?.attachmentId;
+  const matchedId = video?.attachmentMatched?.attachmentId;
 
-  const resultInserted =
-    video?.likeInserted > video?.likeMatched
-      ? "Win"
-      : video?.likeInserted < video?.likeMatched
-        ? "Loss"
-        : "Draw";
+  const insertedLikes = Math.max(
+    0,
+    (video?.likeInserted ?? 0) + (insertedId ? (videoLikes?.[insertedId] ?? 0) : 0),
+  );
+  const matchedLikes = Math.max(
+    0,
+    (video?.likeMatched ?? 0) + (matchedId ? (videoLikes?.[matchedId] ?? 0) : 0),
+  );
 
-  const resultMatched =
-    video?.likeMatched > video?.likeInserted
-      ? "Win"
-      : video?.likeMatched < video?.likeInserted
-        ? "Loss"
-        : "Draw";
+  const resultInserted: MatchResult =
+    insertedLikes > matchedLikes ? "Win" : insertedLikes < matchedLikes ? "Loss" : "Draw";
+  const resultMatched: MatchResult =
+    matchedLikes > insertedLikes ? "Win" : matchedLikes < insertedLikes ? "Loss" : "Draw";
 
   const videoSections = useMemo(
     () => [
       {
-        likeCount: video?.likeInserted ?? 0,
+        likeCount: insertedLikes,
         attachment: video?.attachmentInserted,
         position: 0,
         score: video?.scoreInserted,
-        user: video?.userInserted,
-        isLiked:
-          video?.likes?.[video?.attachmentInserted?.attachmentId]?.isLiked ??
-          false,
         result: resultInserted,
+        isLiked: video?.likes?.[insertedId]?.isLiked ?? false,
       },
       {
-        likeCount: video?.likeMatched ?? 0,
+        likeCount: matchedLikes,
         attachment: video?.attachmentMatched,
         position: 1,
         score: video?.scoreMatched,
-        user: video?.userMatched,
-        isLiked:
-          video?.likes?.[video?.attachmentMatched?.attachmentId]?.isLiked ??
-          false,
         result: resultMatched,
+        isLiked: video?.likes?.[matchedId]?.isLiked ?? false,
       },
     ],
-    [video, resultInserted, resultMatched],
+    [video, insertedLikes, matchedLikes, resultInserted, resultMatched, insertedId, matchedId],
   );
 
-  const inviteId = video?.inviteInserted?.id ?? video?.inviteMatched?.id;
+  const leftSide = {
+    userName: video?.userInserted?.userName,
+    profile: video?.profileInserted,
+    likes: insertedLikes,
+    score: video?.scoreInserted ?? 0,
+    result: resultInserted,
+  };
+  const rightSide = {
+    userName: video?.userMatched?.userName,
+    profile: video?.profileMatched,
+    likes: matchedLikes,
+    score: video?.scoreMatched ?? 0,
+    result: resultMatched,
+  };
 
+  const inviteId = video?.inviteInserted?.id ?? video?.inviteMatched?.id;
   const isAnyPlaying =
     isActive &&
     (activeVideoId === `${inviteId}-0` || activeVideoId === `${inviteId}-1`);
 
   return (
     <View style={styles.container}>
-      {videoSections.map((section) => {
-        const videoId = `${inviteId}-${section.position}`;
-        const isPlaying = isActive && activeVideoId === videoId;
+      <View style={styles.videosWrapper}>
+        {videoSections.map((section) => {
+          const videoId = `${inviteId}-${section.position}`;
+          const isPlaying = isActive && activeVideoId === videoId;
+          return (
+            <View key={videoId} style={styles.half}>
+              <VideoSection
+                handleToggleComments={handleToggleComments}
+                profileWatch={profileWatch}
+                showCountLiked={showCountLiked}
+                itsMatchingWithTimer={itsMatchingWithTimer}
+                activeVideoId={activeVideoId}
+                video={video}
+                handleVideoPlay={onPlay}
+                width={VIDEO_WIDTH}
+                height={VIDEO_HEIGHT}
+                videoLikes={videoLikes}
+                attachment={section.attachment}
+                positionVideo={section.position}
+                score={section.score}
+                result={section.result}
+                countLiked={section.likeCount}
+                isLiked={section.isLiked}
+                showLiked
+                endTime={showTimer}
+                isPlaying={isPlaying}
+                onVideoPlay={() => onPlay(isPlaying ? null : videoId)}
+              />
+            </View>
+          );
+        })}
+        {showTimer && (
+          <View pointerEvents="box-none" style={styles.timerOverlay}>
+            <View style={styles.timerBox}>
+              <TimerTornoment
+                endAt={endAt}
+                active={isActive}
+                onComplete={() => {
+                  if (isAnyPlaying) onPlay(null);
+                  onMatchExpired?.();
+                }}
+              />
+            </View>
+          </View>
+        )}
+      </View>
 
-        return (
-          <View key={videoId} style={styles.half}>
-            <VideoSection
-              handleToggleComments={handleToggleComments}
-              profileWatch={profileWatch}
-              showCountLiked={showCountLiked}
-              itsMatchingWithTimer={itsMatchingWithTimer}
-              activeVideoId={activeVideoId}
-              video={video}
-              handleVideoPlay={onPlay}
-              width={VIDEO_WIDTH}
-              height={VIDEO_HEIGHT}
-              videoLikes={videoLikes}
-              attachment={section.attachment}
-              positionVideo={section.position}
-              score={section.score}
-              result={section.result}
-              countLiked={section.likeCount}
-              isLiked={section.isLiked}
-              showLiked
-              endTime={showTimer}
-              isPlaying={isPlaying}
-              onVideoPlay={() => {
-                onPlay(isPlaying ? null : videoId);
-              }}
-            />
-          </View>
-        );
-      })}
-      {showTimer && (
-        <View pointerEvents="box-none" style={styles.timerOverlay}>
-          <View style={styles.timerBox}>
-            <TimerTornoment
-              endAt={endAt}
-              active={isActive}
-              onComplete={() => {
-                if (isAnyPlaying) onPlay(null);
-                onMatchExpired?.();
-              }}
-            />
-          </View>
-        </View>
-      )}
+      <MatchInfoCard left={leftSide} right={rightSide} isLive={showTimer} />
     </View>
   );
 };
@@ -132,9 +143,12 @@ export default memo(VideosProfileItem);
 
 const styles = StyleSheet.create({
   container: {
-    height: ITEM_HEIGHT,
-    backgroundColor: "#000",
     marginTop: 10,
+  },
+  videosWrapper: {
+    height: ITEM_HEIGHT,
+    position: "relative",
+    backgroundColor: "#000",
   },
   half: {
     height: VIDEO_HEIGHT,

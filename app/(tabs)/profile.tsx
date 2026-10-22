@@ -88,7 +88,7 @@ const Profile: React.FC = () => {
   const expireTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
   );
-  const onRefreshRef = useRef<() => void>(() => {});
+  const onRefreshRef = useRef<() => void>(() => { });
 
   const handleMatchExpired = useCallback(() => {
     clearTimeout(expireTimerRef.current);
@@ -136,10 +136,6 @@ const Profile: React.FC = () => {
     try {
       const profileRes = await profileAttachment(myUserId);
       const resData = profileRes?.data;
-      logger.info(
-        "profileResprofileResprofileResprofileResprofileResprofileResprofileResprofileResprofileResprofileResprofileResprofileResprofileResprofileResprofileResprofileResprofileResprofileResprofileResprofileResprofileResprofileResprofileResprofileResprofileResprofileResprofileResprofileResprofileResprofileResprofileResprofileResprofileRes",
-        resData,
-      );
       const freshUserData = resData?.data || resData;
       if (freshUserData) {
         dispatch(RsetUserLogin({ ...userLoginRef.current, ...freshUserData }));
@@ -242,8 +238,6 @@ const Profile: React.FC = () => {
       }
 
       const [videosRes] = await Promise.all(promises);
-      logger.info("User Attachment List Result:", videosRes?.data);
-
       const freshVideos = videosRes?.data?.data || videosRes?.data || videosRes;
 
       if (freshVideos && Array.isArray(freshVideos)) {
@@ -332,7 +326,7 @@ const Profile: React.FC = () => {
     };
   }, []);
 
-  const handlePickMedia = () => {};
+  const handlePickMedia = () => { };
 
   useEffect(() => {
     const score = userIdWhantToShow?.score || userLogin?.score || 0;
@@ -407,7 +401,7 @@ const Profile: React.FC = () => {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: screenBackground }}>
-      <YStack f={1} bg="$backgroundPaper">
+      <YStack f={1} bg="$divider">
         <FlatList
           data={allVideoData || []}
           keyExtractor={(item, index) =>
@@ -497,6 +491,8 @@ const Profile: React.FC = () => {
               toggleDropdown={toggleDropdown}
               dropdownItems={dropdownItems}
               handleToggleComments={handleOpenComments}
+              onMatchExpired={handleMatchExpired}
+
             />
           )}
           onEndReachedThreshold={0.5}

@@ -1,9 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
 import { usePathname, useRouter } from "expo-router";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   FlatList,
   Keyboard,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
   Pressable,
   StyleSheet,
   TouchableOpacity,
@@ -44,6 +46,119 @@ const AppHeader = () => {
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+
+  const PAGE_SIZE = 10;
+  const END_REACHED_OFFSET = 10;
+
+  const [pageNumber, setPageNumber] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+  const loadingMoreRef = useRef(false);
+  const requestIdRef = useRef(0);
+
+  useEffect(() => {
+    const query = searchQuery.trim();
+
+    if (!query) {
+      requestIdRef.current += 1;
+      setSearchResults([]);
+      setShowDropdown(false);
+      setIsLoading(false);
+      setIsLoadingMore(false);
+      setPageNumber(1);
+      setHasMore(true);
+      loadingMoreRef.current = false;
+      return;
+    }
+
+    setShowDropdown(true);
+    setIsLoading(true);
+
+    const currentRequestId = ++requestIdRef.current;
+
+    const timer = setTimeout(async () => {
+      try {
+        const response: any = await searchUser({
+          userNameReq: query,
+          pageNumber: 1,
+          pageSize: PAGE_SIZE,
+        });
+
+        if (currentRequestId !== requestIdRef.current) return;
+
+        const items = response?.data?.data?.items || [];
+        setSearchResults(items);
+        setPageNumber(1);
+        setHasMore(items.length === PAGE_SIZE);
+      } catch (error) {
+        if (currentRequestId !== requestIdRef.current) return;
+        logger.error("Error for searching:", error);
+        setSearchResults([]);
+        setHasMore(false);
+      } finally {
+        if (currentRequestId === requestIdRef.current) {
+          setIsLoading(false);
+        }
+      }
+    }, 600);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const loadMore = useCallback(async () => {
+    const query = searchQuery.trim();
+
+    if (!query || isLoading || !hasMore || loadingMoreRef.current) return;
+
+    loadingMoreRef.current = true;
+    setIsLoadingMore(true);
+
+    const currentRequestId = requestIdRef.current;
+    const nextPage = pageNumber + 1;
+
+    try {
+      const response: any = await searchUser({
+        userNameReq: query,
+        pageNumber: nextPage,
+        pageSize: PAGE_SIZE,
+      });
+
+      if (currentRequestId !== requestIdRef.current) return;
+
+      const items: any[] = response?.data?.data?.items || [];
+
+      setSearchResults((prev) => {
+        // حذف آیتم‌های تکراری
+        const existingIds = new Set(prev.map((u) => u?.id));
+        const fresh = items.filter((u) => !existingIds.has(u?.id));
+        return [...prev, ...fresh];
+      });
+
+      setPageNumber(nextPage);
+      setHasMore(items.length === PAGE_SIZE);
+    } catch (error) {
+      logger.error("Error for load more search:", error);
+    } finally {
+      loadingMoreRef.current = false;
+      if (currentRequestId === requestIdRef.current) {
+        setIsLoadingMore(false);
+      }
+    }
+  }, [searchQuery, isLoading, hasMore, pageNumber]);
+
+  const handleScroll = useCallback(
+    ({ nativeEvent }: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
+      const distanceFromEnd =
+        contentSize.height - (layoutMeasurement.height + contentOffset.y);
+
+      if (distanceFromEnd <= END_REACHED_OFFSET) {
+        loadMore();
+      }
+    },
+    [loadMore],
+  );
 
   const colors = useMemo(
     () => ({
@@ -288,14 +403,21 @@ const AppHeader = () => {
               ) : searchResults.length > 0 ? (
                 <FlatList
                   data={searchResults}
-                  keyExtractor={(item, index) =>
-                    item?.id?.toString() || index.toString()
-                  }
+                  keyExtractor={(item, index) => item?.id?.toString() || index.toString()}
                   style={styles.dropdownList}
                   contentContainerStyle={styles.listContentContainer}
                   keyboardShouldPersistTaps="handled"
                   keyboardDismissMode="on-drag"
                   showsVerticalScrollIndicator={true}
+                  onScroll={handleScroll}
+                  scrollEventThrottle={16}
+                  ListFooterComponent={
+                    isLoadingMore ? (
+                      <View style={styles.footerLoading}>
+                        <AppLoading />
+                      </View>
+                    ) : null
+                  }
                   renderItem={({ item }) => (
                     <TouchableOpacity
                       style={[
@@ -352,6 +474,11 @@ const styles = StyleSheet.create({
     position: "relative",
     zIndex: 99,
   },
+  footerLoading: {
+    paddingVertical: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   header: {
     height: 40,
     paddingHorizontal: 16,
@@ -392,7 +519,7 @@ const styles = StyleSheet.create({
   },
   dropdownBox: {
     borderRadius: 12,
-    maxHeight: 450,
+    maxHeight: 350,
     marginTop: 0,
     elevation: 12,
     overflow: "hidden",
@@ -401,7 +528,7 @@ const styles = StyleSheet.create({
     flexGrow: 0,
   },
   listContentContainer: {
-    paddingBottom: 6,
+    paddingBottom: 60,
   },
   resultItem: {
     flexDirection: "row",

@@ -30,6 +30,7 @@ export default function ShowWatchSlide({
   const isOpen = useMatchOpen(video?.matchEndAt);
   const votingOpen = isOpen && !video?.isFinished;
   const styles = useMemo(() => createStyles(colors), [isDark]);
+
   const getTimestamp = (dateString: any) => {
     if (!dateString) return 0;
     let fixedDate = dateString;
@@ -68,7 +69,7 @@ export default function ShowWatchSlide({
           itsHome={itsHome}
           inviteWatch={inviteWatch}
           score={showScore ? video?.scoreInserted : null}
-          result={showResult || !votingOpen ? resultInserted : null} 
+          result={showResult || !votingOpen ? resultInserted : null}
           endTime={votingOpen}
           showLiked={showLiked}
           countLiked={showCountLiked ? video?.likeInserted : null}
@@ -96,7 +97,7 @@ export default function ShowWatchSlide({
       ) : null} */}
       <View style={styles.half}>
         <VideoSection
-          result={showResult || !votingOpen ? resultInserted : null}
+          result={showResult || !votingOpen ? resultMatched : null}
           endTime={votingOpen}
           itsHome={itsHome}
           inviteWatch={inviteWatch}

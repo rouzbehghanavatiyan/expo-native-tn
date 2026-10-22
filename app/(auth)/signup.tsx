@@ -100,7 +100,13 @@ export default function SignUpScreen() {
           title: "Registration Successful",
           description: (
             <Text fontSize="$4" color="$textSecondary" textAlign="center">
-              Please check your inbox email, and make sure to check your{" "}
+              Please check your inbox
+              {" "}
+              <Text fontWeight="bold" color={isDark ? "#ffffff" : "#000000"}>
+                email
+              </Text>{" "}
+              , and make sure to check your
+              {" "}
               <Text fontWeight="bold" color={isDark ? "#ffffff" : "#000000"}>
                 spam
               </Text>{" "}
@@ -270,10 +276,10 @@ export default function SignUpScreen() {
                             isSelected
                               ? "$primaryMain"
                               : errors.gender
-                              ? "$errorMain"
-                              : isDark
-                              ? "#383838"
-                              : "#e0e0e0"
+                                ? "$errorMain"
+                                : isDark
+                                  ? "#383838"
+                                  : "#e0e0e0"
                           }
                           backgroundColor={
                             isSelected
@@ -474,8 +480,8 @@ export default function SignUpScreen() {
                           ? "#1b3820"
                           : "$green4Light"
                         : isDark
-                        ? "#3d1b1b"
-                        : "$red4Light"
+                          ? "#3d1b1b"
+                          : "$red4Light"
                     }
                     justifyContent="center"
                     alignItems="center"
