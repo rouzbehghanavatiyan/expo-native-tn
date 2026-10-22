@@ -103,8 +103,12 @@ const LoginScreen: React.FC<any> = () => {
 
   const lockedMessage = (remainingSec?: number) =>
     remainingSec
-      ? `Too many failed attempts. Please try again in ${formatTime(remainingSec)}.`
-      : `Too many failed attempts. Please try again in ${LOCK_DURATION_SEC / 60} minutes.`;
+      ? `Too many failed attempts. Please try again in ${formatTime(
+          remainingSec,
+        )}.`
+      : `Too many failed attempts. Please try again in ${
+          LOCK_DURATION_SEC / 60
+        } minutes.`;
 
   const registerFailedAttempt = () => {
     const next = loginAttempts + 1;
@@ -192,12 +196,16 @@ const LoginScreen: React.FC<any> = () => {
 
       logger.info("login failed response", response);
 
-      // ایمیل تایید نشده: شمارنده قفل زیاد نمی‌شود، دکمه ارسال مجدد نشان داده می‌شود
+      // ایمیل تایید نشده
       if (response?.errorCode === "EMAIL_NOT_CONFIRMED") {
         openModal(
           response?.message ||
             "Your account is not activated. Please verify your email.",
-          { showResend: true },
+          {
+            title: "Account Unverified",
+            showResend: true,
+            isError: true,
+          },
         );
         return;
       }
@@ -223,7 +231,6 @@ const LoginScreen: React.FC<any> = () => {
             : "User not found or incorrect password. Please try again.",
         );
       } else {
-        // خطای شبکه/سرور: تلاش ناموفق حساب نمی‌شود
         openModal(
           "Something went wrong. Please check your connection and try again.",
         );
@@ -237,29 +244,52 @@ const LoginScreen: React.FC<any> = () => {
     if (resendLoading) return;
 
     const username = formState.username?.trim();
-    if (!username) return;
+    if (!username) {
+      openModal("Please enter your username first.", {
+        title: "Validation Error",
+        isError: true,
+        showResend: false,
+      });
+      return;
+    }
 
     try {
       setResendLoading(true);
+      logger.info("usernameusernameusernameusernameusername", username);
       const res = await resendVerificationEmail({ userName: username });
+      logger.info("ccccccccccccccccccccc", res);
 
-      if (res?.status === 0) {
-        openModal("A new verification link has been sent to your email.", {
-          title: "Email Sent",
-          isError: false,
-        });
+      if (res?.status === 0 || res?.statusCode === 200) {
+        openModal(
+          res?.message ||
+            "A new verification link has been sent to your email. Please check your inbox and spam folder.",
+          {
+            title: "Verification Email Sent",
+            isError: false,
+            showResend: false,
+          },
+        );
       } else {
-        // مثلاً TOO_MANY_REQUESTS؛ دکمه ارسال مجدد باقی می‌ماند
         openModal(
           res?.message || "Could not send the email. Please try again later.",
-          { showResend: true },
+          {
+            title: "Email Error",
+            isError: true,
+            showResend: true,
+          },
         );
       }
-    } catch (error) {
+    } catch (error: any) {
       logger.error("Resend verification failed:", error);
-      openModal("Could not send the email. Please try again later.", {
-        showResend: true,
-      });
+      openModal(
+        error?.response?.data?.message ||
+          "Could not send the email. Please try again later.",
+        {
+          title: "Failed",
+          isError: true,
+          showResend: true,
+        },
+      );
     } finally {
       setResendLoading(false);
     }
@@ -381,8 +411,8 @@ const LoginScreen: React.FC<any> = () => {
                   {loading
                     ? "Signing in..."
                     : isLocked
-                      ? `Try again in ${formatTime(lockRemaining)}`
-                      : "Sign in"}
+                    ? `Try again in ${formatTime(lockRemaining)}`
+                    : "Sign in"}
                 </BaseButton>
 
                 <Link href="/forgotPassword" asChild>
@@ -415,6 +445,7 @@ const LoginScreen: React.FC<any> = () => {
               </YStack>
             </YStack>
 
+            {/* Modal نمایش خطاها و وضعیت Resend Email */}
             <Modal
               visible={showErrorModal}
               transparent
@@ -462,7 +493,7 @@ const LoginScreen: React.FC<any> = () => {
                     </YStack>
 
                     <XStack jc="flex-end" gap="$3">
-                      {showResend && (
+                      {true && (
                         <BaseButton
                           appearance="ghost"
                           colorType="primary"
