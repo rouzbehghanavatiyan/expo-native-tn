@@ -21,7 +21,6 @@ export default function WatchScreen() {
   const theme = useTheme();
   const router = useRouter();
   const dispatch = useAppDispatch();
-
   const { pagination, data } = useAppSelector((state) => state.main.watchVideo);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -45,7 +44,6 @@ export default function WatchScreen() {
 
     try {
       setLoading(true);
-
       const skip = reset ? 0 : pagination.skip;
       const take = pagination.take || 6;
       const activeSeed = customSeed ?? seed;
@@ -99,7 +97,11 @@ export default function WatchScreen() {
 
   useEffect(() => {
     stopMatchTimer();
-    handleGetAllMatch(true);
+
+    // فقط در صورتی که دیتایی از قبل در ریداکس نباشد، درخواست ارسال شود
+    if (!data || data.length === 0) {
+      handleGetAllMatch(true);
+    }
   }, []);
 
   const handleShowMatch = (item: any) => {
@@ -156,19 +158,6 @@ export default function WatchScreen() {
             ) : null
           }
         />
-
-        {/* {__DEV__ && (
-          <Button
-            position="absolute"
-            bottom={80}
-            right={20}
-            bg="$red9"
-            onPress={() => watchTour.reset()}
-            zIndex={9999}
-          >
-            Reset Tour
-          </Button>
-        )} */}
       </View>
       {!loading && data?.length > 0 && <WatchHelper enabled={true} />}
       {showTimeout && <MatchTimeoutModal />}
