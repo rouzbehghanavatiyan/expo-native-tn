@@ -88,7 +88,7 @@ const Profile: React.FC = () => {
   const expireTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
   );
-  const onRefreshRef = useRef<() => void>(() => { });
+  const onRefreshRef = useRef<() => void>(() => {});
 
   const handleMatchExpired = useCallback(() => {
     clearTimeout(expireTimerRef.current);
@@ -287,7 +287,7 @@ const Profile: React.FC = () => {
     let isMounted = true;
     const timer = setTimeout(() => {
       if (isMounted && flatListRef.current) {
-        flatListRef.current.scrollToOffset({ offset: 230, animated: true });
+        flatListRef.current.scrollToOffset({ offset: 285, animated: true });
       }
     }, 300);
 
@@ -326,7 +326,7 @@ const Profile: React.FC = () => {
     };
   }, []);
 
-  const handlePickMedia = () => { };
+  const handlePickMedia = () => {};
 
   useEffect(() => {
     const score = userIdWhantToShow?.score || userLogin?.score || 0;
@@ -492,7 +492,6 @@ const Profile: React.FC = () => {
               dropdownItems={dropdownItems}
               handleToggleComments={handleOpenComments}
               onMatchExpired={handleMatchExpired}
-
             />
           )}
           onEndReachedThreshold={0.5}
