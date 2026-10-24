@@ -170,9 +170,8 @@ const CommentRow = memo(
                 <Text color="$textSecondary" fontSize={12} fontWeight="700">
                   {expanded
                     ? "Hide replies"
-                    : `View ${replies.length} ${
-                        replies.length === 1 ? "reply" : "replies"
-                      }`}
+                    : `View ${replies.length} ${replies.length === 1 ? "reply" : "replies"
+                    }`}
                 </Text>
               </XStack>
             </TouchableOpacity>
@@ -495,7 +494,6 @@ const Comments: React.FC<CommentsProps> = ({
 
   const canSend = !!text.trim() && !sending;
 
-  /* -------------------------------- Footer -------------------------------- */
   const inputFooter = (
     <YStack
       bg="$backgroundPaper"
@@ -705,7 +703,6 @@ const Comments: React.FC<CommentsProps> = ({
             </YStack>
           </RNView>
 
-          {/* List */}
           <View flex={1}>
             {loading && comments.length === 0 ? (
               <CommentsSkeleton />

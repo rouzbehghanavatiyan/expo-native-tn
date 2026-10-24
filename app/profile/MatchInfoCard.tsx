@@ -10,7 +10,7 @@ export interface MatchSide {
   userName?: string;
   profile?: any;
   likes: number;
-  score: number; // درصد رنکی که بک‌اند به این کاربر داده
+  score: number;
   result: MatchResult;
 }
 
@@ -27,11 +27,20 @@ const RESULT_COLORS: Record<MatchResult, string> = {
 };
 
 const SideInfo = memo(
-  ({ side, isLive }: { side: MatchSide; isLive: boolean }) => {
+  ({
+    side,
+    opponentLikes,
+    isLive,
+  }: {
+    side: MatchSide;
+    opponentLikes: number;
+    isLive: boolean;
+  }) => {
     const color = RESULT_COLORS[side.result];
     const uri = side.profile ? getImageUrl(side.profile) : null;
     const initial = (side.userName || "?").charAt(0).toUpperCase();
-    const hasReward = !isLive && side.score > 0;
+
+    const hasReward = !isLive && side.likes > opponentLikes && side.score > 0;
 
     return (
       <YStack
@@ -93,8 +102,7 @@ const SideInfo = memo(
             {fixNumberCount(side.likes)}
           </Text>
         </XStack>
-
-        {/* {hasReward && (
+        {hasReward && (
           <XStack
             ai="center"
             gap={4}
@@ -103,12 +111,12 @@ const SideInfo = memo(
             borderRadius={12}
             style={{ backgroundColor: "#1ec75f22" }}
           >
-            <Ionicons name="trending-up" size={13} color="#1ec75f" />
+            <Icon name="trending-up" size={13} color="#1ec75f" />
             <Text fontSize={11} fontWeight="700" style={{ color: "#1ec75f" }}>
               +{side.score}% Rank
             </Text>
           </XStack>
-        )} */}
+        )}
       </YStack>
     );
   },
@@ -129,7 +137,7 @@ const MatchInfoCard = ({ left, right, isLive }: Props) => {
       py={14}
     >
       <XStack ai="flex-start">
-        <SideInfo side={left} isLive={isLive} />
+        <SideInfo side={left} opponentLikes={right.likes} isLive={isLive} />
 
         <YStack ai="center" jc="center" px={8} pt={10} gap={6}>
           <XStack
@@ -151,8 +159,7 @@ const MatchInfoCard = ({ left, right, isLive }: Props) => {
             </Text>
           </XStack>
         </YStack>
-
-        <SideInfo side={right} isLive={isLive} />
+        <SideInfo side={right} opponentLikes={left.likes} isLive={isLive} />
       </XStack>
     </YStack>
   );

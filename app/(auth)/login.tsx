@@ -257,7 +257,6 @@ const LoginScreen: React.FC<any> = () => {
       setResendLoading(true);
       logger.info("usernameusernameusernameusernameusername", username);
       const res = await resendVerificationEmail({ userName: username });
-      logger.info("ccccccccccccccccccccc", res);
 
       if (res?.status === 0 || res?.statusCode === 200) {
         openModal(

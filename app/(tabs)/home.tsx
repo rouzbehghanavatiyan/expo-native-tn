@@ -12,11 +12,10 @@ import {
 import { useAppDispatch, useAppSelector } from "@/src/store/reduxHookType";
 import HomeHelper from "@/src/utils/HomeHelper";
 import { logger } from "@/src/utils/logger";
-import { useHeaderHeight } from "@react-navigation/elements";
 import { FlashList } from "@shopify/flash-list";
 import { useRouter } from "expo-router";
 import React, { useCallback, useRef, useState } from "react";
-import { Platform, RefreshControl, useWindowDimensions } from "react-native";
+import { RefreshControl, useWindowDimensions } from "react-native";
 import {
   Button,
   Paragraph,
@@ -37,13 +36,9 @@ const HomeScreen: React.FC = () => {
   const userIdLogin = main?.userLogin?.user?.id;
   const [currentIndex, setCurrentIndex] = useState(0);
   const { width, height } = useWindowDimensions();
-  const headerHeight = useHeaderHeight();
   const router = useRouter();
-
+  const [containerHeight, setContainerHeight] = useState(0);
   const primaryColor = getThemeColor(theme.primary, "#4F46E5");
-
-  const usableHeight =
-    height - headerHeight - (Platform.OS === "android" ? 30 : 0);
 
   const [refreshing, setRefreshing] = useState(false);
   const [showComments, setShowComments] = useState(false);
@@ -238,7 +233,6 @@ const HomeScreen: React.FC = () => {
                 page to discover new content and creators!
               </Paragraph>
 
-              {/* دکمه‌ها */}
               <YStack w="100%" gap="$3">
                 {/* دکمه Watch */}
                 <Button
@@ -306,53 +300,52 @@ const HomeScreen: React.FC = () => {
           </YStack>
         </ScrollView>
       ) : (
-        <View flex={1} width={width} height={usableHeight}>
-          <FlashList
-            data={data || []}
-            extraData={currentlyPlayingId}
-            keyExtractor={(item, index) =>
-              item?.id?.toString() || index.toString()
-            }
-            pagingEnabled
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            showsVerticalScrollIndicator={false}
-            viewabilityConfig={viewabilityConfig}
-            onViewableItemsChanged={onViewableItemsChanged}
-            renderItem={({ item, index }) => (
-              <View width={width} height={usableHeight}>
-                <ShowWatchSlide
-                  itemHeight={usableHeight}
-                  showLiked={false}
-                  showScore
-                  showResult={true}
-                  itsHome={true}
-                  showCountLiked
-                  video={item}
-                  index={index}
-                  currentlyPlayingId={currentlyPlayingId}
-                  openDropdowns={openDropdowns}
-                  handleVideoPlay={handleVideoPlay}
-                  toggleDropdown={toggleDropdown}
-                  dropdownItems={dropdownItems}
-                  setOpenDropdowns={setOpenDropdowns}
-                  handleToggleComments={handleOpenComments}
-                />
-              </View>
-            )}
-          />
-          {/* {__DEV__ && (
-            <Button
-              position="absolute"
-              bottom={80}
-              right={20}
-              bg="$red9"
-              onPress={() => introTour.reset()}
-              zIndex={9999}
-            >
-              Reset Tour
-            </Button>
-          )} */}
+        <View
+          flex={1}
+          width={width}
+          onLayout={(e) => {
+            const h = Math.round(e.nativeEvent.layout.height);
+            if (h > 0 && h !== containerHeight) setContainerHeight(h);
+          }}
+        >
+          {containerHeight > 0 && (
+            <FlashList
+              data={data || []}
+              extraData={[currentlyPlayingId, containerHeight]}
+              keyExtractor={(item: any, index) => item?.id?.toString() || index.toString()}
+              pagingEnabled
+              snapToInterval={containerHeight}
+              snapToAlignment="start"
+              decelerationRate="fast"
+              disableIntervalMomentum
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              showsVerticalScrollIndicator={false}
+              viewabilityConfig={viewabilityConfig}
+              onViewableItemsChanged={onViewableItemsChanged}
+              renderItem={({ item, index }) => (
+                <View width={width} height={containerHeight}>
+                  <ShowWatchSlide
+                    itemHeight={containerHeight}
+                    showLiked={false}
+                    showScore
+                    showResult
+                    itsHome
+                    showCountLiked
+                    video={item}
+                    index={index}
+                    currentlyPlayingId={currentlyPlayingId}
+                    openDropdowns={openDropdowns}
+                    handleVideoPlay={handleVideoPlay}
+                    toggleDropdown={toggleDropdown}
+                    dropdownItems={dropdownItems}
+                    setOpenDropdowns={setOpenDropdowns}
+                    handleToggleComments={handleOpenComments}
+                  />
+                </View>
+              )}
+            />
+          )}
           <HomeHelper enabled={data.length > 0} />
         </View>
       )}

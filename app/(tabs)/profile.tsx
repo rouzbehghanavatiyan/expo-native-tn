@@ -73,7 +73,7 @@ const Profile: React.FC = () => {
   const followingCountRedux = useAppSelector(
     (state) => state?.main?.followingLength,
   );
-
+  const hasAutoScrolledRef = useRef(false);
   const myUserName = userLogin?.user?.userName;
   const myProfileImage = userLogin?.profile;
   const myScore = userLogin?.score;
@@ -85,10 +85,11 @@ const Profile: React.FC = () => {
   const [commentPosition, setCommentPosition] = useState(0);
   const [otherUserVideos, setOtherUserVideos] = useState<any[]>([]);
   const flatListRef = useRef<FlatList<any>>(null);
+  const [scrollTrigger, setScrollTrigger] = useState(0);
   const expireTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
   );
-  const onRefreshRef = useRef<() => void>(() => {});
+  const onRefreshRef = useRef<() => void>(() => { });
 
   const handleMatchExpired = useCallback(() => {
     clearTimeout(expireTimerRef.current);
@@ -210,7 +211,7 @@ const Profile: React.FC = () => {
   const onRefresh = async () => {
     if (!targetUserId) return;
     setRefreshing(true);
-
+    hasAutoScrolledRef.current = false;
     try {
       const promises: Promise<any>[] = [
         userAttachmentList({
@@ -245,6 +246,9 @@ const Profile: React.FC = () => {
         isMyProfile
           ? dispatch(RsetProfileVideo(items))
           : setOtherUserVideos(items);
+
+        hasAutoScrolledRef.current = false;
+        setScrollTrigger((n) => n + 1);
       }
     } catch (error) {
       console.error("Profile refresh error:", error);
@@ -252,6 +256,7 @@ const Profile: React.FC = () => {
       setRefreshing(false);
     }
   };
+
   onRefreshRef.current = onRefresh;
 
   useFocusEffect(
@@ -261,6 +266,7 @@ const Profile: React.FC = () => {
   );
 
   useEffect(() => {
+
     if (!isMyProfile) {
       setOtherUserVideos([]);
     }
@@ -275,6 +281,7 @@ const Profile: React.FC = () => {
     [allVideoData],
   );
 
+
   useEffect(() => {
     if (needProfileRefresh) {
       onRefresh();
@@ -282,20 +289,45 @@ const Profile: React.FC = () => {
     }
   }, [needProfileRefresh]);
 
+  // useEffect(() => {
+  //   if (!itsMatchingWithTimer) return;
+  //   let isMounted = true;
+  //   const timer = setTimeout(() => {
+  //     if (isMounted && flatListRef.current) {
+  //       flatListRef.current.scrollToOffset({ offset: 285, animated: true });
+  //     }
+  //   }, 300);
+
+  //   return () => {
+  //     isMounted = false;
+  //     clearTimeout(timer);
+  //   };
+  // }, [itsMatchingWithTimer]);
+
+  const firstActiveIndex = useMemo(() => {
+    if (!allVideoData?.length) return -1;
+    return allVideoData.findIndex(
+      (item: any) => Number(item?.matchRemainingSeconds) > 0,
+    );
+  }, [allVideoData]);
+
+
   useEffect(() => {
-    if (!itsMatchingWithTimer) return;
-    let isMounted = true;
+    if (firstActiveIndex < 0) return;
+    if (hasAutoScrolledRef.current) return;
+
     const timer = setTimeout(() => {
-      if (isMounted && flatListRef.current) {
-        flatListRef.current.scrollToOffset({ offset: 285, animated: true });
-      }
+      flatListRef.current?.scrollToIndex({
+        index: firstActiveIndex,
+        animated: true,
+        viewPosition: 0,
+      });
+      hasAutoScrolledRef.current = true;
     }, 300);
 
-    return () => {
-      isMounted = false;
-      clearTimeout(timer);
-    };
-  }, [itsMatchingWithTimer]);
+    return () => clearTimeout(timer);
+  }, [firstActiveIndex, scrollTrigger]);
+
 
   useEffect(() => {
     const handleGetAddLike = (data: { userId: number; movieId: number }) => {
@@ -325,8 +357,6 @@ const Profile: React.FC = () => {
       }
     };
   }, []);
-
-  const handlePickMedia = () => {};
 
   useEffect(() => {
     const score = userIdWhantToShow?.score || userLogin?.score || 0;
@@ -358,6 +388,8 @@ const Profile: React.FC = () => {
       currentProfile?.isFollowedByMe,
     ],
   );
+
+
 
   const renderHeader = useCallback(
     () => (
@@ -411,6 +443,20 @@ const Profile: React.FC = () => {
               index
             ).toString()
           }
+          onScrollToIndexFailed={(info) => {
+            flatListRef.current?.scrollToOffset({
+              offset: info.averageItemLength * info.index,
+              animated: false,
+            });
+            setTimeout(() => {
+              flatListRef.current?.scrollToIndex({
+                index: info.index,
+                animated: true,
+                viewPosition: 0,
+              });
+            }, 100);
+          }}
+
           ref={flatListRef}
           refreshing={refreshing}
           onRefresh={onRefresh}
@@ -508,7 +554,6 @@ const Profile: React.FC = () => {
               loadMore();
             }
           }}
-          removeClippedSubviews
           maxToRenderPerBatch={6}
           windowSize={5}
         />

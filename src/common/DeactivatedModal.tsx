@@ -45,11 +45,10 @@ export const DeactivatedModal = () => {
                 Match search disabled
               </Text>
             </YStack>
-
             <XStack justifyContent="flex-end">
               <BaseButton
                 flex={1}
-                bg="$warningMain"
+                bg="$textPrimary"
                 onPress={() => dispatch(setShowDeactivatedModal(false))}
               >
                 Ok

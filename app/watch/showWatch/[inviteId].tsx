@@ -86,7 +86,6 @@ export default function ShowWatchScreen() {
           take: currentTake,
           inviteId: inviteIdNumber,
         });
-        logger.info("cccccccccccccccccccccccccccccccccc", res);
         const newData = withMatchEndAt(res?.data || []);
 
         if (reset) {
